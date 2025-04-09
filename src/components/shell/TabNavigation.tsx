@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -35,28 +36,30 @@ const TabNavigation: React.FC = () => {
               Connected to AI
             </div>
           )}
-          {[
-            { value: "command", label: "Command", icon: <TerminalSquare size={14} /> },
-            { value: "vision", label: "Vision", icon: <Eye size={14} /> },
-            { value: "memory", label: "Memory", icon: <Brain size={14} /> },
-            { value: "chat", label: "Chat", icon: <MessageSquare size={14} /> },
-            { value: "browser", label: "Browser", icon: <Globe size={14} /> },
-            { value: "instructions", label: "Help", icon: <BookOpen size={14} /> }
-          ].map((tab) => (
-            <Button 
-              key={tab.value} 
-              variant={activeTab === tab.value ? "secondary" : "ghost"}
-              className="justify-start w-full rounded-none"
-              asChild
-            >
-              <TabsTrigger value={tab.value} className="w-full justify-start">
-                <span className="flex items-center space-x-2">
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </span>
-              </TabsTrigger>
-            </Button>
-          ))}
+          <TabsList className="flex flex-col h-auto">
+            {[
+              { value: "command", label: "Command", icon: <TerminalSquare size={14} /> },
+              { value: "vision", label: "Vision", icon: <Eye size={14} /> },
+              { value: "memory", label: "Memory", icon: <Brain size={14} /> },
+              { value: "chat", label: "Chat", icon: <MessageSquare size={14} /> },
+              { value: "browser", label: "Browser", icon: <Globe size={14} /> },
+              { value: "instructions", label: "Help", icon: <BookOpen size={14} /> }
+            ].map((tab) => (
+              <Button 
+                key={tab.value} 
+                variant={activeTab === tab.value ? "secondary" : "ghost"}
+                className="justify-start w-full rounded-none"
+                asChild
+              >
+                <TabsTrigger value={tab.value} className="w-full justify-start">
+                  <span className="flex items-center space-x-2">
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                  </span>
+                </TabsTrigger>
+              </Button>
+            ))}
+          </TabsList>
         </div>
       </SheetContent>
     </Sheet>

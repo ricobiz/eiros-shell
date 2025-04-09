@@ -1,20 +1,19 @@
 
 """
-Определение типов команд для EirosShell
+Command types for EirosShell
 """
 
+from enum import Enum, auto
+
 class CommandType:
-    NAVIGATION = "navigation"
+    NAVIGATION = "navigate"
     CLICK = "click"
     TYPE = "type"
     WAIT = "wait"
     SCREENSHOT = "screenshot"
     ANALYZE = "analyze"
-    UNKNOWN = "unknown"
-    
-    # Advanced DSL command types
     SET = "set"
     IF = "if"
     REPEAT = "repeat"
-    CHAIN = "chain"
+    RECORD = "record"  # New command type for pattern recording
 

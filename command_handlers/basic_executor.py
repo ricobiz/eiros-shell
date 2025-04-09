@@ -16,6 +16,7 @@ from .analyze_handler import handle_analyze_command
 from .variable_handler import handle_set_command, process_params_with_variables
 from .conditional_handler import handle_if_command
 from .loop_handler import handle_repeat_command
+from .record_handler import handle_record_command
 
 logger = logging.getLogger("EirosShell")
 
@@ -56,6 +57,8 @@ async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[s
             return await handle_if_command(browser_controller, params, command_id)
         elif command_type == CommandType.REPEAT:
             return await handle_repeat_command(browser_controller, params, command_id)
+        elif command_type == CommandType.RECORD:
+            return await handle_record_command(browser_controller, params, command_id)
         else:
             result["message"] = f"Unknown command type: {command_type}"
     

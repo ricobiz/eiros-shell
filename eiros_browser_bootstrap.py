@@ -16,6 +16,7 @@ from openai_login_handler import OpenAILoginHandler
 from chat_connector import ChatConnector
 from command_executor import CommandExecutor
 from utils import internet_connection_available, setup_logging
+from pattern_matcher import pattern_matcher  # Import the pattern matcher
 
 # Настройка логирования
 log_dir = Path(os.path.expanduser("~")) / "EirosShell" / "logs"
@@ -50,6 +51,10 @@ async def main():
                 return
         
         logger.info("Интернет-соединение доступно.")
+        
+        # Initialize pattern matcher
+        logger.info("Initializing pattern matcher...")
+        pattern_matcher.load_patterns()
         
         # Инициализация браузера
         browser_controller = BrowserController()

@@ -14,6 +14,7 @@ from .variable_handler import handle_set_command, get_variable, resolve_variable
 from .conditional_handler import handle_if_command
 from .loop_handler import handle_repeat_command
 from .pattern_memory import pattern_memory, PatternMemory
+from .record_handler import handle_record_command
 
 __all__ = [
     'execute_command',
@@ -34,5 +35,6 @@ __all__ = [
     'handle_if_command',
     'handle_repeat_command',
     'pattern_memory',
-    'PatternMemory'
+    'PatternMemory',
+    'handle_record_command'
 ]

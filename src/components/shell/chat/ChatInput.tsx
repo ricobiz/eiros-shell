@@ -10,6 +10,7 @@ interface ChatInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSend: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
+  onPaste?: (e: React.ClipboardEvent<HTMLInputElement>) => void;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ 
@@ -17,7 +18,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   disabled, 
   onChange, 
   onSend, 
-  onKeyPress 
+  onKeyPress,
+  onPaste
 }) => {
   return (
     <div className="flex items-center gap-2">
@@ -26,6 +28,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         value={message}
         onChange={onChange}
         onKeyPress={onKeyPress}
+        onPaste={onPaste}
         className="flex-1"
         disabled={disabled}
       />

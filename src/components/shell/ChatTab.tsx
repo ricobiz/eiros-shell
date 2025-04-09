@@ -20,7 +20,8 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     chatHistory,
     sendMessage,
     addMessageToChat,
-    clearChatHistory
+    clearChatHistory,
+    handleAIResponse
   } = useChatMessages();
   
   const {
@@ -45,6 +46,24 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     }
   };
 
+  // Обработчик вставки для получения ответов от ChatGPT
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    
+    // Только если текст вставлен и выглядит как ответ от ChatGPT
+    // (можно добавить более сложную проверку)
+    if (pastedText && pastedText.length > 10) {
+      // Проверяем, не является ли это просто повторной вставкой нашего собственного сообщения
+      const lastMessage = chatHistory[chatHistory.length - 1];
+      if (!lastMessage || lastMessage.sender !== 'Система' || 
+          !lastMessage.message.includes(pastedText)) {
+        // Обрабатываем как ответ от AI
+        e.preventDefault();
+        handleAIResponse(pastedText);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-full space-y-3">
       <div className="bg-muted/30 p-4 rounded-md flex-1 overflow-auto">
@@ -58,6 +77,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           onChange={(e) => setMessage(e.target.value)}
           onSend={sendMessage}
           onKeyPress={handleKeyPress}
+          onPaste={handlePaste}
         />
         
         <div className="flex items-center justify-between">

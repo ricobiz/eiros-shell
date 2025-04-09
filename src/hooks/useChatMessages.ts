@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { aiSyncService } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
+import { commandService } from '@/services/CommandService';
 
 export interface ChatMessage {
   sender: string;
@@ -20,6 +21,26 @@ export function useChatMessages() {
       message: text,
       timestamp: Date.now()
     }]);
+
+    // Если сообщение от AI, проверяем, не содержит ли оно команду
+    if (sender === 'ChatGPT') {
+      const command = commandService.parseCommand(text);
+      if (command) {
+        // Если это команда, выполняем её
+        toast({
+          title: "Команда обнаружена",
+          description: `Выполняю команду: ${command.type}`,
+        });
+        
+        commandService.executeCommand(command)
+          .then(() => {
+            addMessageToChat('Система', `Команда ${command.type} успешно выполнена`);
+          })
+          .catch((error) => {
+            addMessageToChat('Система', `Ошибка при выполнении команды: ${error.message}`);
+          });
+      }
+    }
   };
 
   const sendMessage = () => {
@@ -41,12 +62,18 @@ export function useChatMessages() {
     setChatHistory([]);
   };
 
+  // Функция для обработки сообщения от AI
+  const handleAIResponse = (text: string) => {
+    addMessageToChat('ChatGPT', text);
+  };
+
   return {
     message,
     setMessage,
     chatHistory,
     sendMessage,
     addMessageToChat,
-    clearChatHistory
+    clearChatHistory,
+    handleAIResponse
   };
 }

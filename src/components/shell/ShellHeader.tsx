@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { 
@@ -31,13 +30,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useMediaQuery } from "@/hooks/use-mobile";
 import InstructionsTab from './InstructionsTab';
 import { useShell } from '@/contexts/ShellContext';
 
 const ShellHeader: React.FC = () => {
   const { isPinned, isConnectedToAI, handleTogglePin, handleToggleAIConnection } = useShell();
-  const isDesktop = useIsMobile("(min-width: 768px)");
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   
   const Instructions = () => (
     <div className="px-2 py-4">

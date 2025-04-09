@@ -3,6 +3,7 @@ import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
 
+// Original function without parameters
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
@@ -19,7 +20,7 @@ export function useIsMobile() {
   return !!isMobile
 }
 
-// Adding the useMediaQuery hook that's being imported in ShellHeader.tsx
+// New function with query parameter
 export function useMediaQuery(query: string) {
   const [matches, setMatches] = React.useState<boolean>(false)
 

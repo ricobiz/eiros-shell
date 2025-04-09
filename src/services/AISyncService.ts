@@ -19,13 +19,37 @@ class AISyncService {
   private connected: boolean = false;
   private connectionAttempts: number = 0;
   private readonly MAX_ATTEMPTS = 3;
+  private chatGPTWindow: Window | null = null;
+  private windowCheckInterval: number | null = null;
+  
+  constructor() {
+    // Setup automatic reconnection on initialization
+    this.setupAutoReconnect();
+  }
+  
+  private setupAutoReconnect() {
+    // Check connection status every 5 seconds and reconnect if needed
+    this.windowCheckInterval = window.setInterval(() => {
+      if (!this.connected || (this.chatGPTWindow && this.chatGPTWindow.closed)) {
+        this.connectToAI();
+      }
+    }, 5000);
+  }
   
   isConnected(): boolean {
+    // Check if the window is still open
+    if (this.chatGPTWindow && this.chatGPTWindow.closed) {
+      this.connected = false;
+      this.chatGPTWindow = null;
+      // Emit disconnection event
+      aiSyncEvents.emit(false, 'ChatGPT window was closed');
+    }
     return this.connected;
   }
   
   async connectToAI(): Promise<boolean> {
-    if (this.connected) {
+    // If already connected and window is open, do nothing
+    if (this.isConnected() && this.chatGPTWindow && !this.chatGPTWindow.closed) {
       logService.addLog({
         type: 'info',
         message: 'Already connected to AI',
@@ -44,7 +68,14 @@ class AISyncService {
         timestamp: Date.now()
       });
       
-      // Mark as connected since we're using the browser window approach
+      // Open ChatGPT in a new window
+      this.chatGPTWindow = window.open('https://chat.openai.com/', 'ChatGPT', 'width=800,height=600');
+      
+      if (!this.chatGPTWindow) {
+        throw new Error('Failed to open ChatGPT window. Popup might be blocked.');
+      }
+      
+      // Mark as connected since we successfully opened the window
       this.connected = true;
       this.connectionAttempts = 0;
       
@@ -56,6 +87,9 @@ class AISyncService {
       
       // Emit sync event
       aiSyncEvents.emit(true, 'ChatGPT browser window opened');
+      
+      // Focus the window
+      this.chatGPTWindow.focus();
       
       return true;
     } catch (error) {
@@ -70,7 +104,7 @@ class AISyncService {
         this.connectionAttempts = 0;
         logService.addLog({
           type: 'warning',
-          message: 'Maximum connection attempts reached. Please try again later.',
+          message: 'Maximum connection attempts reached. Will try again later.',
           timestamp: Date.now()
         });
       }
@@ -87,7 +121,14 @@ class AISyncService {
       return;
     }
     
+    // Close the window if it's open
+    if (this.chatGPTWindow && !this.chatGPTWindow.closed) {
+      this.chatGPTWindow.close();
+    }
+    
     this.connected = false;
+    this.chatGPTWindow = null;
+    
     logService.addLog({
       type: 'info',
       message: 'Disconnected from ChatGPT window',
@@ -99,24 +140,74 @@ class AISyncService {
   }
   
   sendMessageToAI(message: string): void {
-    if (!this.connected) {
-      logService.addLog({
-        type: 'warning',
-        message: 'Cannot send message: Not connected to AI',
-        timestamp: Date.now()
+    if (!this.isConnected()) {
+      // Try to reconnect first
+      this.connectToAI().then(connected => {
+        if (connected) {
+          logService.addLog({
+            type: 'info',
+            message: 'Reconnected to AI, now can send message',
+            timestamp: Date.now()
+          });
+          
+          this.sendMessageAfterConnection(message);
+        } else {
+          logService.addLog({
+            type: 'warning',
+            message: 'Cannot send message: Failed to reconnect to AI',
+            timestamp: Date.now()
+          });
+        }
       });
       return;
     }
     
-    logService.addLog({
-      type: 'info',
-      message: 'Message ready to send to ChatGPT',
-      timestamp: Date.now(),
-      details: { message }
-    });
+    this.sendMessageAfterConnection(message);
+  }
+  
+  private sendMessageAfterConnection(message: string): void {
+    // Focus the window to make it visible to the user
+    if (this.chatGPTWindow && !this.chatGPTWindow.closed) {
+      this.chatGPTWindow.focus();
+      
+      logService.addLog({
+        type: 'info',
+        message: 'Message ready to send to ChatGPT',
+        timestamp: Date.now(),
+        details: { message }
+      });
+      
+      // In the browser approach, the message is shown to the user to paste manually
+      console.log('Ready to send to ChatGPT:', message);
+      
+      // We could try to copy to clipboard as well
+      try {
+        navigator.clipboard.writeText(message).then(() => {
+          logService.addLog({
+            type: 'info',
+            message: 'Message copied to clipboard for easy pasting',
+            timestamp: Date.now()
+          });
+        });
+      } catch (err) {
+        logService.addLog({
+          type: 'warning',
+          message: 'Could not copy message to clipboard',
+          timestamp: Date.now(),
+          details: err
+        });
+      }
+    }
+  }
+  
+  // Method to clean up resources when service is no longer needed
+  cleanup(): void {
+    if (this.windowCheckInterval !== null) {
+      window.clearInterval(this.windowCheckInterval);
+      this.windowCheckInterval = null;
+    }
     
-    // In the browser approach, the message is shown to the user to paste manually
-    console.log('Ready to send to ChatGPT:', message);
+    this.disconnectFromAI();
   }
 }
 

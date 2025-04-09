@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CommandType, MemoryItem } from '@/types/types';
 import { commandService } from '@/services/CommandService';
@@ -182,7 +181,23 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentAnnotation(annotation);
   };
 
-  // Subscribe to navigation events
+  useEffect(() => {
+    aiSyncService.connectToAI().then(connected => {
+      setIsConnectedToAI(connected);
+      
+      if (connected) {
+        toast({
+          title: "AI Connected",
+          description: "Shell has been automatically connected to AI",
+        });
+      }
+    });
+    
+    return () => {
+      aiSyncService.cleanup();
+    };
+  }, [toast]);
+
   useEffect(() => {
     const unsubscribe = navigationEvents.subscribe((url) => {
       setBrowserUrl(url);
@@ -195,7 +210,6 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // Subscribe to AI sync events
   useEffect(() => {
     const unsubscribe = aiSyncEvents.subscribe((connected, message) => {
       setIsConnectedToAI(connected);

@@ -12,6 +12,28 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ chatHistory }) => {
   const isCommand = (message: string) => {
     return commandService.parseCommand(message) !== null;
   };
+  
+  // Форматирование сообщения для отображения команд
+  const formatMessage = (message: string) => {
+    if (isCommand(message)) {
+      const command = commandService.parseCommand(message);
+      if (command) {
+        return (
+          <>
+            <div className="font-mono bg-black/10 p-2 rounded mb-2">
+              <span className="font-bold text-green-600">/{command.type}</span>
+              <span className="text-blue-600">#{command.id}</span>
+              <pre className="text-xs mt-1 overflow-x-auto">
+                {JSON.stringify(command.params, null, 2)}
+              </pre>
+            </div>
+            <p className="text-sm opacity-80">Оригинал: {message}</p>
+          </>
+        );
+      }
+    }
+    return <p className="text-sm">{message}</p>;
+  };
 
   if (chatHistory.length === 0) {
     return (
@@ -40,7 +62,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ chatHistory }) => {
             }`}
           >
             <p className="text-xs font-medium mb-1">{chat.sender}</p>
-            <p className="text-sm">{chat.message}</p>
+            <div>{formatMessage(chat.message)}</div>
             <p className="text-xs opacity-70 mt-1">
               {new Date(chat.timestamp).toLocaleTimeString()}
             </p>

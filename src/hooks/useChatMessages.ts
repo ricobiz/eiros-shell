@@ -33,8 +33,12 @@ export function useChatMessages() {
         });
         
         commandService.executeCommand(command)
-          .then(() => {
+          .then((result) => {
             addMessageToChat('Система', `Команда ${command.type} успешно выполнена`);
+            // Если есть результат, добавляем его в чат
+            if (result && typeof result === 'object') {
+              addMessageToChat('Система', `Результат: ${JSON.stringify(result, null, 2)}`);
+            }
           })
           .catch((error) => {
             addMessageToChat('Система', `Ошибка при выполнении команды: ${error.message}`);

@@ -19,7 +19,7 @@ __all__ = [
     'handle_click_command',
     'handle_type_command',
     'handle_wait_command', 
-    'handle_screenshot_command',
+    'handle_screenshot_handler',
     'handle_analyze_command',
     'analyze_page_elements'
 ]

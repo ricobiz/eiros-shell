@@ -1,4 +1,3 @@
-
 """
 Central command executor that delegates to specific handlers
 """
@@ -128,6 +127,16 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
       /click#cmd3{ "element": "#submit" }
     ]
     
+    Supports nested chains:
+    /chain#cmd30[
+      /navigate#cmd31{ "url": "https://site.com" },
+      /chain#cmd32[
+        /type#cmd33{ "selector": "#user", "text": "admin" },
+        /click#cmd34{ "element": "#next" }
+      ],
+      /click#cmd35{ "element": "#final" }
+    ]
+    
     Returns a result dictionary with information about the chain execution
     """
     logger.info(f"Executing command chain: {dsl_string}")
@@ -166,16 +175,26 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
     success_count = 0
     
     for cmd_string in commands:
-        cmd_result = await execute_dsl_command(browser_controller, cmd_string)
-        results.append(cmd_result)
-        
-        # If any command fails, we might want to stop the chain
-        if cmd_result.get("status") == "success":
-            success_count += 1
+        # Check if this is a nested chain
+        if cmd_string.startswith('/chain#'):
+            # Execute the nested chain
+            chain_result = await execute_command_chain(browser_controller, cmd_string)
+            results.append(chain_result)
+            
+            # Count as success if the nested chain succeeded
+            if chain_result.get("status") == "success":
+                success_count += 1
+            
+            # Send the nested chain result message to log
+            logger.info(chain_result["formatted_message"])
         else:
-            # Consider if we should break here or continue with remaining commands
-            # For now, we'll continue to execute all commands
-            pass
+            # Regular command
+            cmd_result = await execute_dsl_command(browser_controller, cmd_string)
+            results.append(cmd_result)
+            
+            # Count as success if the command succeeded
+            if cmd_result.get("status") == "success":
+                success_count += 1
     
     # Prepare the final result
     status = "success" if success_count == len(commands) else "error"

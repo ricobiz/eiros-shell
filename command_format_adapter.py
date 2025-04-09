@@ -59,17 +59,33 @@ def parse_command_chain(dsl_string: str) -> List[str]:
         chain_id = chain_id_match.group(1)
         
         # Extract the commands between [ and ]
-        commands_pattern = r'/chain#[a-zA-Z0-9_-]+\[(.*)\]'
-        commands_match = re.search(commands_pattern, dsl_string, re.DOTALL)
-        
-        if not commands_match:
-            logger.error(f"Failed to extract commands from chain: {dsl_string}")
+        # We need to find the correct closing bracket for the main chain
+        content_start = dsl_string.find("[") + 1
+        if content_start <= 0:
+            logger.error(f"Invalid chain format, missing opening bracket: {dsl_string}")
             return []
             
-        commands_str = commands_match.group(1).strip()
+        # Find matching closing bracket by counting brackets
+        bracket_count = 1
+        content_end = content_start
         
-        # Split the commands
-        # This is more complex because we need to respect JSON structure
+        for i in range(content_start, len(dsl_string)):
+            if dsl_string[i] == '[':
+                bracket_count += 1
+            elif dsl_string[i] == ']':
+                bracket_count -= 1
+                
+            if bracket_count == 0:
+                content_end = i
+                break
+        
+        if bracket_count != 0:
+            logger.error(f"Unbalanced brackets in chain: {dsl_string}")
+            return []
+            
+        commands_str = dsl_string[content_start:content_end].strip()
+        
+        # Split the commands while respecting nested structures
         commands = []
         current_cmd = ""
         brace_count = 0
@@ -142,3 +158,4 @@ def parse_dsl_command(dsl_string: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error parsing DSL command: {str(e)}")
         return None
+

@@ -5,7 +5,7 @@ Central command executor that delegates to specific handlers
 
 import logging
 import asyncio
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from command_types import CommandType
 from .navigation_handler import handle_navigation_command
@@ -14,6 +14,7 @@ from .type_handler import handle_type_command
 from .wait_handler import handle_wait_command
 from .screenshot_handler import handle_screenshot_command
 from .analyze_handler import handle_analyze_command
+from command_format_adapter import parse_dsl_command
 
 logger = logging.getLogger("EirosShell")
 
@@ -53,4 +54,57 @@ async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[s
         result["message"] = f"Ошибка: {str(e)}"
     
     logger.info(f"Результат команды {command_id}: {result['status']} - {result['message']}")
+    return result
+
+async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[Dict[str, Any]]:
+    """
+    Executes a command in DSL format and returns the result
+    
+    Example: /click#cmd99{ "element": ".submit", "waitAfter": 500 }
+    """
+    logger.info(f"Executing DSL command: {dsl_string}")
+    
+    # Parse the DSL command
+    command = parse_dsl_command(dsl_string)
+    
+    if not command:
+        logger.error("Failed to parse DSL command")
+        return {
+            "command_id": "unknown",
+            "type": "unknown",
+            "status": "error",
+            "message": f"Failed to parse DSL command: {dsl_string}"
+        }
+    
+    # Execute the parsed command
+    result = await execute_command(browser_controller, command)
+    
+    # Format the result for logging
+    command_type = command["type"]
+    command_id = command["id"]
+    status_text = "OK" if result["status"] == "success" else "ОШИБКА"
+    
+    # Build a description of the command for the log
+    description = ""
+    if command_type == CommandType.NAVIGATION:
+        description = f"→ '{command['params'].get('url', '')}'"
+    elif command_type == CommandType.CLICK:
+        description = f"→ '{command['params'].get('element', '')}'"
+    elif command_type == CommandType.TYPE:
+        description = f"→ '{command['params'].get('selector', '')}'"
+    elif command_type == CommandType.WAIT:
+        description = f"→ {command['params'].get('duration', 2)} сек"
+    
+    # Generate the log ID based on command_id
+    log_id = f"log_{command_id.replace('cmd', '')}" if command_id.startswith('cmd') else f"log_{command_id}"
+    
+    # Format the result message
+    result_message = f"[оболочка]: Команда #{command_id}: {command_type} {description} — {status_text}. #{log_id}"
+    
+    # Log the result message
+    logger.info(result_message)
+    
+    # Add the formatted message to the result
+    result["formatted_message"] = result_message
+    
     return result

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'lucide-react';
-import { useShell } from '@/contexts/ShellContext';
+import { useShell } from '@/contexts/shell/ShellContext';
 
 const ShellFooter: React.FC = () => {
   const { isPinned, isConnectedToAI } = useShell();

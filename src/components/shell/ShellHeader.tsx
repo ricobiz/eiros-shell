@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { 
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import InstructionsTab from './InstructionsTab';
-import { useShell } from '@/contexts/ShellContext';
+import { useShell } from '@/contexts/shell/ShellContext';
 
 const ShellHeader: React.FC = () => {
   const { isPinned, isConnectedToAI, handleTogglePin, handleToggleAIConnection } = useShell();

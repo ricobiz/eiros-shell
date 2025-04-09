@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -10,6 +11,13 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 import CommandInput from './CommandInput';
 import LogViewer from './LogViewer';
 import MemoryPanel from './MemoryPanel';
@@ -18,12 +26,16 @@ import { commandService } from '@/services/CommandService';
 import { logService } from '@/services/LogService';
 import { memoryService } from '@/services/MemoryService';
 import { getCommandExamples, getCommandHelp } from '@/utils/commandHelpers';
-import { Brain, Command, Eye, MessageSquare, TerminalSquare, Cpu } from 'lucide-react';
+import { Brain, Command, Eye, MessageSquare, TerminalSquare, Cpu, Pin, PinOff, Edit, Save } from 'lucide-react';
 
 const ShellInterface: React.FC = () => {
   const [activeTab, setActiveTab] = useState('command');
   const [commandResult, setCommandResult] = useState<any>(null);
   const [selectedMemory, setSelectedMemory] = useState<MemoryItem | null>(null);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isAnnotating, setIsAnnotating] = useState(false);
+  const [annotations, setAnnotations] = useState<{id: string, element: string, description: string}[]>([]);
+  const [currentAnnotation, setCurrentAnnotation] = useState({element: '', description: ''});
   
   const handleCommandExecuted = (result: any) => {
     setCommandResult(result);
@@ -75,6 +87,62 @@ const ShellInterface: React.FC = () => {
     }
   };
   
+  const handleTogglePin = () => {
+    setIsPinned(!isPinned);
+    
+    // In a real implementation, this would make the window "always on top"
+    // Since this is a web app, we'd need browser extensions or electron for real pinning
+    logService.addLog({
+      type: 'info',
+      message: `Shell window ${!isPinned ? 'pinned' : 'unpinned'}`,
+      timestamp: Date.now()
+    });
+  };
+  
+  const handleToggleAnnotating = () => {
+    setIsAnnotating(!isAnnotating);
+    
+    if (isAnnotating) {
+      // Save annotation mode
+      logService.addLog({
+        type: 'info',
+        message: 'Exiting annotation mode',
+        timestamp: Date.now()
+      });
+    } else {
+      logService.addLog({
+        type: 'info',
+        message: 'Entering annotation mode - click on elements to annotate',
+        timestamp: Date.now()
+      });
+    }
+  };
+  
+  const handleSaveAnnotation = () => {
+    if (currentAnnotation.element && currentAnnotation.description) {
+      const newAnnotation = {
+        id: `annotation_${Date.now()}`,
+        ...currentAnnotation
+      };
+      
+      setAnnotations([...annotations, newAnnotation]);
+      setCurrentAnnotation({element: '', description: ''});
+      
+      // Save annotation to memory
+      memoryService.addMemoryItem({
+        type: MemoryType.ELEMENT,
+        data: newAnnotation,
+        tags: ['annotation', 'element', 'ui_training']
+      });
+      
+      logService.addLog({
+        type: 'success',
+        message: 'Element annotation saved',
+        timestamp: Date.now()
+      });
+    }
+  };
+  
   const renderCommandHelp = () => {
     const commandHelp = getCommandHelp();
     const commandExamples = getCommandExamples();
@@ -108,11 +176,31 @@ const ShellInterface: React.FC = () => {
   };
   
   return (
-    <Card className="w-full shadow-lg bg-card border-border">
+    <Card className={`w-full shadow-lg bg-card border-border ${isPinned ? 'border-accent border-2' : ''}`}>
       <CardHeader className="bg-muted/30">
-        <div className="flex items-center space-x-2">
-          <Cpu size={18} className="text-accent animate-pulse-accent" />
-          <CardTitle className="text-lg">AI Shell Interface</CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Cpu size={18} className="text-accent animate-pulse-accent" />
+            <CardTitle className="text-lg">AI Shell Interface</CardTitle>
+          </div>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleTogglePin}
+                  className="h-8 w-8"
+                >
+                  {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isPinned ? 'Unpin window' : 'Pin window (always on top)'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <CardDescription>Command & Control Interface for AI Interaction</CardDescription>
       </CardHeader>
@@ -150,21 +238,31 @@ const ShellInterface: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="vision" className="mt-0 space-y-4">
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={handleTakeScreenshot}
-              >
-                Take Screenshot
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={handleAnalyzeInterface}
-              >
-                Analyze Interface
-              </Button>
+            <div className="flex justify-between items-center">
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={handleTakeScreenshot}
+                >
+                  Take Screenshot
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={handleAnalyzeInterface}
+                >
+                  Analyze Interface
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">Annotate Mode</span>
+                <Switch 
+                  checked={isAnnotating} 
+                  onCheckedChange={handleToggleAnnotating} 
+                />
+              </div>
             </div>
             
             <div className="aspect-video bg-muted/30 rounded-md border border-border flex items-center justify-center">
@@ -181,6 +279,43 @@ const ShellInterface: React.FC = () => {
               )}
             </div>
             
+            {isAnnotating && (
+              <div className="mt-2 p-3 border border-accent/30 rounded-md">
+                <h3 className="text-sm font-semibold mb-2">Annotate UI Element</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="text-xs mb-1 block">Element Selector</label>
+                    <input 
+                      type="text" 
+                      className="w-full p-2 text-xs rounded-sm border border-border"
+                      placeholder="#login-button or .navbar"
+                      value={currentAnnotation.element}
+                      onChange={(e) => setCurrentAnnotation({...currentAnnotation, element: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs mb-1 block">Description/Purpose</label>
+                    <input 
+                      type="text" 
+                      className="w-full p-2 text-xs rounded-sm border border-border"
+                      placeholder="Login button that submits credentials"
+                      value={currentAnnotation.description}
+                      onChange={(e) => setCurrentAnnotation({...currentAnnotation, description: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={handleSaveAnnotation}
+                  disabled={!currentAnnotation.element || !currentAnnotation.description}
+                  className="w-full"
+                >
+                  <Save size={14} className="mr-1" />
+                  Save Element Annotation
+                </Button>
+              </div>
+            )}
+            
             {commandResult && typeof commandResult === 'object' && commandResult.elements && (
               <div className="mt-2">
                 <h3 className="text-sm font-semibold mb-1">Detected Elements:</h3>
@@ -194,6 +329,26 @@ const ShellInterface: React.FC = () => {
                         </span>
                       </div>
                       {elem.text && <span className="text-accent text-[10px]">{elem.text}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {annotations.length > 0 && (
+              <div className="mt-2">
+                <h3 className="text-sm font-semibold mb-1">Saved Annotations:</h3>
+                <div className="bg-muted/30 p-2 rounded-md text-xs space-y-1 max-h-[200px] overflow-y-auto">
+                  {annotations.map((anno) => (
+                    <div key={anno.id} className="p-1 border-b border-border last:border-0">
+                      <div className="flex justify-between">
+                        <span className="font-semibold">{anno.element}</span>
+                        <Button variant="ghost" size="sm" className="h-5 px-1 text-[10px]">
+                          <Edit size={10} className="mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                      <span className="text-accent text-[10px]">{anno.description}</span>
                     </div>
                   ))}
                 </div>
@@ -274,7 +429,9 @@ const ShellInterface: React.FC = () => {
       
       <CardFooter className="bg-muted/30 flex justify-between">
         <div className="text-xs text-muted-foreground">
-          Status: <span className="text-accent">Active</span>
+          Status: <span className={`text-${isPinned ? 'accent' : 'muted-foreground'}`}>
+            {isPinned ? 'Pinned' : 'Active'}
+          </span>
         </div>
         
         <div className="flex items-center space-x-1 text-xs">

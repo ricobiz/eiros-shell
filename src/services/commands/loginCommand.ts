@@ -1,5 +1,5 @@
 
-import { Command, MemoryType } from "../../types/types";
+import { Command, MemoryType, CommandType } from "../../types/types";
 import { logService } from "../LogService";
 import { memoryService } from "../MemoryService";
 import { handleNavigateCommand } from "./navigationCommand";
@@ -27,7 +27,7 @@ export async function handleLoginCommand(command: Command): Promise<void> {
   if (url) {
     await handleNavigateCommand({
       id: `nav_to_${service}_${Date.now()}`,
-      type: 'navigate',
+      type: CommandType.NAVIGATE,
       params: { url },
       timestamp: Date.now()
     });
@@ -40,7 +40,7 @@ export async function handleLoginCommand(command: Command): Promise<void> {
       // Type username
       await handleTypeCommand({
         id: `type_username_${Date.now()}`,
-        type: 'type',
+        type: CommandType.TYPE,
         params: { 
           text: username,
           element: usernameSelector,
@@ -52,7 +52,7 @@ export async function handleLoginCommand(command: Command): Promise<void> {
       // Type password
       await handleTypeCommand({
         id: `type_password_${Date.now()}`,
-        type: 'type',
+        type: CommandType.TYPE,
         params: { 
           text: password,
           element: passwordSelector,
@@ -65,7 +65,7 @@ export async function handleLoginCommand(command: Command): Promise<void> {
       if (submitSelector) {
         await handleClickCommand({
           id: `click_submit_${Date.now()}`,
-          type: 'click',
+          type: CommandType.CLICK,
           params: { element: submitSelector, waitAfter: 1000 },
           timestamp: Date.now()
         });
@@ -115,7 +115,7 @@ export async function performAutoLogin(serviceIdentifier: string): Promise<boole
   // Execute login command with saved credentials
   await handleLoginCommand({
     id: `auto_login_${Date.now()}`,
-    type: 'login',
+    type: CommandType.LOGIN,
     params: credentialData,
     timestamp: Date.now()
   });

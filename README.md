@@ -1,73 +1,83 @@
-# Welcome to your Lovable project
 
-## Project info
+# EirosShell v0.7
 
-**URL**: https://lovable.dev/projects/d891adeb-8fba-42c0-97b5-7c57b945bcd7
+Автономная оболочка для взаимодействия с ChatGPT. EirosShell автоматически запускает браузер, 
+подключается к ChatGPT и обеспечивает двустороннюю коммуникацию между AI и компьютером.
 
-## How can I edit this code?
+## Возможности
 
-There are several ways of editing your application.
+- Автоматический запуск и авторизация в ChatGPT
+- Распознавание и выполнение команд от AI
+- Автоматизация действий в браузере
+- Возможность автозапуска при старте системы
+- Сохранение истории команд и логов
 
-**Use Lovable**
+## Требования
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d891adeb-8fba-42c0-97b5-7c57b945bcd7) and start prompting.
+- Python 3.8+
+- Chromium, Chrome или Edge браузер
+- Пакеты: playwright, pyautogui
 
-Changes made via Lovable will be committed automatically to this repo.
+## Установка
 
-**Use your preferred IDE**
+1. Клонируйте репозиторий или загрузите файлы
+2. Установите необходимые зависимости:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+python install_requirements.py
 ```
 
-**Edit a file directly in GitHub**
+## Использование
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Первый запуск
 
-**Use GitHub Codespaces**
+```bash
+python start_eiros_shell.py
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+При первом запуске вам будет предложено войти в аккаунт OpenAI вручную. 
+Вы также можете сохранить учетные данные для автоматического входа.
 
-## What technologies are used for this project?
+### Настройка автозапуска
 
-This project is built with:
+```bash
+python start_eiros_shell.py --setup-autostart
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Структура проекта
 
-## How can I deploy this project?
+- `start_eiros_shell.py` - Главный скрипт запуска
+- `eiros_browser_bootstrap.py` - Основной модуль загрузки
+- `browser_driver.py` - Управление браузером
+- `openai_login_handler.py` - Обработчик авторизации
+- `chat_connector.py` - Подключение к чату
+- `command_executor.py` - Выполнение команд
+- `utils.py` - Вспомогательные функции
 
-Simply open [Lovable](https://lovable.dev/projects/d891adeb-8fba-42c0-97b5-7c57b945bcd7) and click on Share -> Publish.
+## Команды для ChatGPT
 
-## Can I connect a custom domain to my Lovable project?
+EirosShell понимает следующие форматы команд:
 
-Yes it is!
+### JSON команды
+```
+{"command": "navigation", "params": {"url": "https://example.com"}}
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Маркированные команды
+```
+[command: navigation] [url: https://example.com]
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Директивные команды
+```
+#navigate to https://example.com
+#click on .login-button
+#type hello into input[name="message"]
+#wait 5
+#screenshot
+#analyze
+```
+
+## Конфигурация
+
+Конфигурационные файлы и логи хранятся в директории `~/EirosShell/`.

@@ -1,13 +1,11 @@
 
 import React from 'react';
 import { Link } from 'lucide-react';
+import { useShell } from '@/contexts/ShellContext';
 
-interface ShellFooterProps {
-  isPinned: boolean;
-  isConnectedToAI?: boolean;
-}
+const ShellFooter: React.FC = () => {
+  const { isPinned, isConnectedToAI } = useShell();
 
-const ShellFooter: React.FC<ShellFooterProps> = ({ isPinned, isConnectedToAI = false }) => {
   return (
     <div className="bg-muted/30 flex justify-between px-2 py-1 text-xs w-full">
       <div className="text-muted-foreground flex items-center">

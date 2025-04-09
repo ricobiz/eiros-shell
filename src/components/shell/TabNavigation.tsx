@@ -16,13 +16,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
+import { useShell } from '@/contexts/ShellContext';
 
-interface TabNavigationProps {
-  activeTab: string;
-  isConnectedToAI?: boolean;
-}
-
-const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, isConnectedToAI = false }) => {
+const TabNavigation: React.FC = () => {
+  const { activeTab, isConnectedToAI } = useShell();
+  
   const mobileView = (
     <Sheet>
       <SheetTrigger asChild>

@@ -31,24 +31,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import InstructionsTab from './InstructionsTab';
-import { aiSyncService } from '@/services/AISyncService';
+import { useShell } from '@/contexts/ShellContext';
 
-interface ShellHeaderProps {
-  isPinned: boolean;
-  onTogglePin: () => void;
-  isConnectedToAI: boolean;
-  onToggleAIConnection: () => void;
-}
-
-const ShellHeader: React.FC<ShellHeaderProps> = ({ 
-  isPinned, 
-  onTogglePin, 
-  isConnectedToAI, 
-  onToggleAIConnection 
-}) => {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+const ShellHeader: React.FC = () => {
+  const { isPinned, isConnectedToAI, handleTogglePin, handleToggleAIConnection } = useShell();
+  const isDesktop = useIsMobile("(min-width: 768px)");
   
   const Instructions = () => (
     <div className="px-2 py-4">
@@ -110,7 +99,7 @@ const ShellHeader: React.FC<ShellHeaderProps> = ({
                   variant="ghost" 
                   size="icon" 
                   className="h-8 w-8"
-                  onClick={onToggleAIConnection}
+                  onClick={handleToggleAIConnection}
                 >
                   {isConnectedToAI ? (
                     <Link size={16} className="text-green-500" />
@@ -140,7 +129,7 @@ const ShellHeader: React.FC<ShellHeaderProps> = ({
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  onClick={onTogglePin}
+                  onClick={handleTogglePin}
                   className="h-8 w-8"
                 >
                   {isPinned ? <PinOff size={16} /> : <Pin size={16} />}

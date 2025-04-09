@@ -6,7 +6,7 @@
 import asyncio
 import sys
 import os
-from utils import setup_autostart, setup_logging, get_system_info
+from utils import setup_autostart, setup_logging, get_system_info, internet_connection_available
 from pathlib import Path
 import time
 
@@ -33,16 +33,36 @@ async def main():
                 logger.error("Не удалось настроить автозапуск")
                 print("Ошибка при настройке автозапуска!")
             return
+            
+        # Проверка подключения к интернету
+        if not internet_connection_available():
+            logger.warning("Отсутствует подключение к интернету. Повторная попытка через 30 секунд...")
+            await asyncio.sleep(30)
+            if not internet_connection_available():
+                logger.error("Интернет недоступен. Завершение работы.")
+                print("Ошибка: Отсутствует подключение к интернету. Работа невозможна.")
+                return
         
         # Импортируем основной модуль
         from eiros_browser_bootstrap import main as bootstrap_main
         
+        print("EirosShell v0.7 запущена. Лог доступен в:", log_file)
+        
         # Запускаем основной модуль
         await bootstrap_main()
         
+    except ImportError as ie:
+        logger.exception(f"Ошибка импорта модуля: {str(ie)}")
+        print(f"Ошибка: Отсутствуют необходимые модули: {str(ie)}")
+        print("Установите зависимости: python install_requirements.py")
     except Exception as e:
         logger.exception(f"Критическая ошибка при запуске: {str(e)}")
         print(f"Критическая ошибка: {str(e)}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nEirosShell остановлена пользователем.")
+    except Exception as e:
+        print(f"\nКритическая ошибка: {str(e)}")

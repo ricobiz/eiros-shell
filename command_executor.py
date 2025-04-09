@@ -55,13 +55,15 @@ class CommandExecutor:
                         # Отправляем результат выполнения
                         if command_result:
                             self._save_command_to_history(command, command_result)
-                            await self._send_command_result(command_result)
+                            await self._send_command_result(command, command_result)
                 
                 # Небольшая пауза перед следующей проверкой
                 await asyncio.sleep(1)
                 
         except Exception as e:
             logger.exception(f"Критическая ошибка в цикле обработки команд: {str(e)}")
+            # Отправляем сообщение о критической ошибке в чат
+            await self.chat.send_message(f"[оболочка]: Критическая ошибка: {str(e)}. Перезапустите оболочку.")
     
     def _parse_command(self, message: str) -> Optional[Dict[str, Any]]:
         """
@@ -212,16 +214,20 @@ class CommandExecutor:
             elif command_type == CommandType.CLICK:
                 selector = params.get("selector")
                 if selector:
-                    element = await self.browser.wait_for_selector(selector, timeout=10000)
-                    if element:
-                        success = await self.browser.click(selector)
-                        if success:
-                            result["status"] = "success"
-                            result["message"] = f"Успешно выполнен клик по элементу: {selector}"
+                    try:
+                        element = await self.browser.wait_for_selector(selector, timeout=10000)
+                        if element:
+                            success = await self.browser.click(selector)
+                            if success:
+                                result["status"] = "success"
+                                result["message"] = f"Успешно выполнен клик по элементу: {selector}"
+                            else:
+                                result["message"] = f"Ошибка при клике на элемент: {selector}"
                         else:
-                            result["message"] = f"Ошибка при клике на элемент: {selector}"
-                    else:
-                        result["message"] = f"Элемент не найден: {selector}"
+                            result["message"] = f"Элемент не найден: {selector}"
+                    except Exception as click_error:
+                        logger.error(f"Ошибка при выполнении клика: {str(click_error)}")
+                        result["message"] = f"Ошибка при клике: {str(click_error)}"
                 else:
                     result["message"] = "Селектор не указан"
             
@@ -229,54 +235,69 @@ class CommandExecutor:
                 text = params.get("text")
                 selector = params.get("selector")
                 if text and selector:
-                    element = await self.browser.wait_for_selector(selector, timeout=10000)
-                    if element:
-                        success = await self.browser.type_text(selector, text)
-                        if success:
-                            result["status"] = "success"
-                            result["message"] = f"Успешно введен текст в элемент: {selector}"
+                    try:
+                        element = await self.browser.wait_for_selector(selector, timeout=10000)
+                        if element:
+                            success = await self.browser.type_text(selector, text)
+                            if success:
+                                result["status"] = "success"
+                                result["message"] = f"Успешно введен текст в элемент: {selector}"
+                            else:
+                                result["message"] = f"Ошибка при вводе текста в элемент: {selector}"
                         else:
-                            result["message"] = f"Ошибка при вводе текста в элемент: {selector}"
-                    else:
-                        result["message"] = f"Элемент не найден: {selector}"
+                            result["message"] = f"Элемент не найден: {selector}"
+                    except Exception as type_error:
+                        logger.error(f"Ошибка при вводе текста: {str(type_error)}")
+                        result["message"] = f"Ошибка при вводе текста: {str(type_error)}"
                 else:
                     result["message"] = "Текст или селектор не указаны"
             
             elif command_type == CommandType.WAIT:
-                duration = params.get("duration")
-                if duration:
-                    await asyncio.sleep(float(duration))
-                    result["status"] = "success"
-                    result["message"] = f"Ожидание {duration} секунд выполнено"
-                else:
-                    await asyncio.sleep(2)  # Дефолтное ожидание
-                    result["status"] = "success"
-                    result["message"] = "Ожидание 2 секунды выполнено (по умолчанию)"
+                try:
+                    duration = params.get("duration")
+                    if duration:
+                        await asyncio.sleep(float(duration))
+                        result["status"] = "success"
+                        result["message"] = f"Ожидание {duration} секунд выполнено"
+                    else:
+                        await asyncio.sleep(2)  # Дефолтное ожидание
+                        result["status"] = "success"
+                        result["message"] = "Ожидание 2 секунды выполнено (по умолчанию)"
+                except Exception as wait_error:
+                    result["message"] = f"Ошибка при ожидании: {str(wait_error)}"
             
             elif command_type == CommandType.SCREENSHOT:
-                screenshot_path = await self.browser.take_screenshot()
-                if screenshot_path:
-                    result["status"] = "success"
-                    result["message"] = f"Скриншот сохранен: {screenshot_path}"
-                    result["data"] = {"screenshot_path": screenshot_path}
-                else:
-                    result["message"] = "Ошибка при создании скриншота"
+                try:
+                    screenshot_path = await self.browser.take_screenshot()
+                    if screenshot_path:
+                        result["status"] = "success"
+                        result["message"] = f"Скриншот сохранен: {screenshot_path}"
+                        result["data"] = {"screenshot_path": screenshot_path}
+                    else:
+                        result["message"] = "Ошибка при создании скриншота"
+                except Exception as screenshot_error:
+                    logger.error(f"Ошибка при создании скриншота: {str(screenshot_error)}")
+                    result["message"] = f"Ошибка при создании скриншота: {str(screenshot_error)}"
             
             elif command_type == CommandType.ANALYZE:
-                # Анализируем текущую страницу
-                page_title = await self.browser.page.title()
-                page_url = self.browser.page.url
-                
-                # Собираем информацию о ключевых элементах
-                elements_info = await self._analyze_page_elements()
-                
-                result["status"] = "success"
-                result["message"] = f"Анализ страницы {page_title} выполнен"
-                result["data"] = {
-                    "title": page_title,
-                    "url": page_url,
-                    "elements": elements_info
-                }
+                try:
+                    # Анализируем текущую страницу
+                    page_title = await self.browser.page.title()
+                    page_url = self.browser.page.url
+                    
+                    # Собираем информацию о ключевых элементах
+                    elements_info = await self._analyze_page_elements()
+                    
+                    result["status"] = "success"
+                    result["message"] = f"Анализ страницы {page_title} выполнен"
+                    result["data"] = {
+                        "title": page_title,
+                        "url": page_url,
+                        "elements": elements_info
+                    }
+                except Exception as analyze_error:
+                    logger.error(f"Ошибка при анализе страницы: {str(analyze_error)}")
+                    result["message"] = f"Ошибка при анализе страницы: {str(analyze_error)}"
             
             else:
                 result["message"] = f"Неизвестный тип команды: {command_type}"
@@ -366,18 +387,35 @@ class CommandExecutor:
             logger.error(f"Ошибка при анализе элементов страницы: {str(e)}")
             return {"error": str(e)}
     
-    async def _send_command_result(self, result: Dict[str, Any]):
+    async def _send_command_result(self, command: Dict[str, Any], result: Dict[str, Any]):
         """Отправляет результат выполнения команды обратно в чат"""
-        # Формируем краткое сообщение о результате
-        status_emoji = "✅" if result["status"] == "success" else "❌"
-        command_type = result["type"]
-        message = result["message"]
+        # Формируем краткое сообщение о результате с учетом требуемого формата
+        status_text = "OK" if result["status"] == "success" else "ОШИБКА"
+        command_type = command["type"]
+        command_id = command["id"]
+        log_id = f"log_{self.command_counter}"
         
-        # Формируем сообщение для отправки
-        response_message = f"[оболочка]: Команда #{self.command_counter} ({command_type}) {status_emoji} {message} #{result['status']}"
+        # Формируем описание для различных типов команд
+        description = ""
+        if command_type == CommandType.NAVIGATION:
+            description = f"→ '{command['params'].get('url', '')}'"
+        elif command_type == CommandType.CLICK:
+            description = f"→ '{command['params'].get('selector', '')}'"
+        elif command_type == CommandType.TYPE:
+            description = f"→ '{command['params'].get('selector', '')}'"
+        elif command_type == CommandType.WAIT:
+            description = f"→ {command['params'].get('duration', 2)} сек"
+        elif command_type == CommandType.SCREENSHOT or command_type == CommandType.ANALYZE:
+            description = ""
+            
+        # Формируем сообщение для отправки по новому формату
+        response_message = f"[оболочка]: Команда #{command_id}: {command_type} {description} — {status_text}. #{log_id}"
         
         # Отправляем сообщение обратно в чат
         await self.chat.send_message(response_message)
+        
+        # Логируем отправку сообщения
+        logger.info(f"Отправлен результат в чат: {response_message}")
     
     def _save_command_to_history(self, command: Dict[str, Any], result: Dict[str, Any]):
         """Сохраняет команду и результат в историю"""

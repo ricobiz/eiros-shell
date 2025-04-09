@@ -4,218 +4,151 @@
 """
 
 import logging
-import socket
-import urllib.request
 import os
-import sys
 import platform
-from pathlib import Path
+import socket
+import sys
 import time
+from pathlib import Path
+import psutil
 
-def setup_logging(log_file):
-    """Настраивает логирование"""
-    # Создаем папку для логов, если она не существует
-    log_dir = os.path.dirname(log_file)
-    os.makedirs(log_dir, exist_ok=True)
-    
-    # Настраиваем логирование в файл и консоль
+def setup_logging(log_file=None):
+    """Настраивает и возвращает логгер"""
     logger = logging.getLogger("EirosShell")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     
-    # Форматировщик для логов
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # Добавляем форматирование
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     
-    # Обработчик для записи в файл
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
-    
-    # Обработчик для вывода в консоль
+    # Добавляем вывод в консоль
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
-    
-    # Добавляем обработчики к логгеру
-    logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+    
+    # Добавляем вывод в файл, если он указан
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
     
     return logger
 
+def get_system_info():
+    """Собирает информацию о системе"""
+    system_info = {
+        "platform": platform.system(),
+        "platform_version": platform.version(),
+        "platform_release": platform.release(),
+        "architecture": platform.machine(),
+        "processor": platform.processor(),
+        "hostname": socket.gethostname(),
+        "python_version": sys.version,
+        "memory": f"{round(psutil.virtual_memory().total / (1024**3), 2)} GB",
+        "cpu_cores": psutil.cpu_count(logical=False),
+        "cpu_threads": psutil.cpu_count(logical=True)
+    }
+    
+    return system_info
+
 def internet_connection_available():
-    """Проверяет наличие интернет-соединения"""
+    """Проверяет доступность интернет-соединения"""
     try:
-        # Пытаемся подключиться к Google DNS
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        # Пробуем подключиться к надежному хосту
+        socket.create_connection(("8.8.8.8", 53), timeout=5)
         return True
     except OSError:
         pass
     
     try:
-        # Альтернативная проверка через запрос к Google
-        urllib.request.urlopen("https://www.google.com", timeout=3)
+        # Альтернативная проверка
+        socket.create_connection(("1.1.1.1", 53), timeout=5)
         return True
-    except:
+    except OSError:
         return False
 
 def setup_autostart():
     """Настраивает автозапуск оболочки при старте системы"""
     try:
         system = platform.system()
-        script_path = os.path.abspath(sys.argv[0])
         
         if system == "Windows":
             import winreg
             
-            # Путь к ключу автозапуска
-            key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+            # Получаем полный путь к скрипту
+            script_path = os.path.abspath(sys.argv[0])
+            python_exe = sys.executable
             
-            # Открываем ключ реестра
+            # Команда для запуска
+            cmd = f'"{python_exe}" "{script_path}"'
+            
+            # Открываем раздел реестра для автозагрузки
             key = winreg.OpenKey(
-                winreg.HKEY_CURRENT_USER,
-                key_path,
-                0,
-                winreg.KEY_SET_VALUE
+                winreg.HKEY_CURRENT_USER, 
+                r"Software\Microsoft\Windows\CurrentVersion\Run", 
+                0, 
+                winreg.KEY_WRITE
             )
             
-            # Указываем pythonw.exe для запуска без консоли
-            python_exe = sys.executable.replace("python.exe", "pythonw.exe")
-            command = f'"{python_exe}" "{script_path}"'
-            
-            # Записываем значение в реестр
-            winreg.SetValueEx(key, "EirosShell", 0, winreg.REG_SZ, command)
+            # Добавляем запись
+            winreg.SetValueEx(key, "EirosShell", 0, winreg.REG_SZ, cmd)
             winreg.CloseKey(key)
-            
             return True
-        
+            
         elif system == "Linux":
-            # Создаем директорию автозагрузки, если она не существует
+            # Создаем файл автозапуска для Linux
             autostart_dir = Path(os.path.expanduser("~")) / ".config" / "autostart"
             autostart_dir.mkdir(parents=True, exist_ok=True)
             
-            # Создаем .desktop файл
-            desktop_file = autostart_dir / "eirosshell.desktop"
+            desktop_file = autostart_dir / "eiros-shell.desktop"
+            
+            script_path = os.path.abspath(sys.argv[0])
+            python_exe = sys.executable
             
             with open(desktop_file, "w") as f:
                 f.write(f"""[Desktop Entry]
 Type=Application
-Exec=python3 "{script_path}"
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
 Name=EirosShell
-Comment=AI Shell for ChatGPT
+Comment=EirosShell autonomous OpenAI browser
+Exec={python_exe} {script_path}
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-enabled=true
 """)
-            
-            # Делаем файл исполняемым
             os.chmod(desktop_file, 0o755)
-            
             return True
-        
+            
         elif system == "Darwin":  # macOS
-            # Путь к папке автозагрузки
+            # Создаем файл plist для автозагрузки в macOS
             launch_agents_dir = Path(os.path.expanduser("~")) / "Library" / "LaunchAgents"
             launch_agents_dir.mkdir(parents=True, exist_ok=True)
             
-            # Имя и путь к plist файлу
-            plist_file = launch_agents_dir / "com.eiros.shell.plist"
+            plist_file = launch_agents_dir / "com.user.eirosshell.plist"
             
-            # Создаем plist файл
+            script_path = os.path.abspath(sys.argv[0])
+            python_exe = sys.executable
+            
             with open(plist_file, "w") as f:
                 f.write(f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.eiros.shell</string>
+    <string>com.user.eirosshell</string>
     <key>ProgramArguments</key>
     <array>
-        <string>python3</string>
+        <string>{python_exe}</string>
         <string>{script_path}</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
-    <key>KeepAlive</key>
-    <false/>
 </dict>
-</plist>
-""")
-            
+</plist>""")
+            os.chmod(plist_file, 0o644)
             return True
-        
-        return False
-        
+            
+        else:
+            return False
+            
     except Exception as e:
-        logging.error(f"Ошибка при настройке автозапуска: {str(e)}")
+        logger.error(f"Ошибка при настройке автозапуска: {str(e)}")
         return False
-
-def remove_autostart():
-    """Удаляет оболочку из автозапуска"""
-    try:
-        system = platform.system()
-        
-        if system == "Windows":
-            import winreg
-            
-            # Путь к ключу автозапуска
-            key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-            
-            try:
-                # Открываем ключ реестра
-                key = winreg.OpenKey(
-                    winreg.HKEY_CURRENT_USER,
-                    key_path,
-                    0,
-                    winreg.KEY_SET_VALUE
-                )
-                
-                # Удаляем значение из реестра
-                winreg.DeleteValue(key, "EirosShell")
-                winreg.CloseKey(key)
-                
-                return True
-            except FileNotFoundError:
-                # Значение не существует
-                return True
-        
-        elif system == "Linux":
-            # Путь к файлу автозагрузки
-            desktop_file = Path(os.path.expanduser("~")) / ".config" / "autostart" / "eirosshell.desktop"
-            
-            if desktop_file.exists():
-                os.remove(desktop_file)
-            
-            return True
-        
-        elif system == "Darwin":  # macOS
-            # Путь к plist файлу
-            plist_file = Path(os.path.expanduser("~")) / "Library" / "LaunchAgents" / "com.eiros.shell.plist"
-            
-            if plist_file.exists():
-                os.remove(plist_file)
-            
-            return True
-        
-        return False
-        
-    except Exception as e:
-        logging.error(f"Ошибка при удалении автозапуска: {str(e)}")
-        return False
-
-def get_system_info():
-    """Возвращает информацию о системе"""
-    try:
-        system_info = {
-            "system": platform.system(),
-            "release": platform.release(),
-            "version": platform.version(),
-            "machine": platform.machine(),
-            "processor": platform.processor(),
-            "python_version": platform.python_version(),
-            "hostname": platform.node()
-        }
-        
-        return system_info
-        
-    except Exception as e:
-        logging.error(f"Ошибка при получении информации о системе: {str(e)}")
-        return {"error": str(e)}

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CardTitle, CardDescription } from '@/components/ui/card';
+import { CardTitle } from '@/components/ui/card';
 import { 
   Tooltip,
   TooltipContent,
@@ -8,7 +8,29 @@ import {
   TooltipTrigger 
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Cpu, Pin, PinOff } from 'lucide-react';
+import { 
+  Cpu, 
+  Pin, 
+  PinOff, 
+  Command, 
+  HelpCircle
+} from 'lucide-react';
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { 
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { useMediaQuery } from "@/hooks/use-mobile";
+import InstructionsTab from './InstructionsTab';
 
 interface ShellHeaderProps {
   isPinned: boolean;
@@ -16,33 +38,95 @@ interface ShellHeaderProps {
 }
 
 const ShellHeader: React.FC<ShellHeaderProps> = ({ isPinned, onTogglePin }) => {
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  
+  const Instructions = () => (
+    <div className="px-2 py-4">
+      <InstructionsTab />
+    </div>
+  );
+  
+  // Use Sheet for desktop and Drawer for mobile
+  const InstructionsDisplay = isDesktop ? (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
+          <HelpCircle size={16} />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>AI Shell Instructions</SheetTitle>
+        </SheetHeader>
+        <Instructions />
+      </SheetContent>
+    </Sheet>
+  ) : (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
+          <HelpCircle size={16} />
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>AI Shell Instructions</DrawerTitle>
+        </DrawerHeader>
+        <Instructions />
+      </DrawerContent>
+    </Drawer>
+  );
+
   return (
-    <div className="bg-muted/30">
+    <div className="bg-muted/30 px-2">
       <div className="flex items-center justify-between">
+        {/* Apple-style window controls */}
         <div className="flex items-center space-x-2">
-          <Cpu size={18} className="text-accent animate-pulse-accent" />
-          <CardTitle className="text-lg">AI Shell Interface</CardTitle>
+          <div className="flex space-x-1.5 items-center">
+            <div className="h-3 w-3 rounded-full bg-destructive" />
+            <div className="h-3 w-3 rounded-full bg-[#FFBD44]" />
+            <div className="h-3 w-3 rounded-full bg-accent animate-pulse" />
+          </div>
+          
+          <div className="flex items-center ml-3">
+            <Cpu size={14} className="text-accent" />
+            <CardTitle className="text-sm ml-1">AI Shell</CardTitle>
+          </div>
         </div>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={onTogglePin}
-                className="h-8 w-8"
-              >
-                {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isPinned ? 'Unpin window' : 'Pin window (always on top)'}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center space-x-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Command size={16} className="text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                AI Integration
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={onTogglePin}
+                  className="h-8 w-8"
+                >
+                  {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isPinned ? 'Unpin window' : 'Pin window (always on top)'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          {InstructionsDisplay}
+        </div>
       </div>
-      <CardDescription>Command & Control Interface for AI Interaction</CardDescription>
     </div>
   );
 };

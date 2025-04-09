@@ -72,3 +72,39 @@
 .highlight {
   @apply bg-accent/20 text-accent;
 }
+
+/* Apple-style window transitions */
+.window-transition {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Activity indicator pulses */
+@keyframes slow-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.activity-indicator {
+  animation: slow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth fade animations for tabs */
+.tab-transition {
+  @apply transition-opacity duration-200;
+}
+
+.tab-enter {
+  @apply opacity-0;
+}
+
+.tab-enter-active {
+  @apply opacity-100;
+}
+
+.tab-exit {
+  @apply opacity-100;
+}
+
+.tab-exit-active {
+  @apply opacity-0;
+}

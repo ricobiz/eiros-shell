@@ -7,16 +7,15 @@ interface ShellFooterProps {
 
 const ShellFooter: React.FC<ShellFooterProps> = ({ isPinned }) => {
   return (
-    <div className="bg-muted/30 flex justify-between">
-      <div className="text-xs text-muted-foreground">
-        Status: <span className={`text-${isPinned ? 'accent' : 'muted-foreground'}`}>
-          {isPinned ? 'Pinned' : 'Active'}
-        </span>
+    <div className="bg-muted/30 flex justify-between px-2 py-1 text-xs">
+      <div className="text-muted-foreground flex items-center">
+        <span className={`inline-block h-2 w-2 rounded-full mr-1 ${isPinned ? 'bg-accent' : 'bg-muted-foreground'}`}/>
+        <span>{isPinned ? 'Pinned' : 'Active'}</span>
       </div>
       
-      <div className="flex items-center space-x-1 text-xs">
+      <div className="flex items-center space-x-1">
         <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse"/>
-        <span className="text-muted-foreground">Listening for commands</span>
+        <span className="text-muted-foreground">Listening</span>
       </div>
     </div>
   );

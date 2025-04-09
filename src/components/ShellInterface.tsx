@@ -158,7 +158,7 @@ const ShellInterface: React.FC = () => {
 
   return (
     <Card className={`w-full shadow-lg bg-card border-border ${isPinned ? 'border-accent border-2' : ''}`}>
-      <CardHeader className="p-4">
+      <CardHeader className="p-2">
         <ShellHeader isPinned={isPinned} onTogglePin={handleTogglePin} />
       </CardHeader>
       
@@ -205,7 +205,7 @@ const ShellInterface: React.FC = () => {
         </CardContent>
       </Tabs>
       
-      <CardFooter className="p-4">
+      <CardFooter className="p-2">
         <ShellFooter isPinned={isPinned} />
       </CardFooter>
     </Card>

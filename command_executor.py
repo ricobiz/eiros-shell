@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional
 
 from command_parser import CommandParser
 from command_types import CommandType
-from command_handlers import execute_command, analyze_page_elements
+from command_handlers import execute_command
 
 logger = logging.getLogger("EirosShell")
 

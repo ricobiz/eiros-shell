@@ -16,4 +16,4 @@ class CommandType:
     IF = "if"
     REPEAT = "repeat"
     RECORD = "record"  # New command type for pattern recording
-
+    CHAIN = "chain"    # Command type for chains

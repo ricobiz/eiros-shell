@@ -29,7 +29,7 @@ async def handle_if_command(browser_controller, params: Dict[str, Any], command_
                 "type": "if",
                 "status": "error",
                 "message": "Missing condition",
-                "formatted_message": f"[оболочка]: Condition #{command_id} — ERROR: Missing condition. #log_{command_id}"
+                "formatted_message": f"[оболочка]: Условие #{command_id} — ОШИБКА: условие не задано. #log_{command_id}"
             }
             
         # Evaluate the condition
@@ -45,7 +45,8 @@ async def handle_if_command(browser_controller, params: Dict[str, Any], command_
         
         if result:
             executed_branch = "then"
-            formatted_result = f"[оболочка]: Condition #{command_id} evaluated — TRUE. Executing block. #log_{command_id}"
+            formatted_result = f"[оболочка]: Условие #{command_id} вычислено — ИСТИНА. Выполняется блок then. #log_{command_id}"
+            logger.info(formatted_result)
             
             # Execute then commands
             if then_commands:
@@ -56,10 +57,12 @@ async def handle_if_command(browser_controller, params: Dict[str, Any], command_
                         branch_results.append(cmd_result)
         else:
             executed_branch = "else"
-            formatted_result = f"[оболочка]: Condition #{command_id} evaluated — FALSE. Block skipped. #log_{command_id}"
             
             # Execute else commands
             if else_commands:
+                formatted_result = f"[оболочка]: Условие #{command_id} вычислено — ЛОЖЬ. Выполняется блок else. #log_{command_id}"
+                logger.info(formatted_result)
+                
                 for cmd in else_commands:
                     if isinstance(cmd, str):
                         # Execute as a DSL command
@@ -67,19 +70,30 @@ async def handle_if_command(browser_controller, params: Dict[str, Any], command_
                         branch_results.append(cmd_result)
             else:
                 # No else branch to execute
-                formatted_result = f"[оболочка]: Condition #{command_id} evaluated — FALSE. No else block. #log_{command_id}"
+                formatted_result = f"[оболочка]: Условие #{command_id} вычислено — ЛОЖЬ. Блок else отсутствует. #log_{command_id}"
+                logger.info(formatted_result)
+        
+        # Count successes and errors
+        success_count = sum(1 for result in branch_results if result.get("status") == "success")
+        error_count = len(branch_results) - success_count
+        
+        # Determine overall status
+        status = "success" if error_count == 0 else "error"
+        status_text = "OK" if status == "success" else "ОШИБКА"
         
         # Prepare the result
         return {
             "command_id": command_id,
             "type": "if",
-            "status": "success",
+            "status": status,
             "message": log_msg,
             "condition": condition,
             "result": result,
             "executed_branch": executed_branch,
             "branch_results": branch_results,
-            "formatted_message": formatted_result
+            "success_count": success_count,
+            "error_count": error_count,
+            "formatted_message": f"[оболочка]: Условие #{command_id}: {condition} — {status_text}. #log_{command_id}"
         }
     except Exception as e:
         logger.error(f"Error in if command: {str(e)}")
@@ -88,5 +102,5 @@ async def handle_if_command(browser_controller, params: Dict[str, Any], command_
             "type": "if",
             "status": "error",
             "message": f"Error in if command: {str(e)}",
-            "formatted_message": f"[оболочка]: Condition #{command_id} — ERROR: {str(e)}. #log_{command_id}"
+            "formatted_message": f"[оболочка]: Условие #{command_id} — ОШИБКА: {str(e)}. #log_{command_id}"
         }

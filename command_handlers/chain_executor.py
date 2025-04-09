@@ -5,10 +5,13 @@ Chain command executor for EirosShell
 
 import logging
 import re
+import json
+import time
 from typing import Dict, Any, Optional, List
 
 from command_format_adapter import parse_command_chain, is_command_chain
 from .dsl_executor import execute_dsl_command
+from .variable_handler import get_all_variables
 
 logger = logging.getLogger("EirosShell")
 
@@ -48,7 +51,7 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
             "type": "chain",
             "status": "error",
             "message": "Invalid command chain format",
-            "formatted_message": f"[оболочка]: Chain #unknown: format error — ERROR. #log_error"
+            "formatted_message": f"[оболочка]: Цепочка #unknown: ошибка формата — ОШИБКА. #log_error"
         }
     
     chain_id = chain_id_match.group(1)
@@ -63,8 +66,11 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
             "type": "chain",
             "status": "error",
             "message": "No valid commands found in chain",
-            "formatted_message": f"[оболочка]: Chain #{chain_id}: no commands — ERROR. #log_{chain_id}"
+            "formatted_message": f"[оболочка]: Цепочка #{chain_id}: нет команд — ОШИБКА. #log_{chain_id}"
         }
+    
+    # Store start time for execution metrics
+    start_time = time.time()
     
     # Execute each command in sequence
     results = []
@@ -111,8 +117,11 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
     
     # Prepare the final result
     total_commands = len(commands)
-    status = "success" if error_count == 0 else "error"
-    status_text = "OK" if status == "success" else "ERROR"
+    status = "success" if error_count == 0 else "partial" if success_count > 0 else "error"
+    status_text = "OK" if status == "success" else "ЧАСТИЧНО" if status == "partial" else "ОШИБКА"
+    
+    # Calculate execution time
+    execution_time = time.time() - start_time
     
     chain_result = {
         "command_id": chain_id,
@@ -122,13 +131,34 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
         "results": results,
         "success_count": success_count,
         "error_count": error_count,
-        "total_commands": total_commands
+        "total_commands": total_commands,
+        "execution_time": execution_time,
+        "variables": get_all_variables(),  # Include current variable state for debugging
     }
     
     # Format the result message
-    formatted_message = f"[оболочка]: Chain #{chain_id}: {success_count}/{total_commands} commands executed — {status_text}. #log_{chain_id}"
+    formatted_message = f"[оболочка]: Цепочка #{chain_id}: выполнено {success_count}/{total_commands} команд — {status_text}. #log_{chain_id}"
     chain_result["formatted_message"] = formatted_message
     
     logger.info(formatted_message)
+    
+    # Export command history to JSON
+    try:
+        with open("command_history.json", "w", encoding="utf-8") as f:
+            # Create a serializable version of the results
+            export_data = {
+                "chain_id": chain_id,
+                "timestamp": time.time(),
+                "status": status,
+                "success_count": success_count,
+                "total_commands": total_commands,
+                "execution_time": execution_time,
+                "commands": [cmd for cmd in commands],
+                "variables": get_all_variables(),
+            }
+            json.dump(export_data, f, indent=2, ensure_ascii=False)
+        logger.info(f"Command history exported to command_history.json")
+    except Exception as e:
+        logger.error(f"Failed to export command history: {str(e)}")
     
     return chain_result

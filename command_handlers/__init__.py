@@ -10,7 +10,7 @@ from .type_handler import handle_type_command
 from .wait_handler import handle_wait_command
 from .screenshot_handler import handle_screenshot_command
 from .analyze_handler import handle_analyze_command, analyze_page_elements
-from .variable_handler import handle_set_command, get_variable, resolve_variables, evaluate_condition, process_params_with_variables
+from .variable_handler import handle_set_command, get_variable, resolve_variables, evaluate_condition, process_params_with_variables, clear_variables
 from .conditional_handler import handle_if_command
 from .loop_handler import handle_repeat_command
 from .pattern_memory import pattern_memory, PatternMemory
@@ -32,6 +32,7 @@ __all__ = [
     'resolve_variables',
     'evaluate_condition',
     'process_params_with_variables',
+    'clear_variables',
     'handle_if_command',
     'handle_repeat_command',
     'pattern_memory',

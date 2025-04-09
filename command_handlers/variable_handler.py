@@ -36,7 +36,8 @@ def handle_set_command(params: Dict[str, Any], command_id: str) -> Dict[str, Any
                 "command_id": command_id,
                 "type": "set",
                 "status": "error",
-                "message": "Missing variable name"
+                "message": "Missing variable name",
+                "formatted_message": f"[оболочка]: Переменная #{command_id} — ОШИБКА: имя переменной не указано. #log_{command_id}"
             }
             
         # Store the variable
@@ -51,7 +52,7 @@ def handle_set_command(params: Dict[str, Any], command_id: str) -> Dict[str, Any
             "message": f"Variable '{var_name}' set to '{value}'",
             "var_name": var_name,
             "value": value,
-            "formatted_message": f"[оболочка]: Variable {var_name} set to '{value}' — OK. #log_{command_id}"
+            "formatted_message": f"[оболочка]: Переменная {var_name} = '{value}' — OK. #log_{command_id}"
         }
     except Exception as e:
         logger.error(f"Error setting variable: {str(e)}")
@@ -60,7 +61,7 @@ def handle_set_command(params: Dict[str, Any], command_id: str) -> Dict[str, Any
             "type": "set",
             "status": "error",
             "message": f"Error setting variable: {str(e)}",
-            "formatted_message": f"[оболочка]: Variable setting failed — ERROR. #log_{command_id}"
+            "formatted_message": f"[оболочка]: Установка переменной — ОШИБКА: {str(e)}. #log_{command_id}"
         }
 
 def get_variable(var_name: str) -> Any:
@@ -161,3 +162,7 @@ def process_params_with_variables(params):
             processed_params[key] = value
             
     return processed_params
+
+def get_all_variables() -> Dict[str, Any]:
+    """Get all variables for export/debug purposes"""
+    return dict(_variables)

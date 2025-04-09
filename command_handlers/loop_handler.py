@@ -14,14 +14,14 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
     """
     Handles the repeat command to execute commands multiple times
     Example: /repeat#cmdX{ "times": 3, "do": [ ... ] }
-    Alternative: /repeat#cmdX{ "count": 3 }[ ... ]
+    Alternative: /repeat#cmdX{ "count": 3, "body": [ ... ] }
     """
     try:
-        # Support both 'times' and 'count' parameters
+        # Support multiple parameter names for flexibility
         times = params.get("times", params.get("count", 0))
         
-        # Support both 'do' parameter and commands in brackets format
-        do_commands = params.get("do", [])
+        # Support multiple parameter names for the commands
+        do_commands = params.get("do", params.get("body", []))
         
         if not isinstance(times, int) or times <= 0:
             return {
@@ -29,7 +29,7 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
                 "type": "repeat",
                 "status": "error",
                 "message": "Invalid times parameter, must be a positive integer",
-                "formatted_message": f"[оболочка]: Loop #{command_id} — ERROR: Invalid count. #log_{command_id}"
+                "formatted_message": f"[оболочка]: Цикл #{command_id} — ОШИБКА: неверное количество повторений. #log_{command_id}"
             }
             
         if not do_commands:
@@ -40,7 +40,7 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
                 "message": f"No commands to repeat",
                 "iterations": 0,
                 "results": [],
-                "formatted_message": f"[оболочка]: Loop #{command_id} completed: 0 iterations — OK. #log_{command_id}"
+                "formatted_message": f"[оболочка]: Цикл #{command_id} завершен: 0 итераций — OK. #log_{command_id}"
             }
             
         # Track results for each iteration
@@ -66,8 +66,15 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
                         
                     iteration_results.append(result)
                     
-                    if result and result.get("status") != "success":
+                    # Log the iteration details
+                    iteration_log = f"[оболочка]: Цикл #{command_id}: итерация {iteration+1}/{times}, команда {result['command_id']} — "
+                    if result and result.get("status") == "success":
+                        iteration_log += "OK"
+                    else:
+                        iteration_log += "ОШИБКА"
                         iteration_success = False
+                    
+                    logger.info(iteration_log)
             
             all_results.append({
                 "iteration": iteration + 1,
@@ -79,7 +86,7 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
                 success_count += 1
                 
         status = "success" if success_count == times else "partial" if success_count > 0 else "error"
-        status_text = "OK" if status == "success" else "ERROR"
+        status_text = "OK" if status == "success" else "ОШИБКА"
         
         return {
             "command_id": command_id,
@@ -88,7 +95,7 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
             "message": f"Executed {times} iterations, {success_count} successful",
             "iterations": times,
             "results": all_results,
-            "formatted_message": f"[оболочка]: Loop #{command_id} completed: {times} iterations — {status_text}. #log_{command_id}"
+            "formatted_message": f"[оболочка]: Цикл #{command_id} завершен: {success_count}/{times} итераций — {status_text}. #log_{command_id}"
         }
     except Exception as e:
         logger.error(f"Error in repeat command: {str(e)}")
@@ -97,5 +104,5 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
             "type": "repeat",
             "status": "error",
             "message": f"Error in repeat command: {str(e)}",
-            "formatted_message": f"[оболочка]: Loop #{command_id} — ERROR: {str(e)}. #log_{command_id}"
+            "formatted_message": f"[оболочка]: Цикл #{command_id} — ОШИБКА: {str(e)}. #log_{command_id}"
         }

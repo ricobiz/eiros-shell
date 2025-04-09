@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { 
@@ -46,7 +45,6 @@ const ShellHeader: React.FC<ShellHeaderProps> = ({ isPinned, onTogglePin }) => {
     </div>
   );
   
-  // Use Sheet for desktop and Drawer for mobile
   const InstructionsDisplay = isDesktop ? (
     <Sheet>
       <SheetTrigger asChild>
@@ -80,7 +78,6 @@ const ShellHeader: React.FC<ShellHeaderProps> = ({ isPinned, onTogglePin }) => {
   return (
     <div className="bg-muted/30 px-2">
       <div className="flex items-center justify-between">
-        {/* Apple-style window controls */}
         <div className="flex items-center space-x-2">
           <div className="flex space-x-1.5 items-center">
             <div className="h-3 w-3 rounded-full bg-destructive" />

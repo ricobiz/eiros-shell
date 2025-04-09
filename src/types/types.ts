@@ -15,6 +15,8 @@ export enum CommandType {
   MEMORY_SAVE = 'memory_save',
   MEMORY_RETRIEVE = 'memory_retrieve',
   ANALYZE = 'analyze',
+  AUTO_LOGIN = 'auto_login',
+  WAIT = 'wait',
 }
 
 export interface MemoryItem {
@@ -59,4 +61,8 @@ export interface AuthConfig {
   service: string;
   username: string;
   password: string;
+  url?: string;
+  usernameSelector?: string;
+  passwordSelector?: string;
+  submitSelector?: string;
 }

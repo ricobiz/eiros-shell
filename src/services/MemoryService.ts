@@ -1,4 +1,3 @@
-
 import { MemoryItem, MemoryType } from "../types/types";
 
 class MemoryService {
@@ -29,6 +28,28 @@ class MemoryService {
   }
   
   addMemoryItem(item: Omit<MemoryItem, 'id' | 'createdAt'>): MemoryItem {
+    // Check if this is credential data that already exists
+    if (item.type === MemoryType.CREDENTIALS && item.data && item.data.service) {
+      // Try to find existing credentials for this service and update them
+      const existingIndex = this.memoryStore.findIndex(
+        mem => mem.type === MemoryType.CREDENTIALS && 
+               mem.data && 
+               mem.data.service === item.data.service
+      );
+      
+      if (existingIndex >= 0) {
+        // Update existing credentials
+        this.memoryStore[existingIndex].data = {
+          ...this.memoryStore[existingIndex].data,
+          ...item.data
+        };
+        this.memoryStore[existingIndex].lastAccessed = Date.now();
+        this.saveToStorage();
+        
+        return this.memoryStore[existingIndex];
+      }
+    }
+    
     const newItem: MemoryItem = {
       ...item,
       id: `mem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -110,6 +131,23 @@ class MemoryService {
   clearMemory(): void {
     this.memoryStore = [];
     this.saveToStorage();
+  }
+  
+  getCredentialsForService(service: string): any | null {
+    const credentials = this.memoryStore.find(
+      item => item.type === MemoryType.CREDENTIALS && 
+             item.data && 
+             item.data.service === service
+    );
+    
+    if (credentials) {
+      // Update last accessed time
+      credentials.lastAccessed = Date.now();
+      this.saveToStorage();
+      return credentials.data;
+    }
+    
+    return null;
   }
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -18,6 +17,7 @@ import { CommandType, MemoryItem } from '@/types/types';
 import { commandService } from '@/services/CommandService';
 import { logService } from '@/services/LogService';
 import { memoryService } from '@/services/MemoryService';
+import { getCommandExamples, getCommandHelp } from '@/utils/commandHelpers';
 import { Brain, Command, Eye, MessageSquare, TerminalSquare, Cpu } from 'lucide-react';
 
 const ShellInterface: React.FC = () => {
@@ -75,30 +75,37 @@ const ShellInterface: React.FC = () => {
     }
   };
   
-  const renderCommandHelp = () => (
-    <div className="text-sm text-muted-foreground space-y-3 p-2">
-      <p>Commands use the following format:</p>
-      <pre className="bg-muted p-2 rounded-sm text-xs">/command_type#command_id{'{parameters}'}</pre>
-      
-      <p>Available commands:</p>
-      <ul className="space-y-1 pl-4">
-        {Object.values(CommandType).map((cmd) => (
-          <li key={cmd} className="text-xs">
-            <code className="bg-muted px-1 rounded-sm">{cmd}</code>
-          </li>
-        ))}
-      </ul>
-      
-      <p>Example:</p>
-      <pre className="bg-muted p-2 rounded-sm text-xs overflow-x-auto">
-        /click#btn1{'{'}
-          "x": 100, 
-          "y": 200, 
-          "waitAfter": 500
-        {'}'}
-      </pre>
-    </div>
-  );
+  const renderCommandHelp = () => {
+    const commandHelp = getCommandHelp();
+    const commandExamples = getCommandExamples();
+    
+    return (
+      <div className="text-sm text-muted-foreground space-y-3 p-2">
+        <p>Commands use the following format:</p>
+        <pre className="bg-muted p-2 rounded-sm text-xs">/command_type#command_id{'{parameters}'}</pre>
+        
+        <p>Available commands:</p>
+        <ul className="space-y-1 pl-4">
+          {Object.values(CommandType).map((cmd) => (
+            <li key={cmd} className="text-xs">
+              <code className="bg-muted px-1 rounded-sm">{cmd}</code>
+              <span className="ml-2">{commandHelp[cmd] || ''}</span>
+            </li>
+          ))}
+        </ul>
+        
+        <p>Examples:</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {Object.entries(commandExamples).map(([name, example]) => (
+            <pre key={name} className="bg-muted p-2 rounded-sm text-xs overflow-x-auto">
+              <div className="text-xs font-semibold mb-1">{name}</div>
+              {example}
+            </pre>
+          ))}
+        </div>
+      </div>
+    );
+  };
   
   return (
     <Card className="w-full shadow-lg bg-card border-border">

@@ -6,6 +6,8 @@ import { handleScreenshotCommand } from './screenshotCommand';
 import { handleLoginCommand } from './loginCommand';
 import { handleMemorySaveCommand, handleMemoryRetrieveCommand } from './memoryCommands';
 import { handleAnalyzeCommand } from './analyzeCommand';
+import { handleAutoLoginCommand } from './autoLoginCommand';
+import { handleWaitCommand } from './waitCommand';
 import { CommandType } from '../../types/types';
 
 export const commandHandlers = {
@@ -16,5 +18,7 @@ export const commandHandlers = {
   [CommandType.LOGIN]: handleLoginCommand,
   [CommandType.MEMORY_SAVE]: handleMemorySaveCommand,
   [CommandType.MEMORY_RETRIEVE]: handleMemoryRetrieveCommand,
-  [CommandType.ANALYZE]: handleAnalyzeCommand
+  [CommandType.ANALYZE]: handleAnalyzeCommand,
+  [CommandType.AUTO_LOGIN]: handleAutoLoginCommand,
+  [CommandType.WAIT]: handleWaitCommand
 };

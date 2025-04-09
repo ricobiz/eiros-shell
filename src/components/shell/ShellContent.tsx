@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TabsContent } from '@/components/ui/tabs';
-import { useShell } from '@/contexts/ShellContext';
+import { useShell } from '@/contexts/shell/ShellContext';
 import CommandTab from './CommandTab';
 import VisionTab from './VisionTab';
 import MemoryTab from './MemoryTab';

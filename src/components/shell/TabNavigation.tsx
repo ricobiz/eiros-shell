@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -16,7 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
-import { useShell } from '@/contexts/ShellContext';
+import { useShell } from '@/contexts/shell/ShellContext';
 
 const TabNavigation: React.FC = () => {
   const { activeTab, isConnectedToAI } = useShell();

@@ -7,7 +7,7 @@ import {
   CardHeader
 } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { ShellProvider } from '@/contexts/ShellContext';
+import { ShellProvider } from '@/contexts/shell/ShellContext';
 import ShellContent from './shell/ShellContent';
 import ShellHeader from './shell/ShellHeader';
 import ShellFooter from './shell/ShellFooter';
@@ -45,7 +45,7 @@ const ShellContainer: React.FC = () => {
   );
 };
 
-// Need to import the hook after defining the Provider to avoid circular dependency
-import { useShell } from '@/contexts/ShellContext';
+// Import the hook after defining the Provider to avoid circular dependency
+import { useShell } from '@/contexts/shell/ShellContext';
 
 export default ShellInterface;

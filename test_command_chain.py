@@ -1,4 +1,3 @@
-
 """
 Test script for command chain execution in EirosShell
 """
@@ -6,7 +5,7 @@ Test script for command chain execution in EirosShell
 import asyncio
 import logging
 from command_handlers import execute_command_chain
-from command_format_adapter import is_command_chain
+from dsl_parser import is_command_chain
 
 # Configure logging
 logging.basicConfig(

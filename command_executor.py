@@ -1,4 +1,3 @@
-
 """
 Main command executor module for EirosShell
 """
@@ -10,7 +9,7 @@ from typing import Dict, Any, Optional
 from command_parser import CommandParser
 from command_types import CommandType
 from command_handlers import execute_command, execute_dsl_command, execute_command_chain
-from command_format_adapter import is_dsl_command, is_command_chain
+from dsl_parser import is_dsl_command, is_command_chain
 from command_history_manager import CommandHistoryManager
 from command_loop_manager import CommandLoopManager
 

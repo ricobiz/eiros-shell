@@ -1,4 +1,3 @@
-
 """
 Test script for DSL command execution in EirosShell
 """

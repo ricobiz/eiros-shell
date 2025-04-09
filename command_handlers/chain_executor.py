@@ -1,4 +1,3 @@
-
 """
 Chain command executor for EirosShell
 """
@@ -9,7 +8,7 @@ import json
 import time
 from typing import Dict, Any, Optional, List
 
-from command_format_adapter import parse_command_chain, is_command_chain
+from dsl_parser import parse_command_chain, is_command_chain
 from .dsl_executor import execute_dsl_command
 from .variable_handler import get_all_variables
 

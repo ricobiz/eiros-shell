@@ -1,4 +1,3 @@
-
 """
 DSL command executor for EirosShell
 """
@@ -8,7 +7,7 @@ import re
 from typing import Dict, Any, Optional
 
 from command_types import CommandType
-from command_format_adapter import parse_dsl_command
+from dsl_parser import parse_dsl_command
 from .basic_executor import execute_command
 
 logger = logging.getLogger("EirosShell")

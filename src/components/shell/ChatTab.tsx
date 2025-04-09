@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, ExternalLink } from 'lucide-react';
+import { Send, ExternalLink, AlertOctagon } from 'lucide-react';
 import LogViewer from '../LogViewer';
 import { aiSyncService } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +35,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     // Only auto-connect if explicitly told to
     if (!isConnectedToAI && !isWindowOpen) {
       // Add a welcome message
-      addMessageToChat('System', 'Нажмите кнопку чтобы связаться с ChatGPT. После успешного подключения вы можете отправить сообщение.');
+      addMessageToChat('Система', 'Нажмите кнопку чтобы связаться с ChatGPT. После успешного подключения вы можете отправить сообщение.');
     }
     
     return () => {
@@ -59,7 +59,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           description: "Теперь вы можете отправлять сообщения в ChatGPT",
         });
         
-        addMessageToChat('System', 'Подключение установлено! Введите сообщение ниже и нажмите отправить.');
+        addMessageToChat('Система', 'Подключение установлено! Введите сообщение ниже и нажмите отправить.');
       } else {
         toast({
           title: "Ошибка подключения",
@@ -67,24 +67,37 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           variant: "destructive"
         });
         
-        addMessageToChat('System', 'Ошибка подключения. Пожалуйста, попробуйте снова.');
+        addMessageToChat('Система', 'Ошибка подключения. Пожалуйста, попробуйте снова.');
       }
     } finally {
       setIsConnecting(false);
     }
   };
   
+  const emergencyStop = () => {
+    aiSyncService.emergencyStop();
+    setIsWindowOpen(false);
+    
+    addMessageToChat('Система', 'Аварийная остановка выполнена. Все подключения закрыты.');
+    
+    toast({
+      title: "Аварийная остановка",
+      description: "Все подключения к ChatGPT остановлены",
+      variant: "destructive"
+    });
+  };
+  
   // Function to send a message
   const sendMessage = () => {
     if (message.trim()) {
       // Add message to chat history
-      addMessageToChat('You', message);
+      addMessageToChat('Вы', message);
       
       // Try to send the message (service will auto-reconnect if needed)
       aiSyncService.sendMessageToAI(message);
       
       // Add instruction for manual paste
-      addMessageToChat('System', 'Сообщение скопировано в буфер обмена. Нажмите Ctrl+V (или Cmd+V) в окне ChatGPT чтобы вставить текст: "' + message + '"');
+      addMessageToChat('Система', 'Сообщение скопировано в буфер обмена. Нажмите Ctrl+V (или Cmd+V) в окне ChatGPT чтобы вставить текст: "' + message + '"');
       
       setMessage('');
     }
@@ -113,13 +126,13 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
             {chatHistory.map((chat, index) => (
               <div 
                 key={index} 
-                className={`flex ${chat.sender === 'You' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${chat.sender === 'Вы' ? 'justify-end' : 'justify-start'}`}
               >
                 <div 
                   className={`max-w-[80%] p-3 rounded-lg ${
-                    chat.sender === 'You' 
+                    chat.sender === 'Вы' 
                       ? 'bg-primary text-primary-foreground' 
-                      : chat.sender === 'System'
+                      : chat.sender === 'Система'
                         ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
                         : 'bg-muted text-muted-foreground'
                   }`}
@@ -171,6 +184,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
                 <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
                 ChatGPT подключен
               </div>
+              
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -183,6 +197,16 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
               >
                 <ExternalLink size={14} />
                 <span>Открыть</span>
+              </Button>
+              
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={emergencyStop}
+              >
+                <AlertOctagon size={14} />
+                <span>Стоп</span>
               </Button>
             </div>
           ) : (

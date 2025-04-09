@@ -12,10 +12,10 @@ import {
   Cpu, 
   Pin, 
   PinOff, 
-  Command, 
   HelpCircle,
   Link,
-  Unlink
+  Unlink,
+  AlertOctagon
 } from 'lucide-react';
 import { 
   Sheet,
@@ -34,16 +34,28 @@ import {
 import { useMediaQuery } from "@/hooks/use-mobile";
 import InstructionsTab from './InstructionsTab';
 import { useShell } from '@/contexts/shell/ShellContext';
+import { aiSyncService } from '@/services/ai-sync';
+import { useToast } from '@/hooks/use-toast';
 
 const ShellHeader: React.FC = () => {
   const { isPinned, isConnectedToAI, handleTogglePin, handleToggleAIConnection } = useShell();
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { toast } = useToast();
   
   const Instructions = () => (
     <div className="px-2 py-4">
       <InstructionsTab />
     </div>
   );
+  
+  const handleEmergencyStop = () => {
+    aiSyncService.emergencyStop();
+    toast({
+      title: "Аварийная остановка",
+      description: "Все подключения к ChatGPT остановлены",
+      variant: "destructive",
+    });
+  };
   
   const InstructionsDisplay = isDesktop ? (
     <Sheet>
@@ -96,33 +108,48 @@ const ShellHeader: React.FC = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8"
+                  variant={isConnectedToAI ? "default" : "outline"} 
+                  size="sm" 
+                  className="h-8"
                   onClick={handleToggleAIConnection}
                 >
                   {isConnectedToAI ? (
-                    <Link size={16} className="text-green-500" />
+                    <div className="flex items-center">
+                      <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
+                      <Unlink size={14} className="mr-1" />
+                      <span className="text-xs">Отключить</span>
+                    </div>
                   ) : (
-                    <Unlink size={16} className="text-muted-foreground" />
+                    <div className="flex items-center">
+                      <Link size={14} className="mr-1" />
+                      <span className="text-xs">Подключить</span>
+                    </div>
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isConnectedToAI ? 'Disconnect from AI' : 'Connect to AI'}
+                {isConnectedToAI ? 'Отключить от AI' : 'Подключить к AI'}
               </TooltipContent>
             </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Command size={16} className="text-primary" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                AI Integration
-              </TooltipContent>
-            </Tooltip>
+            {isConnectedToAI && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    className="h-8"
+                    onClick={handleEmergencyStop}
+                  >
+                    <AlertOctagon size={14} className="mr-1" />
+                    <span className="text-xs">Стоп</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Аварийная остановка всех подключений
+                </TooltipContent>
+              </Tooltip>
+            )}
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -136,7 +163,7 @@ const ShellHeader: React.FC = () => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isPinned ? 'Unpin window' : 'Pin window (always on top)'}
+                {isPinned ? 'Открепить окно' : 'Закрепить окно (всегда поверх)'}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

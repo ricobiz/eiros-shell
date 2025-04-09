@@ -58,9 +58,23 @@ class AISyncService {
   }
   
   disconnectFromAI(): void {
-    // Stop auto-reconnect before disconnecting
+    // First make sure the auto-reconnect is completely stopped
     this.autoReconnectService.stopAutoReconnect();
+    
+    // Force close any open window
+    this.windowManager.closeWindow();
+    
+    // Finally mark as disconnected
     this.connectionService.disconnectFromAI();
+    
+    // Clear any pending messages
+    this.pendingMessages = [];
+    
+    logService.addLog({
+      type: 'info',
+      message: 'Соединение с ChatGPT полностью остановлено',
+      timestamp: Date.now()
+    });
   }
   
   async sendMessageToAI(message: string): Promise<void> {
@@ -74,7 +88,7 @@ class AISyncService {
       if (!connected) {
         logService.addLog({
           type: 'warning',
-          message: 'Cannot send message: Failed to connect to AI',
+          message: 'Невозможно отправить сообщение: не удалось подключиться к AI',
           timestamp: Date.now()
         });
         return;
@@ -91,7 +105,7 @@ class AISyncService {
   private async sendMessageAfterConnection(message: string): Promise<void> {
     logService.addLog({
       type: 'info',
-      message: 'Attempting to send message to ChatGPT',
+      message: 'Попытка отправить сообщение в ChatGPT',
       timestamp: Date.now()
     });
     
@@ -105,11 +119,33 @@ class AISyncService {
     }
   }
   
+  // Emergency stop - completely stops all reconnection attempts and closes window
+  emergencyStop(): void {
+    this.autoReconnectService.stopAutoReconnect();
+    this.windowManager.closeWindow();
+    this.connectionService.disconnectFromAI();
+    this.pendingMessages = [];
+    
+    logService.addLog({
+      type: 'warning',
+      message: 'АВАРИЙНАЯ ОСТАНОВКА: Все подключения к AI остановлены',
+      timestamp: Date.now()
+    });
+    
+    // Emit disconnect event
+    aiSyncEvents.emit(false, 'Аварийная остановка выполнена');
+  }
+  
   // Method to clean up resources when service is no longer needed
   cleanup(): void {
     this.autoReconnectService.stopAutoReconnect();
     this.connectionService.disconnectFromAI();
     this.pendingMessages = [];
+  }
+  
+  // Check if auto-reconnect is enabled
+  isAutoReconnectEnabled(): boolean {
+    return this.autoReconnectService.isAutoReconnectEnabled();
   }
 }
 

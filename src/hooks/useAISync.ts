@@ -12,8 +12,8 @@ export function useAISync() {
       aiSyncService.disconnectFromAI();
       setIsConnectedToAI(false);
       toast({
-        title: "AI Disconnected",
-        description: "Shell has been disconnected from AI",
+        title: "AI отключен",
+        description: "Shell отключен от AI",
       });
     } else {
       const connected = await aiSyncService.connectToAI();
@@ -21,35 +21,37 @@ export function useAISync() {
       
       if (connected) {
         toast({
-          title: "AI Connected",
-          description: "Shell has been successfully connected to AI",
+          title: "AI подключен",
+          description: "Shell успешно подключен к AI",
         });
       } else {
         toast({
-          title: "Connection Failed",
-          description: "Failed to connect to AI. Please try again.",
+          title: "Ошибка подключения",
+          description: "Не удалось подключиться к AI. Попробуйте снова.",
           variant: "destructive",
         });
       }
     }
   };
+  
+  const handleEmergencyStop = () => {
+    aiSyncService.emergencyStop();
+    setIsConnectedToAI(false);
+    toast({
+      title: "Аварийная остановка",
+      description: "Все подключения к AI остановлены",
+      variant: "destructive",
+    });
+  };
 
   useEffect(() => {
-    aiSyncService.connectToAI().then(connected => {
-      setIsConnectedToAI(connected);
-      
-      if (connected) {
-        toast({
-          title: "AI Connected",
-          description: "Shell has been automatically connected to AI",
-        });
-      }
-    });
+    // Instead of auto-connecting, we'll just check the initial connection state
+    setIsConnectedToAI(aiSyncService.isConnected());
     
     return () => {
       aiSyncService.cleanup();
     };
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = aiSyncEvents.subscribe((connected, message) => {
@@ -57,7 +59,7 @@ export function useAISync() {
       
       if (message) {
         toast({
-          title: connected ? "AI Connected" : "AI Disconnected",
+          title: connected ? "AI подключен" : "AI отключен",
           description: message,
           variant: connected ? "default" : "destructive",
         });
@@ -72,6 +74,7 @@ export function useAISync() {
   return {
     isConnectedToAI,
     setIsConnectedToAI,
-    handleToggleAIConnection
+    handleToggleAIConnection,
+    handleEmergencyStop
   };
 }

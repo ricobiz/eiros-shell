@@ -20,7 +20,7 @@ from .loop_handler import handle_repeat_command
 logger = logging.getLogger("EirosShell")
 
 async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[str, Any]:
-    """Выполняет команду и возвращает результат"""
+    """Executes a command and returns the result"""
     command_type = command["type"]
     params = command["params"]
     command_id = command["id"]
@@ -28,7 +28,7 @@ async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[s
     # Process variables in parameters
     params = process_params_with_variables(params)
     
-    logger.info(f"Выполнение команды {command_id} типа {command_type} с параметрами: {params}")
+    logger.info(f"Executing command {command_id} of type {command_type} with parameters: {params}")
     
     result = {
         "command_id": command_id,
@@ -57,11 +57,11 @@ async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[s
         elif command_type == CommandType.REPEAT:
             return await handle_repeat_command(browser_controller, params, command_id)
         else:
-            result["message"] = f"Неизвестный тип команды: {command_type}"
+            result["message"] = f"Unknown command type: {command_type}"
     
     except Exception as e:
-        logger.error(f"Ошибка при выполнении команды {command_id}: {str(e)}")
-        result["message"] = f"Ошибка: {str(e)}"
+        logger.error(f"Error executing command {command_id}: {str(e)}")
+        result["message"] = f"Error: {str(e)}"
     
-    logger.info(f"Результат команды {command_id}: {result['status']} - {result['message']}")
+    logger.info(f"Command {command_id} result: {result['status']} - {result['message']}")
     return result

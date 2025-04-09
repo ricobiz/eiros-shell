@@ -12,7 +12,9 @@ class CommandType:
     ANALYZE = "analyze"
     UNKNOWN = "unknown"
     
-    # New command types for advanced DSL
+    # Advanced DSL command types
     SET = "set"
     IF = "if"
     REPEAT = "repeat"
+    CHAIN = "chain"
+

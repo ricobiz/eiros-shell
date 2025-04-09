@@ -31,7 +31,7 @@ async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[D
             "type": "unknown",
             "status": "error",
             "message": f"Failed to parse DSL command: {dsl_string}",
-            "formatted_message": f"[оболочка]: Команда #unknown: unknown — ОШИБКА. #log_error"
+            "formatted_message": f"[оболочка]: Command #unknown: unknown — ERROR. #log_error"
         }
     
     # Execute the parsed command
@@ -40,28 +40,34 @@ async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[D
     # Format the result for logging
     command_type = command["type"]
     command_id = command["id"]
-    status_text = "OK" if result["status"] == "success" else "ОШИБКА"
+    status_text = "OK" if result["status"] == "success" else "ERROR"
     
     # Build a description of the command for the log
     description = ""
     if command_type == CommandType.NAVIGATION:
         description = f"→ '{command['params'].get('url', '')}'"
     elif command_type == CommandType.CLICK:
-        description = f"→ '{command['params'].get('element', '')}'"
+        description = f"→ '{command['params'].get('element', '') or command['params'].get('selector', '')}'"
     elif command_type == CommandType.TYPE:
         description = f"→ '{command['params'].get('selector', '')}'"
     elif command_type == CommandType.WAIT:
-        description = f"→ {command['params'].get('duration', 2)} сек"
+        description = f"→ {command['params'].get('duration', 2)} sec"
     elif command_type == CommandType.SET:
         var_name = command['params'].get('var', '')
-        var_value = command['params'].get('value', '')
+        if not var_name:
+            # Find first key that's not 'var' or 'value'
+            for key in command['params'].keys():
+                if key not in ['var', 'value']:
+                    var_name = key
+                    break
+        var_value = command['params'].get('value', command['params'].get(var_name, ''))
         description = f"→ ${var_name} = '{var_value}'"
     elif command_type == CommandType.IF:
         condition = command['params'].get('condition', '')
         description = f"→ '{condition}'"
     elif command_type == CommandType.REPEAT:
-        times = command['params'].get('times', 0)
-        description = f"→ {times} раз"
+        times = command['params'].get('times', command['params'].get('count', 0))
+        description = f"→ {times} times"
     elif command_type == CommandType.SCREENSHOT or command_type == CommandType.ANALYZE:
         description = ""
     
@@ -73,7 +79,7 @@ async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[D
         log_id = command_id
     
     # Format the result message
-    result_message = f"[оболочка]: Команда #{command_id}: {command_type} {description} — {status_text}. #log_{log_id}"
+    result_message = f"[оболочка]: Command #{command_id}: {command_type} {description} — {status_text}. #log_{log_id}"
     
     # Log the result message
     logger.info(result_message)

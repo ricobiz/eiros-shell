@@ -145,5 +145,25 @@ async def run_test():
     else:
         logger.error("Complex chain execution returned no result")
 
+    # Test chain error resilience
+    logger.info("\n=== Testing chain error resilience ===")
+    
+    error_chain = """
+    /chain#cmd200[
+        /navigate#cmd201{ "url": "https://site.com/page" },
+        /click#cmd202{ "element": "#non-existent" },
+        /type#cmd203{ "selector": "#email", "text": "still-works@example.com" }
+    ]
+    """
+    
+    # Execute the chain with an error
+    result = await execute_command_chain(browser, error_chain)
+    if result:
+        logger.info(f"Error chain result: {result['status']}")
+        logger.info(f"Message: {result['formatted_message']}")
+        logger.info(f"Success count: {result['success_count']}/{result['total_commands']}")
+    else:
+        logger.error("Error chain execution returned no result")
+
 if __name__ == "__main__":
     asyncio.run(run_test())

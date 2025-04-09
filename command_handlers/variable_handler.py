@@ -15,10 +15,21 @@ def handle_set_command(params: Dict[str, Any], command_id: str) -> Dict[str, Any
     """
     Handles the set command to store a variable
     Example: /set#cmd101{ "var": "email", "value": "admin@example.com" }
+    Or simplified format: /set#cmd1{ "name": "value" }
     """
     try:
+        # Support both var/value and direct name/value formats
         var_name = params.get("var")
         value = params.get("value")
+        
+        # If using the simplified format, extract first key/value pair
+        if not var_name:
+            # Get the first key that's not "var" or "value"
+            for key, val in params.items():
+                if key not in ["var", "value"]:
+                    var_name = key
+                    value = val
+                    break
         
         if not var_name:
             return {
@@ -39,7 +50,8 @@ def handle_set_command(params: Dict[str, Any], command_id: str) -> Dict[str, Any
             "status": "success",
             "message": f"Variable '{var_name}' set to '{value}'",
             "var_name": var_name,
-            "value": value
+            "value": value,
+            "formatted_message": f"[оболочка]: Variable {var_name} set to '{value}' — OK. #log_{command_id}"
         }
     except Exception as e:
         logger.error(f"Error setting variable: {str(e)}")
@@ -47,7 +59,8 @@ def handle_set_command(params: Dict[str, Any], command_id: str) -> Dict[str, Any
             "command_id": command_id,
             "type": "set",
             "status": "error",
-            "message": f"Error setting variable: {str(e)}"
+            "message": f"Error setting variable: {str(e)}",
+            "formatted_message": f"[оболочка]: Variable setting failed — ERROR. #log_{command_id}"
         }
 
 def get_variable(var_name: str) -> Any:
@@ -79,9 +92,10 @@ def evaluate_condition(condition_str: str) -> bool:
     """
     Evaluate a condition string with variables
     Examples: 
-        - "var1 == 'admin'"
-        - "count > 3"
-        - "status == 'error'"
+        - "$var1 == 'admin'"
+        - "$count > 3"
+        - "$status == 'error'"
+        - "'admin' in $roles"
     """
     try:
         # Replace variables with their values

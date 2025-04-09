@@ -5,7 +5,8 @@ Handler for loop operations in the DSL
 import logging
 from typing import Dict, Any, List
 
-from .executor import execute_dsl_command, execute_command_chain
+from .dsl_executor import execute_dsl_command
+from .chain_executor import execute_command_chain
 
 logger = logging.getLogger("EirosShell")
 
@@ -13,9 +14,13 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
     """
     Handles the repeat command to execute commands multiple times
     Example: /repeat#cmdX{ "times": 3, "do": [ ... ] }
+    Alternative: /repeat#cmdX{ "count": 3 }[ ... ]
     """
     try:
-        times = params.get("times")
+        # Support both 'times' and 'count' parameters
+        times = params.get("times", params.get("count", 0))
+        
+        # Support both 'do' parameter and commands in brackets format
         do_commands = params.get("do", [])
         
         if not isinstance(times, int) or times <= 0:
@@ -23,7 +28,8 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
                 "command_id": command_id,
                 "type": "repeat",
                 "status": "error",
-                "message": "Invalid times parameter, must be a positive integer"
+                "message": "Invalid times parameter, must be a positive integer",
+                "formatted_message": f"[оболочка]: Loop #{command_id} — ERROR: Invalid count. #log_{command_id}"
             }
             
         if not do_commands:
@@ -33,7 +39,8 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
                 "status": "success",
                 "message": f"No commands to repeat",
                 "iterations": 0,
-                "results": []
+                "results": [],
+                "formatted_message": f"[оболочка]: Loop #{command_id} completed: 0 iterations — OK. #log_{command_id}"
             }
             
         # Track results for each iteration
@@ -71,13 +78,17 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
             if iteration_success:
                 success_count += 1
                 
+        status = "success" if success_count == times else "partial" if success_count > 0 else "error"
+        status_text = "OK" if status == "success" else "ERROR"
+        
         return {
             "command_id": command_id,
             "type": "repeat",
-            "status": "success" if success_count == times else "partial" if success_count > 0 else "error",
+            "status": status,
             "message": f"Executed {times} iterations, {success_count} successful",
             "iterations": times,
-            "results": all_results
+            "results": all_results,
+            "formatted_message": f"[оболочка]: Loop #{command_id} completed: {times} iterations — {status_text}. #log_{command_id}"
         }
     except Exception as e:
         logger.error(f"Error in repeat command: {str(e)}")
@@ -85,5 +96,6 @@ async def handle_repeat_command(browser_controller, params: Dict[str, Any], comm
             "command_id": command_id,
             "type": "repeat",
             "status": "error",
-            "message": f"Error in repeat command: {str(e)}"
+            "message": f"Error in repeat command: {str(e)}",
+            "formatted_message": f"[оболочка]: Loop #{command_id} — ERROR: {str(e)}. #log_{command_id}"
         }

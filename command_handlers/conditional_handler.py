@@ -3,17 +3,20 @@
 Handler for conditional operations in the DSL
 """
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 
-from .executor import execute_dsl_command, execute_command_chain
 from .variable_handler import evaluate_condition
+from .dsl_executor import execute_dsl_command
 
 logger = logging.getLogger("EirosShell")
 
 async def handle_if_command(browser_controller, params: Dict[str, Any], command_id: str) -> Dict[str, Any]:
     """
     Handles the if command to conditionally execute commands
-    Example: /if#cmd106{ "condition": "status == 'error'", "then": [ ... ], "else": [ ... ] }
+    Example: /if#cmd2{ "condition": "$role == 'admin'", "then": [...], "else": [...] }
+    
+    Also supports alternative syntax:
+    @if#cmd2{ "condition": "$role == 'admin'" }[...]
     """
     try:
         condition = params.get("condition")
@@ -25,52 +28,58 @@ async def handle_if_command(browser_controller, params: Dict[str, Any], command_
                 "command_id": command_id,
                 "type": "if",
                 "status": "error",
-                "message": "Missing condition"
+                "message": "Missing condition",
+                "formatted_message": f"[оболочка]: Condition #{command_id} — ERROR: Missing condition. #log_{command_id}"
             }
-        
+            
         # Evaluate the condition
-        condition_result = evaluate_condition(condition)
-        logger.info(f"Condition '{condition}' evaluated to {condition_result}")
+        result = evaluate_condition(condition)
+        
+        # Log the condition result
+        log_msg = f"Condition '{condition}' evaluated to {result}"
+        logger.info(log_msg)
         
         # Execute the appropriate branch
-        results = []
-        branch_name = "then" if condition_result else "else"
-        commands_to_execute = then_commands if condition_result else else_commands
+        branch_results = []
+        executed_branch = None
         
-        if not commands_to_execute:
-            logger.info(f"No commands in the '{branch_name}' branch to execute")
-            return {
-                "command_id": command_id,
-                "type": "if",
-                "status": "success",
-                "message": f"Condition '{condition}' = {condition_result}, no commands to execute",
-                "condition_result": condition_result,
-                "branch_executed": branch_name,
-                "results": []
-            }
+        if result:
+            executed_branch = "then"
+            formatted_result = f"[оболочка]: Condition #{command_id} evaluated — TRUE. Executing block. #log_{command_id}"
             
-        # Handle commands based on their type (string or dict)
-        for cmd in commands_to_execute:
-            if isinstance(cmd, str):
-                # Execute as a DSL command
-                if cmd.startswith('/chain#'):
-                    # Execute as a chain
-                    result = await execute_command_chain(browser_controller, cmd)
-                else:
-                    result = await execute_dsl_command(browser_controller, cmd)
-                results.append(result)
-                
-        success_count = sum(1 for r in results if r and r.get("status") == "success")
-        total_count = len(commands_to_execute)
+            # Execute then commands
+            if then_commands:
+                for cmd in then_commands:
+                    if isinstance(cmd, str):
+                        # Execute as a DSL command
+                        cmd_result = await execute_dsl_command(browser_controller, cmd)
+                        branch_results.append(cmd_result)
+        else:
+            executed_branch = "else"
+            formatted_result = f"[оболочка]: Condition #{command_id} evaluated — FALSE. Block skipped. #log_{command_id}"
             
+            # Execute else commands
+            if else_commands:
+                for cmd in else_commands:
+                    if isinstance(cmd, str):
+                        # Execute as a DSL command
+                        cmd_result = await execute_dsl_command(browser_controller, cmd)
+                        branch_results.append(cmd_result)
+            else:
+                # No else branch to execute
+                formatted_result = f"[оболочка]: Condition #{command_id} evaluated — FALSE. No else block. #log_{command_id}"
+        
+        # Prepare the result
         return {
             "command_id": command_id,
             "type": "if",
-            "status": "success" if success_count == total_count else "partial" if success_count > 0 else "error",
-            "message": f"Condition '{condition}' = {condition_result}, executed {success_count}/{total_count} commands",
-            "condition_result": condition_result,
-            "branch_executed": branch_name,
-            "results": results
+            "status": "success",
+            "message": log_msg,
+            "condition": condition,
+            "result": result,
+            "executed_branch": executed_branch,
+            "branch_results": branch_results,
+            "formatted_message": formatted_result
         }
     except Exception as e:
         logger.error(f"Error in if command: {str(e)}")
@@ -78,5 +87,6 @@ async def handle_if_command(browser_controller, params: Dict[str, Any], command_
             "command_id": command_id,
             "type": "if",
             "status": "error",
-            "message": f"Error in if command: {str(e)}"
+            "message": f"Error in if command: {str(e)}",
+            "formatted_message": f"[оболочка]: Condition #{command_id} — ERROR: {str(e)}. #log_{command_id}"
         }

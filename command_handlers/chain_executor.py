@@ -48,7 +48,7 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
             "type": "chain",
             "status": "error",
             "message": "Invalid command chain format",
-            "formatted_message": f"[оболочка]: Цепочка #unknown: ошибка формата — ОШИБКА. #log_error"
+            "formatted_message": f"[оболочка]: Chain #unknown: format error — ERROR. #log_error"
         }
     
     chain_id = chain_id_match.group(1)
@@ -63,12 +63,13 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
             "type": "chain",
             "status": "error",
             "message": "No valid commands found in chain",
-            "formatted_message": f"[оболочка]: Цепочка #{chain_id}: нет команд — ОШИБКА. #log_{chain_id}"
+            "formatted_message": f"[оболочка]: Chain #{chain_id}: no commands — ERROR. #log_{chain_id}"
         }
     
     # Execute each command in sequence
     results = []
     success_count = 0
+    error_count = 0
     
     for cmd_string in commands:
         # Check if this is a nested chain
@@ -80,32 +81,52 @@ async def execute_command_chain(browser_controller, dsl_string: str) -> Optional
             # Count as success if the nested chain succeeded
             if chain_result.get("status") == "success":
                 success_count += 1
+            else:
+                error_count += 1
             
             # Send the nested chain result message to log
             logger.info(chain_result["formatted_message"])
         else:
             # Regular command
-            cmd_result = await execute_dsl_command(browser_controller, cmd_string)
-            results.append(cmd_result)
-            
-            # Count as success if the command succeeded
-            if cmd_result.get("status") == "success":
-                success_count += 1
+            try:
+                cmd_result = await execute_dsl_command(browser_controller, cmd_string)
+                results.append(cmd_result)
+                
+                # Count as success if the command succeeded
+                if cmd_result.get("status") == "success":
+                    success_count += 1
+                else:
+                    error_count += 1
+                    
+                # Log the command result
+                logger.info(cmd_result.get("formatted_message", f"Command result: {cmd_result.get('status')}"))
+            except Exception as e:
+                logger.error(f"Error executing command in chain: {str(e)}")
+                error_count += 1
+                results.append({
+                    "status": "error",
+                    "message": f"Command execution failed: {str(e)}",
+                    "command": cmd_string
+                })
     
     # Prepare the final result
-    status = "success" if success_count == len(commands) else "error"
-    status_text = "OK" if status == "success" else "ОШИБКА"
+    total_commands = len(commands)
+    status = "success" if error_count == 0 else "error"
+    status_text = "OK" if status == "success" else "ERROR"
     
     chain_result = {
         "command_id": chain_id,
         "type": "chain",
         "status": status,
-        "message": f"Выполнено {success_count}/{len(commands)} команд",
-        "results": results
+        "message": f"Executed {success_count}/{total_commands} commands successfully",
+        "results": results,
+        "success_count": success_count,
+        "error_count": error_count,
+        "total_commands": total_commands
     }
     
     # Format the result message
-    formatted_message = f"[оболочка]: Цепочка #{chain_id}: выполнено {success_count}/{len(commands)} команд — {status_text}. #log_{chain_id}"
+    formatted_message = f"[оболочка]: Chain #{chain_id}: {success_count}/{total_commands} commands executed — {status_text}. #log_{chain_id}"
     chain_result["formatted_message"] = formatted_message
     
     logger.info(formatted_message)

@@ -14,13 +14,14 @@ def is_dsl_command(message: str) -> bool:
     """
     Check if a message is in DSL command format.
     Format: /command_type#command_id{json_params}
+    Or alternative: @command_type#command_id{json_params}[commands]
     
     Example: /click#cmd99{ "element": ".submit", "waitAfter": 500 }
     
     Returns True if the message matches the DSL command pattern.
     """
     message = message.strip()
-    return message.startswith("/") and "#" in message and ("{" in message or "[" in message)
+    return (message.startswith("/") or message.startswith("@")) and "#" in message and ("{" in message or "[" in message)
 
 def is_command_chain(message: str) -> bool:
     """
@@ -126,14 +127,54 @@ def parse_dsl_command(dsl_string: str) -> Optional[Dict[str, Any]]:
     Parse a DSL command string in the format:
     /command_type#command_id{json_params}
     
+    Or alternative format:
+    @command_type#command_id{json_params}[commands]
+    
     Example: /click#cmd99{ "element": ".submit", "waitAfter": 500 }
     
     Returns a dictionary with the command structure or None if parsing failed
     """
     try:
-        # Using regex to extract command parts
+        dsl_string = dsl_string.strip()
+        
+        # Check for @ syntax for conditional and loop commands
+        if dsl_string.startswith('@'):
+            # This is the alternative syntax with brackets for commands
+            # @if#cmd2{ "condition": "$role == 'admin'" }[...commands...]
+            pattern = r'^@(\w+)#([a-zA-Z0-9_-]+)\{(.*?)\}\[(.*)\]$'
+            match = re.match(pattern, dsl_string, re.DOTALL)
+            
+            if match:
+                command_type, command_id, params_str, commands_str = match.groups()
+                
+                # Parse the JSON parameters
+                try:
+                    params = json.loads(f"{{{params_str}}}")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse command parameters: {e}")
+                    return None
+                
+                # For if command, add the commands as then branch
+                if command_type.lower() == "if":
+                    # Split commands by comma, respecting nested structures
+                    commands = parse_command_chain(f"/chain#temp[{commands_str}]")
+                    params["then"] = commands
+                
+                # For repeat command, add the commands as do list
+                elif command_type.lower() == "repeat":
+                    commands = parse_command_chain(f"/chain#temp[{commands_str}]")
+                    params["do"] = commands
+                
+                # Return the structured command
+                return {
+                    "type": command_type.lower(),
+                    "id": command_id,
+                    "params": params
+                }
+        
+        # Using regex to extract command parts for standard format
         pattern = r'^/(\w+)#([a-zA-Z0-9_-]+)\{(.*)\}$'
-        match = re.match(pattern, dsl_string.strip())
+        match = re.match(pattern, dsl_string)
         
         if not match:
             logger.error(f"Invalid DSL command format: {dsl_string}")
@@ -150,7 +191,7 @@ def parse_dsl_command(dsl_string: str) -> Optional[Dict[str, Any]]:
             
         # Return the structured command
         return {
-            "type": command_type,
+            "type": command_type.lower(),
             "id": command_id,
             "params": params
         }

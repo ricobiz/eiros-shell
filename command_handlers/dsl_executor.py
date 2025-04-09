@@ -79,7 +79,14 @@ async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[D
         log_id = command_id
     
     # Format the result message
-    result_message = f"[оболочка]: Command #{command_id}: {command_type} {description} — {status_text}. #log_{log_id}"
+    result_message = f"[оболочка]: Command #{command_id}: {command_type} {description} — {status_text}."
+    
+    # Add pattern recognition info if available
+    if "pattern_info" in result:
+        result_message += f" {result['pattern_info']}."
+        
+    # Add log ID
+    result_message += f" #log_{log_id}"
     
     # Log the result message
     logger.info(result_message)

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
@@ -14,36 +14,79 @@ interface ChatTabProps {
 const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false }) => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<{sender: string; message: string; timestamp: number}[]>([]);
-
-  const sendTestMessageToAI = () => {
-    if (isConnectedToAI) {
-      aiSyncService.sendMessageToAI('Test message from shell');
-      addMessageToChat('You', 'Test message from shell');
+  const chatGPTWindowRef = useRef<Window | null>(null);
+  const [isWindowOpen, setIsWindowOpen] = useState(false);
+  
+  // Function to open ChatGPT in a new window
+  const openChatGPTWindow = () => {
+    if (!chatGPTWindowRef.current || chatGPTWindowRef.current.closed) {
+      const newWindow = window.open('https://chat.openai.com/', 'ChatGPT', 'width=800,height=600');
+      chatGPTWindowRef.current = newWindow;
       
-      // Simulate AI response after a delay
-      setTimeout(() => {
-        addMessageToChat('AI', 'Received your test message. I am ready to assist you.');
-      }, 1000);
+      if (newWindow) {
+        setIsWindowOpen(true);
+        aiSyncService.connectToAI();
+        
+        // Check periodically if the window is closed
+        const checkWindowInterval = setInterval(() => {
+          if (chatGPTWindowRef.current && chatGPTWindowRef.current.closed) {
+            clearInterval(checkWindowInterval);
+            setIsWindowOpen(false);
+            aiSyncService.disconnectFromAI();
+            addMessageToChat('System', 'Connection to ChatGPT closed');
+          }
+        }, 1000);
+      } else {
+        addMessageToChat('System', 'Failed to open ChatGPT window. Please check your popup blocker settings.');
+      }
+    } else {
+      // Window already open, just focus it
+      chatGPTWindowRef.current.focus();
+    }
+  };
+
+  // Function to send test message
+  const sendTestMessageToAI = () => {
+    if (isConnectedToAI && isWindowOpen && chatGPTWindowRef.current) {
+      const testMessage = 'Test message from AI Shell';
+      addMessageToChat('You', testMessage);
+      
+      // Focus the ChatGPT window
+      chatGPTWindowRef.current.focus();
+      
+      // Add instruction to manually paste the message
+      addMessageToChat('System', 'Please paste this test message into ChatGPT manually: "' + testMessage + '"');
+      
+      aiSyncService.sendMessageToAI(testMessage);
+    } else if (!isWindowOpen) {
+      openChatGPTWindow();
     }
   };
   
+  // Function to send a message
   const sendMessage = () => {
-    if (message.trim() && isConnectedToAI) {
-      aiSyncService.sendMessageToAI(message);
-      addMessageToChat('You', message);
-      setMessage('');
-      
-      // Simulate AI response after a delay
-      setTimeout(() => {
-        const responses = [
-          'I understand your message. How can I help further?',
-          'That\'s an interesting point. Would you like more information?',
-          'I'm processing your request. Is there anything specific you're looking for?',
-          'Thanks for sharing. Let me know if you need any assistance.'
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        addMessageToChat('AI', randomResponse);
-      }, 1500);
+    if (message.trim()) {
+      if (isConnectedToAI && isWindowOpen && chatGPTWindowRef.current) {
+        aiSyncService.sendMessageToAI(message);
+        addMessageToChat('You', message);
+        
+        // Focus the ChatGPT window
+        chatGPTWindowRef.current.focus();
+        
+        // Add instruction to manually paste the message
+        addMessageToChat('System', 'Please paste this message into ChatGPT manually: "' + message + '"');
+        
+        setMessage('');
+      } else if (!isWindowOpen) {
+        // If not connected yet, open the window first
+        openChatGPTWindow();
+        
+        // Then save the message to send after connection
+        addMessageToChat('You', message);
+        addMessageToChat('System', 'Please paste this message into ChatGPT manually after it loads: "' + message + '"');
+        aiSyncService.sendMessageToAI(message);
+        setMessage('');
+      }
     }
   };
   
@@ -61,6 +104,20 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       sendMessage();
     }
   };
+  
+  // Connect to AI when the component mounts if isConnectedToAI is true
+  useEffect(() => {
+    if (isConnectedToAI && !isWindowOpen) {
+      openChatGPTWindow();
+    }
+    
+    return () => {
+      // Close window when component unmounts
+      if (chatGPTWindowRef.current && !chatGPTWindowRef.current.closed) {
+        chatGPTWindowRef.current.close();
+      }
+    };
+  }, [isConnectedToAI]);
 
   return (
     <div className="flex flex-col h-full space-y-3">
@@ -76,7 +133,9 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
                   className={`max-w-[80%] p-3 rounded-lg ${
                     chat.sender === 'You' 
                       ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted text-muted-foreground'
+                      : chat.sender === 'System'
+                        ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                        : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   <p className="text-xs font-medium mb-1">{chat.sender}</p>
@@ -122,22 +181,24 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
             <Button variant="outline" size="sm" onClick={onClearLogs}>
               Clear Logs
             </Button>
-            {isConnectedToAI && (
-              <Button variant="outline" size="sm" onClick={sendTestMessageToAI}>
-                Test AI Connection
-              </Button>
-            )}
+            <Button 
+              variant={isConnectedToAI ? "outline" : "default"} 
+              size="sm" 
+              onClick={isConnectedToAI ? sendTestMessageToAI : openChatGPTWindow}
+            >
+              {isConnectedToAI ? "Test AI Connection" : "Open ChatGPT"}
+            </Button>
           </div>
           
-          {isConnectedToAI ? (
+          {isWindowOpen ? (
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs">
               <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
-              Connected to AI
+              ChatGPT Window Open
             </div>
           ) : (
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs">
               <span className="mr-1.5 h-2 w-2 rounded-full bg-red-500"></span>
-              Disconnected
+              ChatGPT Window Closed
             </div>
           )}
         </div>

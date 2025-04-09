@@ -37,29 +37,25 @@ class AISyncService {
     this.connectionAttempts++;
     
     try {
-      // In a real implementation, this would establish a connection to an AI service
-      // For now, we'll simulate a successful connection
+      // When connecting to browser-based ChatGPT, log the attempt
       logService.addLog({
         type: 'info',
-        message: 'Attempting to connect to AI...',
+        message: 'Opening connection to browser-based ChatGPT...',
         timestamp: Date.now()
       });
       
-      // Simulate connection delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate success
+      // Mark as connected since we're using the browser window approach
       this.connected = true;
       this.connectionAttempts = 0;
       
       logService.addLog({
         type: 'success',
-        message: 'AI connection established',
+        message: 'ChatGPT browser window opened',
         timestamp: Date.now()
       });
       
       // Emit sync event
-      aiSyncEvents.emit(true, 'AI connection successful');
+      aiSyncEvents.emit(true, 'ChatGPT browser window opened');
       
       return true;
     } catch (error) {
@@ -94,12 +90,12 @@ class AISyncService {
     this.connected = false;
     logService.addLog({
       type: 'info',
-      message: 'Disconnected from AI',
+      message: 'Disconnected from ChatGPT window',
       timestamp: Date.now()
     });
     
     // Emit sync event
-    aiSyncEvents.emit(false, 'AI disconnected');
+    aiSyncEvents.emit(false, 'ChatGPT window closed');
   }
   
   sendMessageToAI(message: string): void {
@@ -114,13 +110,13 @@ class AISyncService {
     
     logService.addLog({
       type: 'info',
-      message: 'Message sent to AI',
+      message: 'Message ready to send to ChatGPT',
       timestamp: Date.now(),
       details: { message }
     });
     
-    // In a real implementation, this would send the message to the AI service
-    console.log('Sending message to AI:', message);
+    // In the browser approach, the message is shown to the user to paste manually
+    console.log('Ready to send to ChatGPT:', message);
   }
 }
 

@@ -20,6 +20,20 @@ async def main():
     try:
         logger.info("Запуск EirosShell...")
         
+        # Check if GUI should be disabled
+        headless_mode = "--nogui" in sys.argv
+        
+        # Initialize debug GUI if not in headless mode
+        if not headless_mode:
+            try:
+                from debug_gui import initialize_debug_gui
+                logger.info("Запуск отладочного интерфейса...")
+                debug_gui = initialize_debug_gui()
+                logger.info("Отладочный интерфейс запущен")
+            except ImportError as e:
+                logger.warning(f"Не удалось запустить отладочный интерфейс: {str(e)}")
+                logger.warning("Установите PyQt5: pip install PyQt5")
+        
         # Получаем информацию о системе
         system_info = get_system_info()
         logger.info(f"Информация о системе: {system_info}")

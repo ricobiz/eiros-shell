@@ -1,3 +1,4 @@
+
 """
 Модуль для распознавания и выполнения команд от ChatGPT
 """
@@ -27,6 +28,7 @@ class CommandExecutor:
         self.compressed_logs_file = Path(os.path.expanduser("~")) / "EirosShell" / "compressed_logs.json"
         self._load_command_counter()
         self.command_parser = CommandParser(self.command_counter)
+        self.debug_gui = None  # Will be set by main if available
         
     async def start_command_loop(self):
         """Запускает основной цикл обработки команд"""
@@ -38,12 +40,25 @@ class CommandExecutor:
                 response = await self.chat.wait_for_response(timeout=300)
                 
                 if response:
+                    # Update debug GUI with current command if available
+                    if self.debug_gui:
+                        self.debug_gui.update_current_command(response[:100] + "..." if len(response) > 100 else response)
+                    
                     # Обработка команд в разных форматах
                     if is_command_chain(response):
                         # Выполняем цепочку DSL-команд
                         chain_result = await execute_command_chain(self.browser, response)
                         
                         if chain_result:
+                            # Update debug GUI with command result
+                            if self.debug_gui:
+                                self.debug_gui.log_command_result(
+                                    chain_result.get("command_id", "unknown"),
+                                    "chain",
+                                    chain_result.get("status", "error"),
+                                    chain_result.get("message", "Unknown result")
+                                )
+                            
                             # Отправляем результат выполнения цепочки
                             self._save_command_to_history(
                                 {"type": "chain", "id": chain_result["command_id"]}, 
@@ -55,6 +70,15 @@ class CommandExecutor:
                         command_result = await execute_dsl_command(self.browser, response)
                         
                         if command_result:
+                            # Update debug GUI with command result
+                            if self.debug_gui:
+                                self.debug_gui.log_command_result(
+                                    command_result.get("command_id", "unknown"),
+                                    command_result.get("type", "unknown"),
+                                    command_result.get("status", "error"),
+                                    command_result.get("message", "Unknown result")
+                                )
+                            
                             # Отправляем результат выполнения
                             self._save_command_to_history(
                                 {"type": command_result["type"], "id": command_result["command_id"]}, 
@@ -67,11 +91,26 @@ class CommandExecutor:
                         self.command_counter = self.command_parser.get_command_counter()
                         
                         if command:
+                            # Update debug GUI with current command
+                            if self.debug_gui:
+                                cmd_type = command.get("type", "unknown")
+                                cmd_id = command.get("id", "unknown")
+                                self.debug_gui.update_current_command(f"{cmd_type}#{cmd_id}")
+                            
                             # Выполняем команду
                             command_result = await execute_command(self.browser, command)
                             
                             # Отправляем результат выполнения
                             if command_result:
+                                # Update debug GUI with command result
+                                if self.debug_gui:
+                                    self.debug_gui.log_command_result(
+                                        command_result.get("command_id", "unknown"),
+                                        command.get("type", "unknown"),
+                                        command_result.get("status", "error"),
+                                        command_result.get("message", "Unknown result")
+                                    )
+                                
                                 self._save_command_to_history(command, command_result)
                                 await self._send_command_result(command, command_result)
                 
@@ -80,6 +119,9 @@ class CommandExecutor:
                 
         except Exception as e:
             logger.exception(f"Критическая ошибка в цикле обработки команд: {str(e)}")
+            # Update debug GUI with error
+            if self.debug_gui:
+                self.debug_gui.update_status(False, f"Command loop error: {str(e)}")
             # Отправляем сообщение о критической ошибке в чат
             await self.chat.send_message(f"[оболочка]: Критическая ошибка: {str(e)}. Перезапустите оболочку.")
     

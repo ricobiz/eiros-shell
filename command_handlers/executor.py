@@ -1,3 +1,4 @@
+
 """
 Central command executor that delegates to specific handlers
 """
@@ -14,6 +15,9 @@ from .type_handler import handle_type_command
 from .wait_handler import handle_wait_command
 from .screenshot_handler import handle_screenshot_command
 from .analyze_handler import handle_analyze_command
+from .variable_handler import handle_set_command, process_params_with_variables
+from .conditional_handler import handle_if_command
+from .loop_handler import handle_repeat_command
 from command_format_adapter import parse_dsl_command, parse_command_chain, is_command_chain
 
 logger = logging.getLogger("EirosShell")
@@ -23,6 +27,9 @@ async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[s
     command_type = command["type"]
     params = command["params"]
     command_id = command["id"]
+    
+    # Process variables in parameters
+    params = process_params_with_variables(params)
     
     logger.info(f"Выполнение команды {command_id} типа {command_type} с параметрами: {params}")
     
@@ -46,6 +53,12 @@ async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[s
             return await handle_screenshot_command(browser_controller, command_id)
         elif command_type == CommandType.ANALYZE:
             return await handle_analyze_command(browser_controller, command_id)
+        elif command_type == CommandType.SET:
+            return handle_set_command(params, command_id)
+        elif command_type == CommandType.IF:
+            return await handle_if_command(browser_controller, params, command_id)
+        elif command_type == CommandType.REPEAT:
+            return await handle_repeat_command(browser_controller, params, command_id)
         else:
             result["message"] = f"Неизвестный тип команды: {command_type}"
     
@@ -95,6 +108,16 @@ async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[D
         description = f"→ '{command['params'].get('selector', '')}'"
     elif command_type == CommandType.WAIT:
         description = f"→ {command['params'].get('duration', 2)} сек"
+    elif command_type == CommandType.SET:
+        var_name = command['params'].get('var', '')
+        var_value = command['params'].get('value', '')
+        description = f"→ ${var_name} = '{var_value}'"
+    elif command_type == CommandType.IF:
+        condition = command['params'].get('condition', '')
+        description = f"→ '{condition}'"
+    elif command_type == CommandType.REPEAT:
+        times = command['params'].get('times', 0)
+        description = f"→ {times} раз"
     elif command_type == CommandType.SCREENSHOT or command_type == CommandType.ANALYZE:
         description = ""
     

@@ -13,6 +13,8 @@ from typing import Dict, Any, Optional
 from command_parser import CommandParser
 from command_types import CommandType
 from command_handlers import execute_command
+from command_handlers.executor import execute_dsl_command
+from command_format_adapter import is_dsl_command
 
 logger = logging.getLogger("EirosShell")
 
@@ -38,18 +40,28 @@ class CommandExecutor:
                 response = await self.chat.wait_for_response(timeout=300)
                 
                 if response:
-                    # Проверяем, содержит ли ответ команду
-                    command = self.command_parser.parse_command(response)
-                    self.command_counter = self.command_parser.get_command_counter()
-                    
-                    if command:
-                        # Выполняем команду
-                        command_result = await execute_command(self.browser, command)
+                    # Сначала проверяем, это DSL-команда или нет
+                    if is_dsl_command(response):
+                        # Выполняем DSL-команду
+                        command_result = await execute_dsl_command(self.browser, response)
                         
-                        # Отправляем результат выполнения
                         if command_result:
-                            self._save_command_to_history(command, command_result)
-                            await self._send_command_result(command, command_result)
+                            # Отправляем результат выполнения
+                            self._save_command_to_history({"type": command_result["type"], "id": command_result["command_id"]}, command_result)
+                            await self.chat.send_message(command_result["formatted_message"])
+                    else:
+                        # Обрабатываем обычную команду через CommandParser
+                        command = self.command_parser.parse_command(response)
+                        self.command_counter = self.command_parser.get_command_counter()
+                        
+                        if command:
+                            # Выполняем команду
+                            command_result = await execute_command(self.browser, command)
+                            
+                            # Отправляем результат выполнения
+                            if command_result:
+                                self._save_command_to_history(command, command_result)
+                                await self._send_command_result(command, command_result)
                 
                 # Небольшая пауза перед следующей проверкой
                 await asyncio.sleep(1)

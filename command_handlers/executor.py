@@ -73,7 +73,8 @@ async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[D
             "command_id": "unknown",
             "type": "unknown",
             "status": "error",
-            "message": f"Failed to parse DSL command: {dsl_string}"
+            "message": f"Failed to parse DSL command: {dsl_string}",
+            "formatted_message": f"[оболочка]: Команда #unknown: unknown — ОШИБКА. #log_error"
         }
     
     # Execute the parsed command
@@ -94,12 +95,18 @@ async def execute_dsl_command(browser_controller, dsl_string: str) -> Optional[D
         description = f"→ '{command['params'].get('selector', '')}'"
     elif command_type == CommandType.WAIT:
         description = f"→ {command['params'].get('duration', 2)} сек"
+    elif command_type == CommandType.SCREENSHOT or command_type == CommandType.ANALYZE:
+        description = ""
     
-    # Generate the log ID based on command_id
-    log_id = f"log_{command_id.replace('cmd', '')}" if command_id.startswith('cmd') else f"log_{command_id}"
+    # Extract numeric part of the command ID for the log ID
+    log_id = ""
+    if command_id.startswith('cmd') and command_id[3:].isdigit():
+        log_id = command_id[3:]
+    else:
+        log_id = command_id
     
     # Format the result message
-    result_message = f"[оболочка]: Команда #{command_id}: {command_type} {description} — {status_text}. #{log_id}"
+    result_message = f"[оболочка]: Команда #{command_id}: {command_type} {description} — {status_text}. #log_{log_id}"
     
     # Log the result message
     logger.info(result_message)

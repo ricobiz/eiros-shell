@@ -10,6 +10,18 @@ from typing import Dict, Any, Optional
 
 logger = logging.getLogger("EirosShell")
 
+def is_dsl_command(message: str) -> bool:
+    """
+    Check if a message is in DSL command format.
+    Format: /command_type#command_id{json_params}
+    
+    Example: /click#cmd99{ "element": ".submit", "waitAfter": 500 }
+    
+    Returns True if the message matches the DSL command pattern.
+    """
+    message = message.strip()
+    return message.startswith("/") and "#" in message and "{" in message
+
 def parse_dsl_command(dsl_string: str) -> Optional[Dict[str, Any]]:
     """
     Parse a DSL command string in the format:

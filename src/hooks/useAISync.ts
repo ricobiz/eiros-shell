@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { aiSyncService, aiSyncEvents } from '@/services/AISyncService';
+import { aiSyncService, aiSyncEvents } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
 
 export function useAISync() {

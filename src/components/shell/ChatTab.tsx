@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, ExternalLink } from 'lucide-react';
 import LogViewer from '../LogViewer';
-import { aiSyncService } from '@/services/AISyncService';
+import { aiSyncService } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChatTabProps {

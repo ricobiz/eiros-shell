@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -11,6 +12,8 @@ import { commandService } from '@/services/CommandService';
 import { logService } from '@/services/LogService';
 import { memoryService } from '@/services/MemoryService';
 import { navigationEvents } from '@/services/commands/navigationCommand';
+import { useToast } from '@/hooks/use-toast';
+import { aiSyncService, aiSyncEvents } from '@/services/AISyncService';
 
 // Import our refactored components
 import ShellHeader from './shell/ShellHeader';
@@ -24,11 +27,13 @@ import BrowserPreviewTab from './shell/BrowserPreviewTab';
 import InstructionsTab from './shell/InstructionsTab';
 
 const ShellInterface: React.FC = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('command');
   const [commandResult, setCommandResult] = useState<any>(null);
   const [selectedMemory, setSelectedMemory] = useState<MemoryItem | null>(null);
   const [isPinned, setIsPinned] = useState(false);
   const [isAnnotating, setIsAnnotating] = useState(false);
+  const [isConnectedToAI, setIsConnectedToAI] = useState(false);
   const [annotations, setAnnotations] = useState<{id: string, element: string, description: string}[]>([]);
   const [currentAnnotation, setCurrentAnnotation] = useState({element: '', description: ''});
   const [browserUrl, setBrowserUrl] = useState('https://example.com');
@@ -94,6 +99,33 @@ const ShellInterface: React.FC = () => {
       timestamp: Date.now()
     });
   };
+
+  const handleToggleAIConnection = async () => {
+    if (isConnectedToAI) {
+      aiSyncService.disconnectFromAI();
+      setIsConnectedToAI(false);
+      toast({
+        title: "AI Disconnected",
+        description: "Shell has been disconnected from AI",
+      });
+    } else {
+      const connected = await aiSyncService.connectToAI();
+      setIsConnectedToAI(connected);
+      
+      if (connected) {
+        toast({
+          title: "AI Connected",
+          description: "Shell has been successfully connected to AI",
+        });
+      } else {
+        toast({
+          title: "Connection Failed",
+          description: "Failed to connect to AI. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
   
   const handleToggleAnnotating = () => {
     setIsAnnotating(!isAnnotating);
@@ -156,14 +188,41 @@ const ShellInterface: React.FC = () => {
     };
   }, []);
 
+  // Subscribe to AI sync events
+  useEffect(() => {
+    const unsubscribe = aiSyncEvents.subscribe((connected, message) => {
+      setIsConnectedToAI(connected);
+      
+      if (message) {
+        toast({
+          title: connected ? "AI Connected" : "AI Disconnected",
+          description: message,
+          variant: connected ? "default" : "destructive",
+        });
+      }
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [toast]);
+
   return (
     <Card className={`w-full shadow-lg bg-card border-border ${isPinned ? 'border-accent border-2' : ''}`}>
       <CardHeader className="p-2">
-        <ShellHeader isPinned={isPinned} onTogglePin={handleTogglePin} />
+        <ShellHeader 
+          isPinned={isPinned} 
+          onTogglePin={handleTogglePin} 
+          isConnectedToAI={isConnectedToAI}
+          onToggleAIConnection={handleToggleAIConnection}
+        />
       </CardHeader>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabNavigation activeTab={activeTab} />
+        <TabNavigation 
+          activeTab={activeTab} 
+          isConnectedToAI={isConnectedToAI}
+        />
         
         <CardContent className="p-4">
           <TabsContent value="command" className="mt-0">
@@ -192,7 +251,10 @@ const ShellInterface: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="chat" className="mt-0">
-            <ChatTab onClearLogs={handleClearLogs} />
+            <ChatTab 
+              onClearLogs={handleClearLogs}
+              isConnectedToAI={isConnectedToAI}
+            />
           </TabsContent>
 
           <TabsContent value="browser" className="mt-0">
@@ -206,7 +268,10 @@ const ShellInterface: React.FC = () => {
       </Tabs>
       
       <CardFooter className="p-2">
-        <ShellFooter isPinned={isPinned} />
+        <ShellFooter 
+          isPinned={isPinned}
+          isConnectedToAI={isConnectedToAI}
+        />
       </CardFooter>
     </Card>
   );

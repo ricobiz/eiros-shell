@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { 
@@ -12,7 +13,9 @@ import {
   Pin, 
   PinOff, 
   Command, 
-  HelpCircle
+  HelpCircle,
+  Link,
+  Unlink
 } from 'lucide-react';
 import { 
   Sheet,
@@ -30,13 +33,21 @@ import {
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import InstructionsTab from './InstructionsTab';
+import { aiSyncService } from '@/services/AISyncService';
 
 interface ShellHeaderProps {
   isPinned: boolean;
   onTogglePin: () => void;
+  isConnectedToAI: boolean;
+  onToggleAIConnection: () => void;
 }
 
-const ShellHeader: React.FC<ShellHeaderProps> = ({ isPinned, onTogglePin }) => {
+const ShellHeader: React.FC<ShellHeaderProps> = ({ 
+  isPinned, 
+  onTogglePin, 
+  isConnectedToAI, 
+  onToggleAIConnection 
+}) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   
   const Instructions = () => (
@@ -87,12 +98,32 @@ const ShellHeader: React.FC<ShellHeaderProps> = ({ isPinned, onTogglePin }) => {
           
           <div className="flex items-center ml-3">
             <Cpu size={14} className="text-accent" />
-            <CardTitle className="text-sm ml-1">AI Shell</CardTitle>
+            <CardTitle className="text-sm ml-1">Shell</CardTitle>
           </div>
         </div>
         
         <div className="flex items-center space-x-1">
           <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={onToggleAIConnection}
+                >
+                  {isConnectedToAI ? (
+                    <Link size={16} className="text-green-500" />
+                  ) : (
+                    <Unlink size={16} className="text-muted-foreground" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isConnectedToAI ? 'Disconnect from AI' : 'Connect to AI'}
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">

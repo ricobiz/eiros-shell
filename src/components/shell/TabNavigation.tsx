@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -6,7 +7,8 @@ import {
   Brain, 
   MessageSquare, 
   Globe, 
-  BookOpen 
+  BookOpen,
+  Link
 } from 'lucide-react';
 import { 
   Sheet,
@@ -17,9 +19,10 @@ import { Button } from '@/components/ui/button';
 
 interface TabNavigationProps {
   activeTab: string;
+  isConnectedToAI?: boolean;
 }
 
-const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab }) => {
+const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, isConnectedToAI = false }) => {
   const mobileView = (
     <Sheet>
       <SheetTrigger asChild>
@@ -29,6 +32,12 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab }) => {
       </SheetTrigger>
       <SheetContent side="left" className="w-[240px] p-0">
         <div className="flex flex-col py-2">
+          {isConnectedToAI && (
+            <div className="mx-2 mb-2 px-3 py-2 rounded-md bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs flex items-center">
+              <Link size={12} className="mr-1.5" />
+              Connected to AI
+            </div>
+          )}
           {[
             { value: "command", label: "Command", icon: <TerminalSquare size={14} /> },
             { value: "vision", label: "Vision", icon: <Eye size={14} /> },
@@ -57,32 +66,40 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab }) => {
   );
 
   const desktopView = (
-    <TabsList className="grid grid-cols-6 w-full hidden md:grid">
-      <TabsTrigger value="command" className="flex items-center space-x-1">
-        <TerminalSquare size={14} />
-        <span>Command</span>
-      </TabsTrigger>
-      <TabsTrigger value="vision" className="flex items-center space-x-1">
-        <Eye size={14} />
-        <span>Vision</span>
-      </TabsTrigger>
-      <TabsTrigger value="memory" className="flex items-center space-x-1">
-        <Brain size={14} />
-        <span>Memory</span>
-      </TabsTrigger>
-      <TabsTrigger value="chat" className="flex items-center space-x-1">
-        <MessageSquare size={14} />
-        <span>Chat</span>
-      </TabsTrigger>
-      <TabsTrigger value="browser" className="flex items-center space-x-1">
-        <Globe size={14} />
-        <span>Browser</span>
-      </TabsTrigger>
-      <TabsTrigger value="instructions" className="flex items-center space-x-1">
-        <BookOpen size={14} />
-        <span>Help</span>
-      </TabsTrigger>
-    </TabsList>
+    <div className="hidden md:block w-full">
+      {isConnectedToAI && (
+        <div className="mb-2 px-3 py-2 rounded-md bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs flex items-center justify-center">
+          <Link size={12} className="mr-1.5" />
+          Connected to AI
+        </div>
+      )}
+      <TabsList className="grid grid-cols-6 w-full">
+        <TabsTrigger value="command" className="flex items-center space-x-1">
+          <TerminalSquare size={14} />
+          <span>Command</span>
+        </TabsTrigger>
+        <TabsTrigger value="vision" className="flex items-center space-x-1">
+          <Eye size={14} />
+          <span>Vision</span>
+        </TabsTrigger>
+        <TabsTrigger value="memory" className="flex items-center space-x-1">
+          <Brain size={14} />
+          <span>Memory</span>
+        </TabsTrigger>
+        <TabsTrigger value="chat" className="flex items-center space-x-1">
+          <MessageSquare size={14} />
+          <span>Chat</span>
+        </TabsTrigger>
+        <TabsTrigger value="browser" className="flex items-center space-x-1">
+          <Globe size={14} />
+          <span>Browser</span>
+        </TabsTrigger>
+        <TabsTrigger value="instructions" className="flex items-center space-x-1">
+          <BookOpen size={14} />
+          <span>Help</span>
+        </TabsTrigger>
+      </TabsList>
+    </div>
   );
 
   return (

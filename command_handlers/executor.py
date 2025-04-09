@@ -5,6 +5,7 @@ Central command executor that delegates to specific handlers
 
 import logging
 import asyncio
+import re
 from typing import Dict, Any, Optional, List
 
 from command_types import CommandType

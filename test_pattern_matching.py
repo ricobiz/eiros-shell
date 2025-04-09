@@ -8,7 +8,7 @@ import os
 import cv2
 import numpy as np
 from pathlib import Path
-from pattern_matcher import pattern_matcher
+from pattern_matcher import pattern_matcher, image_processor, storage
 from command_handlers import execute_command
 from command_types import CommandType
 
@@ -45,7 +45,7 @@ async def test_pattern_matching():
     
     # Test matching
     screenshot = cv2.imread(str(test_dir / "test_screenshot.png"))
-    matches = pattern_matcher.match_elements(screenshot, [test_pattern])
+    matches = image_processor.match_patterns(screenshot, [test_pattern])
     
     if matches:
         match = matches[0]

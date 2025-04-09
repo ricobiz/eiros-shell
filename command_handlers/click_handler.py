@@ -1,4 +1,3 @@
-
 """
 Handler for click commands
 """

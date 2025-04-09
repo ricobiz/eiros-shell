@@ -1,4 +1,3 @@
-
 """
 Command loop manager for EirosShell
 """
@@ -7,7 +6,7 @@ import asyncio
 import logging
 from typing import Dict, Any, Optional
 
-from command_format_adapter import is_dsl_command, is_command_chain
+from dsl_parser import is_dsl_command, is_command_chain  # Updated import 
 from command_handlers import execute_dsl_command, execute_command_chain
 
 logger = logging.getLogger("EirosShell")

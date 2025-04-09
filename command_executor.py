@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Dict, Any, Optional
 
-from command_parser import CommandParser
+from parser.command_parser import CommandParser  # Updated import
 from command_types import CommandType
 from command_handlers import execute_command, execute_dsl_command, execute_command_chain
 from dsl_parser import is_dsl_command, is_command_chain

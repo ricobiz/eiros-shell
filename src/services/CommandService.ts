@@ -1,5 +1,5 @@
 
-import { Command, CommandType, LogEntry } from "../types/types";
+import { Command, CommandType, LogEntry, MemoryType } from "../types/types";
 import { memoryService } from "./MemoryService";
 import { logService } from "./LogService";
 
@@ -78,7 +78,7 @@ class CommandService {
       
       // Store command in memory
       memoryService.addMemoryItem({
-        type: 'command',
+        type: MemoryType.COMMAND,  // Updated to use enum value
         data: command,
         tags: [command.type, command.id]
       });
@@ -195,7 +195,7 @@ class CommandService {
     
     // Store screenshot in memory
     memoryService.addMemoryItem({
-      type: 'screenshot',
+      type: MemoryType.SCREENSHOT,  // Updated to use enum value
       data: mockScreenshotData,
       tags: ['screenshot', command.id, new Date().toISOString().split('T')[0]]
     });
@@ -215,7 +215,7 @@ class CommandService {
     
     // Store credentials securely (in reality should encrypt)
     memoryService.addMemoryItem({
-      type: 'credentials',
+      type: MemoryType.CREDENTIALS,  // Updated to use enum value
       data: { service, username },
       tags: ['auth', service]
     });
@@ -295,7 +295,7 @@ class CommandService {
     
     // Store analysis results in memory
     memoryService.addMemoryItem({
-      type: 'element',
+      type: MemoryType.ELEMENT,  // Updated to use enum value
       data: mockAnalysisResult,
       tags: ['analysis', 'ui', command.id]
     });

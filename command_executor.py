@@ -1,4 +1,3 @@
-
 """
 Модуль для распознавания и выполнения команд от ChatGPT
 """
@@ -12,9 +11,8 @@ from typing import Dict, Any, Optional
 
 from command_parser import CommandParser
 from command_types import CommandType
-from command_handlers import execute_command
-from command_handlers.executor import execute_dsl_command
-from command_format_adapter import is_dsl_command
+from command_handlers import execute_command, execute_dsl_command, execute_command_chain
+from command_format_adapter import is_dsl_command, is_command_chain
 
 logger = logging.getLogger("EirosShell")
 
@@ -40,14 +38,28 @@ class CommandExecutor:
                 response = await self.chat.wait_for_response(timeout=300)
                 
                 if response:
-                    # Сначала проверяем, это DSL-команда или нет
-                    if is_dsl_command(response):
+                    # Обработка команд в разных форматах
+                    if is_command_chain(response):
+                        # Выполняем цепочку DSL-команд
+                        chain_result = await execute_command_chain(self.browser, response)
+                        
+                        if chain_result:
+                            # Отправляем результат выполнения цепочки
+                            self._save_command_to_history(
+                                {"type": "chain", "id": chain_result["command_id"]}, 
+                                chain_result
+                            )
+                            await self.chat.send_message(chain_result["formatted_message"])
+                    elif is_dsl_command(response):
                         # Выполняем DSL-команду
                         command_result = await execute_dsl_command(self.browser, response)
                         
                         if command_result:
                             # Отправляем результат выполнения
-                            self._save_command_to_history({"type": command_result["type"], "id": command_result["command_id"]}, command_result)
+                            self._save_command_to_history(
+                                {"type": command_result["type"], "id": command_result["command_id"]}, 
+                                command_result
+                            )
                             await self.chat.send_message(command_result["formatted_message"])
                     else:
                         # Обрабатываем обычную команду через CommandParser

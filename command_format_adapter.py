@@ -6,7 +6,7 @@ Module for parsing DSL commands for EirosShell
 import json
 import re
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger("EirosShell")
 
@@ -20,7 +20,90 @@ def is_dsl_command(message: str) -> bool:
     Returns True if the message matches the DSL command pattern.
     """
     message = message.strip()
-    return message.startswith("/") and "#" in message and "{" in message
+    return message.startswith("/") and "#" in message and ("{" in message or "[" in message)
+
+def is_command_chain(message: str) -> bool:
+    """
+    Check if a message is a command chain.
+    Format: /chain#command_id[commands...]
+    
+    Example: /chain#cmd9[/navigate#cmd1{...}, /click#cmd2{...}]
+    
+    Returns True if the message matches the command chain pattern.
+    """
+    message = message.strip()
+    return message.startswith("/chain#") and "[" in message and "]" in message
+
+def parse_command_chain(dsl_string: str) -> List[str]:
+    """
+    Parse a command chain into individual command strings.
+    
+    Example:
+    /chain#cmd9[
+      /navigate#cmd1{ "url": "https://example.com" },
+      /type#cmd2{ "selector": "#login", "text": "admin" },
+      /click#cmd3{ "element": "#submit" }
+    ]
+    
+    Returns a list of command strings.
+    """
+    try:
+        # Extract the command ID
+        chain_id_pattern = r'^/chain#([a-zA-Z0-9_-]+)\['
+        chain_id_match = re.match(chain_id_pattern, dsl_string.strip())
+        
+        if not chain_id_match:
+            logger.error(f"Invalid command chain format: {dsl_string}")
+            return []
+            
+        chain_id = chain_id_match.group(1)
+        
+        # Extract the commands between [ and ]
+        commands_pattern = r'/chain#[a-zA-Z0-9_-]+\[(.*)\]'
+        commands_match = re.search(commands_pattern, dsl_string, re.DOTALL)
+        
+        if not commands_match:
+            logger.error(f"Failed to extract commands from chain: {dsl_string}")
+            return []
+            
+        commands_str = commands_match.group(1).strip()
+        
+        # Split the commands
+        # This is more complex because we need to respect JSON structure
+        commands = []
+        current_cmd = ""
+        brace_count = 0
+        bracket_count = 0
+        
+        for char in commands_str:
+            current_cmd += char
+            
+            if char == '{':
+                brace_count += 1
+            elif char == '}':
+                brace_count -= 1
+            elif char == '[':
+                bracket_count += 1
+            elif char == ']':
+                bracket_count -= 1
+            
+            # If we're at a comma, and not inside any braces or brackets
+            if char == ',' and brace_count == 0 and bracket_count == 0:
+                # We've found a command boundary
+                cmd = current_cmd[:-1].strip()  # Remove the comma
+                if cmd:
+                    commands.append(cmd)
+                current_cmd = ""
+        
+        # Don't forget the last command (which doesn't end with a comma)
+        if current_cmd.strip():
+            commands.append(current_cmd.strip())
+        
+        return commands
+        
+    except Exception as e:
+        logger.error(f"Error parsing command chain: {str(e)}")
+        return []
 
 def parse_dsl_command(dsl_string: str) -> Optional[Dict[str, Any]]:
     """

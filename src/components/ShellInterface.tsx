@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -11,6 +10,7 @@ import { CommandType, MemoryItem, MemoryType } from '@/types/types';
 import { commandService } from '@/services/CommandService';
 import { logService } from '@/services/LogService';
 import { memoryService } from '@/services/MemoryService';
+import { navigationEvents } from '@/services/commands/navigationCommand';
 
 // Import our refactored components
 import ShellHeader from './shell/ShellHeader';
@@ -20,6 +20,8 @@ import CommandTab from './shell/CommandTab';
 import VisionTab from './shell/VisionTab';
 import MemoryTab from './shell/MemoryTab';
 import ChatTab from './shell/ChatTab';
+import BrowserPreviewTab from './shell/BrowserPreviewTab';
+import InstructionsTab from './shell/InstructionsTab';
 
 const ShellInterface: React.FC = () => {
   const [activeTab, setActiveTab] = useState('command');
@@ -29,6 +31,7 @@ const ShellInterface: React.FC = () => {
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [annotations, setAnnotations] = useState<{id: string, element: string, description: string}[]>([]);
   const [currentAnnotation, setCurrentAnnotation] = useState({element: '', description: ''});
+  const [browserUrl, setBrowserUrl] = useState('https://example.com');
   
   const handleCommandExecuted = (result: any) => {
     setCommandResult(result);
@@ -47,7 +50,7 @@ const ShellInterface: React.FC = () => {
   const handleClearLogs = () => {
     logService.clearLogs();
   };
-  
+
   const handleTakeScreenshot = async () => {
     const command = {
       id: `screenshot_${Date.now()}`,
@@ -139,7 +142,20 @@ const ShellInterface: React.FC = () => {
   const handleCurrentAnnotationChange = (annotation: {element: string, description: string}) => {
     setCurrentAnnotation(annotation);
   };
-  
+
+  // Subscribe to navigation events
+  useEffect(() => {
+    const unsubscribe = navigationEvents.subscribe((url) => {
+      setBrowserUrl(url);
+      // Automatically switch to browser tab when navigation occurs
+      setActiveTab('browser');
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   return (
     <Card className={`w-full shadow-lg bg-card border-border ${isPinned ? 'border-accent border-2' : ''}`}>
       <CardHeader className="p-4">
@@ -177,6 +193,14 @@ const ShellInterface: React.FC = () => {
           
           <TabsContent value="chat" className="mt-0">
             <ChatTab onClearLogs={handleClearLogs} />
+          </TabsContent>
+
+          <TabsContent value="browser" className="mt-0">
+            <BrowserPreviewTab url={browserUrl} setUrl={setBrowserUrl} />
+          </TabsContent>
+
+          <TabsContent value="instructions" className="mt-0">
+            <InstructionsTab />
           </TabsContent>
         </CardContent>
       </Tabs>

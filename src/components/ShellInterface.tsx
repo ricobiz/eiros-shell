@@ -21,7 +21,7 @@ import {
 import CommandInput from './CommandInput';
 import LogViewer from './LogViewer';
 import MemoryPanel from './MemoryPanel';
-import { CommandType, MemoryItem } from '@/types/types';
+import { CommandType, MemoryItem, MemoryType } from '@/types/types';
 import { commandService } from '@/services/CommandService';
 import { logService } from '@/services/LogService';
 import { memoryService } from '@/services/MemoryService';

@@ -11,6 +11,8 @@ class AISyncService {
   private connectionService: AIConnectionService;
   private messagingService: AIMessagingService;
   private autoReconnectService: AutoReconnectService;
+  private pendingMessages: string[] = [];
+  private isConnecting = false;
   
   constructor() {
     this.windowManager = new ChatGPTWindowManager();
@@ -18,8 +20,8 @@ class AISyncService {
     this.messagingService = new AIMessagingService(this.windowManager);
     this.autoReconnectService = new AutoReconnectService(this.connectionService);
     
-    // Setup automatic reconnection on initialization
-    this.autoReconnectService.setupAutoReconnect();
+    // We'll only start auto-reconnect when a message is explicitly sent
+    // to avoid aggressive window opening
   }
   
   isConnected(): boolean {
@@ -27,46 +29,87 @@ class AISyncService {
   }
   
   async connectToAI(): Promise<boolean> {
-    return this.connectionService.connectToAI();
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      logService.addLog({
+        type: 'info',
+        message: 'Connection attempt already in progress',
+        timestamp: Date.now()
+      });
+      return this.isConnected();
+    }
+    
+    this.isConnecting = true;
+    
+    try {
+      const result = await this.connectionService.connectToAI();
+      
+      // If we successfully connected, maybe start auto-reconnect
+      if (result) {
+        // Now that the user has explicitly requested a connection,
+        // we can set up auto-reconnect
+        this.autoReconnectService.setupAutoReconnect();
+      }
+      
+      return result;
+    } finally {
+      this.isConnecting = false;
+    }
   }
   
   disconnectFromAI(): void {
+    // Stop auto-reconnect before disconnecting
+    this.autoReconnectService.stopAutoReconnect();
     this.connectionService.disconnectFromAI();
   }
   
   async sendMessageToAI(message: string): Promise<void> {
+    // Queue message first
+    this.pendingMessages.push(message);
+    
+    // If we're not connected, try to connect first
     if (!this.connectionService.isConnected()) {
       // Try to reconnect first
-      const connected = await this.connectionService.connectToAI();
-      if (connected) {
-        logService.addLog({
-          type: 'info',
-          message: 'Reconnected to AI, now can send message',
-          timestamp: Date.now()
-        });
-        
-        this.sendMessageAfterConnection(message);
-      } else {
+      const connected = await this.connectToAI();
+      if (!connected) {
         logService.addLog({
           type: 'warning',
-          message: 'Cannot send message: Failed to reconnect to AI',
+          message: 'Cannot send message: Failed to connect to AI',
           timestamp: Date.now()
         });
+        return;
       }
-      return;
     }
     
-    this.sendMessageAfterConnection(message);
+    // Try to send the first pending message
+    if (this.pendingMessages.length > 0) {
+      const nextMessage = this.pendingMessages.shift()!;
+      this.sendMessageAfterConnection(nextMessage);
+    }
   }
   
   private async sendMessageAfterConnection(message: string): Promise<void> {
-    await this.messagingService.sendMessage(message);
+    logService.addLog({
+      type: 'info',
+      message: 'Attempting to send message to ChatGPT',
+      timestamp: Date.now()
+    });
+    
+    const success = await this.messagingService.sendMessage(message);
+    
+    if (!success && this.pendingMessages.length > 0) {
+      // If sending failed and we have more messages, try again later
+      setTimeout(() => {
+        this.sendMessageToAI(this.pendingMessages.shift()!);
+      }, 5000); // Try again in 5 seconds
+    }
   }
   
   // Method to clean up resources when service is no longer needed
   cleanup(): void {
     this.autoReconnectService.stopAutoReconnect();
     this.connectionService.disconnectFromAI();
+    this.pendingMessages = [];
   }
 }
 

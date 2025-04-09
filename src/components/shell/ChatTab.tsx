@@ -17,6 +17,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<{sender: string; message: string; timestamp: number}[]>([]);
   const [isWindowOpen, setIsWindowOpen] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   
   // Check connection status on component mount and set up periodic checks
   useEffect(() => {
@@ -28,25 +29,50 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     // Check initially
     checkConnectionStatus();
     
-    // Set up interval to check connection status
-    const intervalId = setInterval(checkConnectionStatus, 2000);
+    // Set up interval to check connection status - but only every 5 seconds
+    const intervalId = setInterval(checkConnectionStatus, 5000);
     
-    // Connect automatically if not connected
-    if (!isConnectedToAI) {
-      aiSyncService.connectToAI().then(success => {
-        if (success) {
-          toast({
-            title: "ChatGPT Connected",
-            description: "Auto-connected to ChatGPT window",
-          });
-        }
-      });
+    // Only auto-connect if explicitly told to
+    if (!isConnectedToAI && !isWindowOpen) {
+      // Add a welcome message
+      addMessageToChat('System', 'Нажмите кнопку чтобы связаться с ChatGPT. После успешного подключения вы можете отправить сообщение.');
     }
     
     return () => {
       clearInterval(intervalId);
     };
-  }, [isConnectedToAI, toast]);
+  }, [isConnectedToAI]);
+  
+  // Function to manually connect to ChatGPT
+  const connectToChatGPT = async () => {
+    if (isConnecting) return;
+    
+    setIsConnecting(true);
+    
+    try {
+      const success = await aiSyncService.connectToAI();
+      setIsWindowOpen(success);
+      
+      if (success) {
+        toast({
+          title: "ChatGPT подключен",
+          description: "Теперь вы можете отправлять сообщения в ChatGPT",
+        });
+        
+        addMessageToChat('System', 'Подключение установлено! Введите сообщение ниже и нажмите отправить.');
+      } else {
+        toast({
+          title: "Ошибка подключения",
+          description: "Не удалось подключиться к ChatGPT. Проверьте, не блокирует ли браузер всплывающие окна.",
+          variant: "destructive"
+        });
+        
+        addMessageToChat('System', 'Ошибка подключения. Пожалуйста, попробуйте снова.');
+      }
+    } finally {
+      setIsConnecting(false);
+    }
+  };
   
   // Function to send a message
   const sendMessage = () => {
@@ -58,7 +84,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       aiSyncService.sendMessageToAI(message);
       
       // Add instruction for manual paste
-      addMessageToChat('System', 'Please paste this message into ChatGPT: "' + message + '"');
+      addMessageToChat('System', 'Сообщение скопировано в буфер обмена. Нажмите Ctrl+V (или Cmd+V) в окне ChatGPT чтобы вставить текст: "' + message + '"');
       
       setMessage('');
     }
@@ -109,7 +135,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           </div>
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
-            <p>Система автоматически подключится к ChatGPT</p>
+            <p>Нажмите "Подключить ChatGPT" чтобы начать</p>
           </div>
         )}
       </div>
@@ -122,11 +148,12 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             className="flex-1"
+            disabled={!isWindowOpen}
           />
           <Button 
             variant="default" 
             size="icon"
-            disabled={!message.trim()}
+            disabled={!message.trim() || !isWindowOpen}
             onClick={sendMessage}
           >
             <Send size={16} />
@@ -159,10 +186,25 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
               </Button>
             </div>
           ) : (
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 text-xs">
-              <span className="mr-1.5 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
-              Подключение...
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={connectToChatGPT}
+              disabled={isConnecting}
+            >
+              {isConnecting ? (
+                <>
+                  <span className="mr-1.5 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                  Подключение...
+                </>
+              ) : (
+                <>
+                  <ExternalLink size={14} />
+                  <span>Подключить ChatGPT</span>
+                </>
+              )}
+            </Button>
           )}
         </div>
       </div>

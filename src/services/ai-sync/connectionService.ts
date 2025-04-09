@@ -7,21 +7,37 @@ export class AIConnectionService {
   private connected: boolean = false;
   private connectionAttempts: number = 0;
   private readonly MAX_ATTEMPTS = 3;
+  private readonly MAX_RECONNECT_INTERVAL = 30000; // 30 seconds
+  private lastConnectionAttempt: number = 0;
   private readonly AI_URL = 'https://chat.openai.com/';
   
   constructor(private windowManager: AIWindowManager) {}
   
   isConnected(): boolean {
-    // Check if the window is still open
-    if (!this.windowManager.isWindowOpen() && this.connected) {
-      this.connected = false;
-      // Emit disconnection event
-      aiSyncEvents.emit(false, 'ChatGPT window was closed');
+    // Only check if window is still open if we think we're connected
+    if (this.connected) {
+      // Check if the window is still open
+      if (!this.windowManager.isWindowOpen()) {
+        this.connected = false;
+        // Emit disconnection event
+        aiSyncEvents.emit(false, 'ChatGPT window was closed');
+      }
     }
     return this.connected;
   }
   
   async connectToAI(): Promise<boolean> {
+    // Prevent connection spam by enforcing a cooldown period
+    const now = Date.now();
+    if ((now - this.lastConnectionAttempt) < 5000) { // 5 second cooldown
+      logService.addLog({
+        type: 'info',
+        message: 'Connection attempt throttled. Please wait a moment before trying again.',
+        timestamp: Date.now()
+      });
+      return this.connected;
+    }
+    
     // If already connected and window is open, do nothing
     if (this.isConnected() && this.windowManager.isWindowOpen()) {
       logService.addLog({
@@ -32,6 +48,7 @@ export class AIConnectionService {
       return true;
     }
     
+    this.lastConnectionAttempt = now;
     this.connectionAttempts++;
     
     try {

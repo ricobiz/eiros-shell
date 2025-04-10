@@ -15,7 +15,9 @@ import {
   HelpCircle,
   Link,
   Unlink,
-  AlertOctagon
+  AlertOctagon,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { 
   Sheet,
@@ -40,27 +42,21 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import TaskScheduler from '@/components/TaskScheduler';
 import EmergencyPauseButton from '@/components/EmergencyPauseButton';
+import { useTaskScheduler } from '@/contexts/TaskSchedulerContext';
 
 const ShellHeader: React.FC = () => {
-  const { isPinned, isConnectedToAI, handleTogglePin, handleToggleAIConnection } = useShell();
+  const { isPinned, isConnectedToAI, handleTogglePin, handleToggleAIConnection, handleEmergencyStop } = useShell();
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { isExecutionPaused, toggleExecutionPause } = useTaskScheduler();
+  const [expanded, setExpanded] = React.useState(false);
   
   const Instructions = () => (
     <div className="px-2 py-4">
       <InstructionsTab />
     </div>
   );
-  
-  const handleEmergencyStop = () => {
-    aiSyncService.emergencyStop();
-    toast({
-      title: t('emergencyStopTitle'),
-      description: t('emergencyStopDesc'),
-      variant: "destructive",
-    });
-  };
   
   const InstructionsDisplay = isDesktop ? (
     <Sheet>
@@ -92,14 +88,56 @@ const ShellHeader: React.FC = () => {
     </Drawer>
   );
 
+  const handleExpandToggle = () => {
+    setExpanded(!expanded);
+  };
+
   return (
     <div className="bg-muted/30 px-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="flex space-x-1.5 items-center">
-            <div className="h-3 w-3 rounded-full bg-destructive" />
-            <div className="h-3 w-3 rounded-full bg-[#FFBD44]" />
-            <div className="h-3 w-3 rounded-full bg-accent animate-pulse" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button 
+                    onClick={() => handleToggleAIConnection()} 
+                    className="h-3 w-3 rounded-full bg-green-500 hover:bg-green-600 active:bg-green-700 cursor-pointer"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isConnectedToAI ? t('disconnect') : t('connect')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button 
+                    onClick={() => toggleExecutionPause()} 
+                    className="h-3 w-3 rounded-full bg-[#FFBD44] hover:bg-[#E0A93E] active:bg-[#C19435] cursor-pointer"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button 
+                    onClick={() => handleEmergencyStop()} 
+                    className="h-3 w-3 rounded-full bg-destructive hover:bg-red-600 active:bg-red-700 cursor-pointer"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('emergencyStop')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           
           <div className="flex items-center ml-3">
@@ -113,54 +151,22 @@ const ShellHeader: React.FC = () => {
           
           <TaskScheduler />
           
-          <EmergencyPauseButton />
-          
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
-                  variant={isConnectedToAI ? "default" : "outline"} 
-                  size="sm" 
-                  className="h-8"
-                  onClick={handleToggleAIConnection}
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleExpandToggle}
+                  className="h-8 w-8"
                 >
-                  {isConnectedToAI ? (
-                    <div className="flex items-center">
-                      <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
-                      <Unlink size={14} className="mr-1" />
-                      <span className="text-xs">{t('disconnect')}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <Link size={14} className="mr-1" />
-                      <span className="text-xs">{t('connect')}</span>
-                    </div>
-                  )}
+                  {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isConnectedToAI ? t('disconnect') : t('connect')}
+                {expanded ? t('collapseInterface') : t('expandInterface')}
               </TooltipContent>
             </Tooltip>
-
-            {isConnectedToAI && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    className="h-8"
-                    onClick={handleEmergencyStop}
-                  >
-                    <AlertOctagon size={14} className="mr-1" />
-                    <span className="text-xs">{t('stop')}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t('emergencyStop')}
-                </TooltipContent>
-              </Tooltip>
-            )}
 
             <Tooltip>
               <TooltipTrigger asChild>

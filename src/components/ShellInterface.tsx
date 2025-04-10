@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -12,6 +12,7 @@ import ShellContent from './shell/ShellContent';
 import ShellHeader from './shell/ShellHeader';
 import ShellFooter from './shell/ShellFooter';
 import TabNavigation from './shell/TabNavigation';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 
 const ShellInterface: React.FC = () => {
   return (
@@ -23,6 +24,20 @@ const ShellInterface: React.FC = () => {
 
 const ShellContainer: React.FC = () => {
   const { activeTab, setActiveTab, isPinned } = useShell();
+  const [expanded, setExpanded] = useState(false);
+  
+  // Listen for changes in expanded state from header component
+  React.useEffect(() => {
+    const handleExpand = (e: CustomEvent) => {
+      setExpanded(e.detail);
+    };
+    
+    window.addEventListener('shell-expand' as any, handleExpand);
+    
+    return () => {
+      window.removeEventListener('shell-expand' as any, handleExpand);
+    };
+  }, []);
   
   return (
     <Card className={`w-full shadow-lg bg-card border-border ${isPinned ? 'border-accent border-2' : ''}`}>
@@ -30,13 +45,17 @@ const ShellContainer: React.FC = () => {
         <ShellHeader />
       </CardHeader>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabNavigation />
-        
-        <CardContent className="p-4">
-          <ShellContent />
-        </CardContent>
-      </Tabs>
+      <Collapsible open={expanded} className="w-full">
+        <CollapsibleContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabNavigation />
+            
+            <CardContent className="p-4">
+              <ShellContent />
+            </CardContent>
+          </Tabs>
+        </CollapsibleContent>
+      </Collapsible>
       
       <CardFooter className="p-2">
         <ShellFooter />

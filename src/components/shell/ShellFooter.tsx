@@ -9,6 +9,15 @@ const ShellFooter: React.FC = () => {
   const { isPinned, isConnectedToAI } = useShell();
   const { isExecutionPaused } = useTaskScheduler();
   const { t } = useLanguage();
+  const [expanded, setExpanded] = React.useState(false);
+
+  // Кнопка для разворачивания интерфейса
+  const handleExpandClick = () => {
+    const newState = !expanded;
+    setExpanded(newState);
+    // Отправляем событие для обновления состояния в ShellInterface
+    window.dispatchEvent(new CustomEvent('shell-expand', { detail: newState }));
+  };
 
   return (
     <div className="bg-muted/30 flex justify-between px-2 py-1 text-xs w-full">
@@ -22,12 +31,17 @@ const ShellFooter: React.FC = () => {
       </div>
       
       <div className="flex items-center space-x-4">
+        <button onClick={handleExpandClick} className="text-muted-foreground hover:text-foreground">
+          {expanded ? '▲' : '▼'}
+        </button>
+        
         {isConnectedToAI && (
           <div className="flex items-center space-x-1">
             <Link size={12} className="text-green-500" />
             <span className="text-green-500">{t('aiConnected')}</span>
           </div>
         )}
+        
         <div className="flex items-center space-x-1">
           <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse"/>
           <span className="text-muted-foreground">{t('listening')}</span>

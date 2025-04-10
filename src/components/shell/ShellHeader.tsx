@@ -51,6 +51,7 @@ const ShellHeader: React.FC = () => {
   const { t } = useLanguage();
   const { isExecutionPaused, toggleExecutionPause } = useTaskScheduler();
   const [expanded, setExpanded] = React.useState(false);
+  const [customTitle, setCustomTitle] = React.useState("Shell Assistant"); // Default custom title
   
   const Instructions = () => (
     <div className="px-2 py-4">
@@ -93,6 +94,20 @@ const ShellHeader: React.FC = () => {
     // Dispatch custom event to notify other components
     const event = new CustomEvent('shell-expand', { detail: !expanded });
     window.dispatchEvent(event);
+  };
+
+  // Load custom title from localStorage if available
+  useEffect(() => {
+    const savedTitle = localStorage.getItem('shellCustomTitle');
+    if (savedTitle) {
+      setCustomTitle(savedTitle);
+    }
+  }, []);
+
+  // Save custom title to localStorage when it changes
+  const updateCustomTitle = (newTitle: string) => {
+    setCustomTitle(newTitle);
+    localStorage.setItem('shellCustomTitle', newTitle);
   };
 
   return (
@@ -145,7 +160,7 @@ const ShellHeader: React.FC = () => {
           
           <div className="flex items-center ml-3">
             <Cpu size={14} className="text-accent" />
-            <CardTitle className="text-sm ml-1">{t('shell')}</CardTitle>
+            <CardTitle className="text-sm ml-1">{customTitle}</CardTitle>
           </div>
         </div>
         

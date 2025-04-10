@@ -10,13 +10,17 @@ const ShellInterface: React.FC = () => {
     console.log('ShellInterface mounted - setting up provider hierarchy');
   }, []);
 
+  // Log provider mounting outside of JSX
+  useEffect(() => {
+    console.log('LanguageProvider rendered');
+    console.log('TaskSchedulerProvider rendered');
+    console.log('ShellProvider rendered - context should be available');
+  }, []);
+
   return (
     <LanguageProvider>
-      {console.log('LanguageProvider rendered')}
       <TaskSchedulerProvider>
-        {console.log('TaskSchedulerProvider rendered')}
         <ShellProvider>
-          {console.log('ShellProvider rendered - context should be available')}
           <div className="w-full h-full">
             <ShellContainer />
           </div>

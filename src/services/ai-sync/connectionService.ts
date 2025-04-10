@@ -21,11 +21,11 @@ export class AIConnectionService {
       if (!this.windowManager.isWindowOpen()) {
         this.connected = false;
         // Emit disconnection event
-        aiSyncEvents.emit(false, 'Окно ChatGPT было закрыто');
+        aiSyncEvents.emit(false, 'AI window was closed');
         
         logService.addLog({
           type: 'warning',
-          message: 'Соединение с ChatGPT потеряно (окно закрыто)',
+          message: 'Connection to AI lost (window closed)',
           timestamp: Date.now()
         });
       }
@@ -39,7 +39,7 @@ export class AIConnectionService {
     if ((now - this.lastConnectionAttempt) < this.COOLDOWN_PERIOD) {
       logService.addLog({
         type: 'info',
-        message: 'Попытка подключения отклонена. Пожалуйста, подождите несколько секунд перед повторной попыткой.',
+        message: 'Connection attempt rejected. Please wait a few seconds before trying again.',
         timestamp: Date.now()
       });
       return this.connected;
@@ -49,7 +49,7 @@ export class AIConnectionService {
     if (this.isConnected() && this.windowManager.isWindowOpen()) {
       logService.addLog({
         type: 'info',
-        message: 'Уже подключено к AI',
+        message: 'Already connected to AI',
         timestamp: Date.now()
       });
       return true;
@@ -62,7 +62,7 @@ export class AIConnectionService {
       // When connecting to browser-based ChatGPT, log the attempt
       logService.addLog({
         type: 'info',
-        message: 'Открытие соединения с браузерным ChatGPT...',
+        message: 'Opening connection to browser-based ChatGPT...',
         timestamp: Date.now()
       });
       
@@ -70,7 +70,7 @@ export class AIConnectionService {
       const chatWindow = this.windowManager.openWindow(this.AI_URL);
       
       if (!chatWindow) {
-        throw new Error('Не удалось открыть окно ChatGPT. Возможно, блокировщик всплывающих окон активен.');
+        throw new Error('Failed to open ChatGPT window. Popup blocker might be active.');
       }
       
       // Mark as connected since we successfully opened the window
@@ -79,12 +79,12 @@ export class AIConnectionService {
       
       logService.addLog({
         type: 'success',
-        message: 'Окно браузера ChatGPT открыто',
+        message: 'ChatGPT browser window opened',
         timestamp: Date.now()
       });
       
       // Emit sync event
-      aiSyncEvents.emit(true, 'Окно браузера ChatGPT открыто');
+      aiSyncEvents.emit(true, 'Connected to AI system');
       
       // Focus the window
       this.windowManager.focusWindow();
@@ -93,7 +93,7 @@ export class AIConnectionService {
     } catch (error) {
       logService.addLog({
         type: 'error',
-        message: `Ошибка подключения к AI (попытка ${this.connectionAttempts}/${this.MAX_ATTEMPTS})`,
+        message: `Error connecting to AI (attempt ${this.connectionAttempts}/${this.MAX_ATTEMPTS})`,
         timestamp: Date.now(),
         details: error
       });
@@ -102,13 +102,13 @@ export class AIConnectionService {
         this.connectionAttempts = 0;
         logService.addLog({
           type: 'warning',
-          message: 'Достигнуто максимальное количество попыток подключения. Повторная попытка через некоторое время.',
+          message: 'Maximum connection attempts reached. Will retry later.',
           timestamp: Date.now()
         });
       }
       
       // Emit sync event
-      aiSyncEvents.emit(false, 'Ошибка подключения к AI');
+      aiSyncEvents.emit(false, 'Failed to connect to AI system');
       
       return false;
     }
@@ -126,11 +126,11 @@ export class AIConnectionService {
     
     logService.addLog({
       type: 'info',
-      message: 'Отключено от окна ChatGPT',
+      message: 'Disconnected from AI window',
       timestamp: Date.now()
     });
     
     // Emit sync event
-    aiSyncEvents.emit(false, 'Окно ChatGPT закрыто');
+    aiSyncEvents.emit(false, 'Disconnected from AI system');
   }
 }

@@ -118,6 +118,18 @@ const CommandTab: React.FC<CommandTabProps> = ({ onCommandExecuted }) => {
 ]`}
             </pre>
           </div>
+          
+          <div>
+            <h4 className="font-medium">Task Scheduling</h4>
+            <p className="text-xs mb-1">Schedule recurring tasks:</p>
+            <pre className="bg-muted p-2 rounded-sm text-xs overflow-x-auto">
+{`/schedule#cmd601{ 
+  "command": "/click#btn1{ \\"selector\\": \\".refresh\\" }", 
+  "interval": 60, 
+  "name": "Auto Refresh" 
+}`}
+            </pre>
+          </div>
         </div>
       </div>
     );

@@ -22,7 +22,7 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleToggleAIConnection()} 
-              className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors border border-green-500/30"
+              className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-green-500/30"
               aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
             >
               <div className="h-3 w-3 rounded-none bg-green-500"></div>
@@ -39,7 +39,7 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => toggleExecutionPause()} 
-              className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors border border-amber-500/30"
+              className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-amber-500/30"
               aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
             >
               <div className="h-3 w-3 rounded-none bg-[#FFBD44]"></div>
@@ -56,7 +56,7 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleEmergencyStop()} 
-              className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors border border-destructive/30"
+              className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-destructive/30"
               aria-label={t('emergencyStop')}
             >
               <div className="h-3 w-3 rounded-none bg-destructive"></div>

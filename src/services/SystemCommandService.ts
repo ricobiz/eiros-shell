@@ -60,6 +60,61 @@ class SystemCommandService {
     });
   }
 
+  // Alias for executeCommand to match the usage in systemCommands.ts
+  public async executeShellCommand(command: string, asAdmin: boolean = false): Promise<SystemCommandResult> {
+    return this.executeCommand(command, asAdmin);
+  }
+
+  // Method to request elevation of privileges
+  public async requestElevation(): Promise<boolean> {
+    console.log("Requesting elevation of privileges");
+    
+    // Mock implementation - in a real app, this would trigger a UAC prompt or sudo request
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // For demo purposes, simulate a successful elevation request
+        this.isAdmin = true;
+        resolve(true);
+      }, 1000);
+    });
+  }
+
+  // Method to restart the system
+  public async restartSystem(): Promise<SystemCommandResult> {
+    console.log("Requesting system restart");
+    
+    // Mock implementation - in a real app, this would trigger a system restart
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          output: "System restart requested",
+          error: null,
+          exitCode: 0,
+          asAdmin: true
+        });
+      }, 500);
+    });
+  }
+
+  // Method to kill a process
+  public async killProcess(processName: string): Promise<SystemCommandResult> {
+    console.log(`Killing process: ${processName}`);
+    
+    // Mock implementation - in a real app, this would kill the specified process
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          output: `Process ${processName} terminated`,
+          error: null,
+          exitCode: 0,
+          asAdmin: this.isAdmin
+        });
+      }, 500);
+    });
+  }
+
   public async readFile(path: string): Promise<FileOperationResult> {
     console.log(`Reading file at: ${path}`);
     

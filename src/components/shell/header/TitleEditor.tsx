@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Cpu, Edit, Check } from 'lucide-react';
+import { Edit, Check } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,7 +42,7 @@ const TitleEditor: React.FC = () => {
   };
   
   return (
-    <div className="flex items-center ml-3">
+    <div className="flex items-center">
       {isEditingTitle ? (
         <div className="flex items-center ml-1">
           <Input type="text" value={titleInput} onChange={e => setTitleInput(e.target.value)} className="h-6 py-1 px-2 text-sm w-32" autoFocus />
@@ -54,8 +54,10 @@ const TitleEditor: React.FC = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="link" className="p-0 h-auto">
-              <CardTitle className="text-sm ml-1 flex items-center font-mono font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#21e6c1] to-cyan-500">
-                {customTitle}
+              <CardTitle className="text-sm flex items-center">
+                <span className="font-serif italic font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-[#21e6c1] tracking-wide">
+                  {customTitle}
+                </span>
                 <div className="text-xs text-muted-foreground ml-2 font-normal">
                   (Enhanced Intelligent Reactive Operating Shell)
                 </div>

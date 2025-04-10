@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Link } from 'lucide-react';
 import { useShell } from '@/contexts/shell/ShellContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTaskScheduler } from '@/contexts/TaskSchedulerContext';
@@ -34,13 +33,6 @@ const ShellFooter: React.FC = () => {
         <button onClick={handleExpandClick} className="text-muted-foreground hover:text-foreground">
           {expanded ? '▲' : '▼'}
         </button>
-        
-        {isConnectedToAI && (
-          <div className="flex items-center space-x-1">
-            <Link size={12} className="text-green-500" />
-            <span className="text-green-500">{t('aiConnected')}</span>
-          </div>
-        )}
         
         <div className="flex items-center space-x-1">
           <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse"/>

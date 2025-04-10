@@ -17,7 +17,8 @@ export const navigationEvents = {
   }
 };
 
-export async function handleNavigateCommand(command: Command): Promise<void> {
+// Renaming from handleNavigateCommand to handleNavigationCommand to match the import in index.ts
+export async function handleNavigationCommand(command: Command): Promise<void> {
   const { url } = command.params;
   
   logService.addLog({

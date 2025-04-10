@@ -27,7 +27,7 @@ export function useShellMemory() {
       const mockScreenshotData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
       
       memoryService.addMemoryItem({
-        type: MemoryType.SCREENSHOT,
+        type: MemoryType.SCREENSHOT,  // Use enum value instead of string literal
         data: mockScreenshotData,
         tags: ['screenshot', 'manual']
       });
@@ -65,7 +65,7 @@ export function useShellMemory() {
       };
       
       memoryService.addMemoryItem({
-        type: MemoryType.ELEMENT,
+        type: MemoryType.ELEMENT,  // Use enum value instead of string literal
         data: mockAnalysisData,
         tags: ['analysis', 'interface', 'elements']
       });

@@ -90,6 +90,7 @@ def parse_command_chain(dsl_string: str) -> List[str]:
         if current_cmd.strip():
             commands.append(current_cmd.strip())
         
+        logger.info(f"Parsed {len(commands)} commands from chain #{chain_id}")
         return commands
         
     except Exception as e:

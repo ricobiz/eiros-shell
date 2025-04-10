@@ -103,6 +103,21 @@ const CommandTab: React.FC<CommandTabProps> = ({ onCommandExecuted }) => {
 ]`}
             </pre>
           </div>
+          
+          <div>
+            <h4 className="font-medium">Nested Chains</h4>
+            <p className="text-xs mb-1">Execute chains within chains for complex workflows:</p>
+            <pre className="bg-muted p-2 rounded-sm text-xs overflow-x-auto">
+{`/chain#cmd501[
+  /navigate#cmd502{ "url": "https://example.com" },
+  /chain#cmd503[
+    /type#cmd504{ "selector": "#username", "text": "admin" },
+    /type#cmd505{ "selector": "#password", "text": "secret" }
+  ],
+  /click#cmd506{ "element": "#loginButton" }
+]`}
+            </pre>
+          </div>
         </div>
       </div>
     );

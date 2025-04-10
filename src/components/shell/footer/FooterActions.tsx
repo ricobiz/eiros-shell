@@ -17,7 +17,10 @@ const FooterActions: React.FC<FooterActionsProps> = ({ expanded, onExpandToggle 
       </button>
       
       <div className="flex items-center">
-        <span className="text-muted-foreground">🟢 SYMBIOTE ACTIVE</span>
+        <span className="text-accent flex items-center">
+          <span className="inline-block h-2 w-2 rounded-full bg-accent mr-1.5"></span>
+          SYMBIOTE ACTIVE
+        </span>
       </div>
     </div>
   );

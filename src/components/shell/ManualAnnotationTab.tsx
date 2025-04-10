@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { useShell } from '@/contexts/shell/ShellContext';
-import { useCommandService } from '@/hooks/useShellCommands';
+import { commandService } from '@/services/CommandService';
 
 interface Screenshot {
   path: string;
@@ -14,7 +14,6 @@ interface Screenshot {
 
 const ManualAnnotationTab: React.FC = () => {
   const { handleTakeScreenshot } = useShell();
-  const { executeCommand } = useCommandService();
   const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
   const [currentScreenshot, setCurrentScreenshot] = useState<Screenshot | null>(null);
   const [loading, setLoading] = useState(false);
@@ -24,9 +23,11 @@ const ManualAnnotationTab: React.FC = () => {
     setLoading(true);
     try {
       // First try to get existing screenshots
-      const result = await executeCommand({
+      const result = await commandService.executeCommand({
+        id: `get_screenshots_${Date.now()}`,
         type: 'GET_SCREENSHOTS',
-        params: { limit: 1 }
+        params: { limit: 1 },
+        timestamp: Date.now()
       });
       
       if (result && result.screenshots && result.screenshots.length > 0) {
@@ -35,9 +36,9 @@ const ManualAnnotationTab: React.FC = () => {
       } else {
         // If no screenshots, take a new one
         const screenshotResult = await handleTakeScreenshot();
-        if (screenshotResult && screenshotResult.path) {
+        if (screenshotResult && typeof screenshotResult === 'object' && 'path' in screenshotResult) {
           const newScreenshot: Screenshot = {
-            path: screenshotResult.path,
+            path: screenshotResult.path as string,
             timestamp: Date.now()
           };
           setScreenshots([newScreenshot]);
@@ -54,9 +55,11 @@ const ManualAnnotationTab: React.FC = () => {
   // Start annotation mode
   const handleStartAnnotating = async () => {
     try {
-      await executeCommand({
+      await commandService.executeCommand({
+        id: `annotate_${Date.now()}`,
         type: 'ANNOTATE',
-        params: {}
+        params: {},
+        timestamp: Date.now()
       });
     } catch (error) {
       console.error("Failed to start annotation mode:", error);

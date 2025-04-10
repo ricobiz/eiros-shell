@@ -16,16 +16,16 @@ const HeaderButtons: React.FC = () => {
   const { t } = useLanguage();
   
   return (
-    <div className="flex space-x-2 items-center">
+    <div className="flex items-center space-x-3 mr-2">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleToggleAIConnection()} 
-              className="relative h-8 w-8 cursor-pointer flex items-center justify-center"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
               aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
             >
-              <div className="absolute transform h-5 w-1.5 rotate-[30deg] bg-green-500 hover:bg-green-600 active:bg-green-700"></div>
+              <div className="transform h-4 w-1 rotate-[30deg] bg-green-500"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -39,10 +39,10 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => toggleExecutionPause()} 
-              className="relative h-8 w-8 cursor-pointer flex items-center justify-center"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
               aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
             >
-              <div className="absolute transform h-5 w-1.5 rotate-[30deg] bg-[#FFBD44] hover:bg-[#E0A93E] active:bg-[#C19435]"></div>
+              <div className="transform h-4 w-1 rotate-[30deg] bg-[#FFBD44]"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -56,10 +56,10 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleEmergencyStop()} 
-              className="relative h-8 w-8 cursor-pointer flex items-center justify-center"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
               aria-label={t('emergencyStop')}
             >
-              <div className="absolute transform h-5 w-1.5 rotate-[30deg] bg-destructive hover:bg-red-600 active:bg-red-700"></div>
+              <div className="transform h-4 w-1 rotate-[30deg] bg-destructive"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>

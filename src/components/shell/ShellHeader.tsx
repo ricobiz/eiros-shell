@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { 
   Tooltip,
@@ -90,6 +90,9 @@ const ShellHeader: React.FC = () => {
 
   const handleExpandToggle = () => {
     setExpanded(!expanded);
+    // Dispatch custom event to notify other components
+    const event = new CustomEvent('shell-expand', { detail: !expanded });
+    window.dispatchEvent(event);
   };
 
   return (

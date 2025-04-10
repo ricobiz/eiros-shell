@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -30,8 +30,8 @@ const ShellContainer: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   
   // Listen for changes in expanded state from header component
-  React.useEffect(() => {
-    const handleExpand = (e: CustomEvent) => {
+  useEffect(() => {
+    const handleExpand = (e: CustomEvent<boolean>) => {
       setExpanded(e.detail);
     };
     

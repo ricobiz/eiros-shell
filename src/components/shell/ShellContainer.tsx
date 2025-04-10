@@ -14,15 +14,17 @@ import ShellFooter from './ShellFooter';
 import TabNavigation from './TabNavigation';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import DiagnosticPanel from '../DiagnosticPanel';
+import AutostartConfig from '../AutostartConfig';
 import DebugOverlay from '../DebugOverlay';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '../ui/button';
-import { Bug, CheckCircle } from 'lucide-react';
+import { Bug, CheckCircle, Settings } from 'lucide-react';
 
 const ShellContainer: React.FC = () => {
   const { activeTab, setActiveTab, isPinned } = useShell();
   const [expanded, setExpanded] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [showAutostart, setShowAutostart] = useState(false);
   const [showDebugOverlay, setShowDebugOverlay] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const { toast } = useToast();
@@ -58,6 +60,13 @@ const ShellContainer: React.FC = () => {
       setShowDebugOverlay(false);
     }
   };
+
+  const toggleSettings = () => {
+    setShowAutostart(!showAutostart);
+    if (!showAutostart) {
+      setShowDiagnostics(true); // Show diagnostics when showing settings
+    }
+  };
   
   return (
     <>
@@ -66,29 +75,43 @@ const ShellContainer: React.FC = () => {
           <div className="flex justify-between items-center">
             <ShellHeader />
             
-            {/* Debug Toggle Button */}
-            <Button 
-              variant={debugMode ? "default" : "outline"}
-              size="sm" 
-              className="h-7"
-              onClick={toggleDebugMode}
-            >
-              {debugMode ? (
-                <>
-                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs">Debug Active</span>
-                </>
-              ) : (
-                <>
-                  <Bug className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs">Debug Mode</span>
-                </>
-              )}
-            </Button>
+            <div className="flex items-center space-x-2">
+              {/* Settings Toggle Button */}
+              <Button 
+                variant={showAutostart ? "default" : "outline"}
+                size="sm" 
+                className="h-7"
+                onClick={toggleSettings}
+              >
+                <Settings className="h-3.5 w-3.5 mr-1" />
+                <span className="text-xs">Settings</span>
+              </Button>
+              
+              {/* Debug Toggle Button */}
+              <Button 
+                variant={debugMode ? "default" : "outline"}
+                size="sm" 
+                className="h-7"
+                onClick={toggleDebugMode}
+              >
+                {debugMode ? (
+                  <>
+                    <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                    <span className="text-xs">Debug Active</span>
+                  </>
+                ) : (
+                  <>
+                    <Bug className="h-3.5 w-3.5 mr-1" />
+                    <span className="text-xs">Debug Mode</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           
-          {/* Diagnostics Panel - Only show when specifically requested or during debug mode */}
+          {/* Settings & Diagnostic Panels - Show when specifically requested */}
           {(showDiagnostics || debugMode) && <div className="mt-2"><DiagnosticPanel /></div>}
+          {showAutostart && <div className="mt-2"><AutostartConfig /></div>}
         </CardHeader>
         
         <Collapsible open={expanded} className="w-full">

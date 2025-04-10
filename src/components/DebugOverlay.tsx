@@ -1,131 +1,202 @@
 
 import React, { useState } from 'react';
-import { useShell } from '@/contexts/shell/ShellContext';
-import { X, Minimize, Maximize2, ChevronUp, ChevronDown } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Card, 
+  CardContent, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DiagnosticResult } from '@/services/DiagnosticsService';
+import { 
+  Code, 
+  Play, 
+  Pause, 
+  StepForward, 
+  RotateCcw, 
+  X,
+  Terminal,
+  AlertCircle
+} from 'lucide-react';
+import { logService } from '@/services/LogService';
+import { LogEntry } from '@/types/types';
 
 interface DebugOverlayProps {
   onClose: () => void;
-  diagnosticResults?: DiagnosticResult[];
 }
 
-const DebugOverlay: React.FC<DebugOverlayProps> = ({ onClose, diagnosticResults = [] }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [minimized, setMinimized] = useState(false);
-  const { isConnectedToAI, commandResult } = useShell();
+const DebugOverlay: React.FC<DebugOverlayProps> = ({ onClose }) => {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [commandInput, setCommandInput] = useState('');
   
-  // Visual indicator components for system state
-  const SystemStateIndicators = () => {
-    const indicators = [
-      { color: 'bg-green-500', status: isConnectedToAI },
-      { color: 'bg-[#FFBD44]', status: true }, // Execution always on for demo
-      { color: 'bg-blue-500', status: true }   // System state always on for demo
-    ];
+  React.useEffect(() => {
+    // Subscribe to logs
+    const unsubscribe = logService.subscribe(newLogs => {
+      if (!isPaused) {
+        setLogs(newLogs.slice(0, 100)); // Limit to 100 most recent logs
+      }
+    });
     
-    return (
-      <div className="flex items-center space-x-1.5">
-        {indicators.map((indicator, index) => (
-          <div 
-            key={index} 
-            className={`${indicator.status ? indicator.color : 'bg-gray-500'} w-[2px] h-4 transform rotate-45`}
-          />
-        ))}
-      </div>
-    );
+    // Get initial logs
+    setLogs(logService.getLogs(100));
+    
+    // Add debug mode activated log
+    logService.addLog({
+      type: 'info',
+      message: 'Debug mode activated',
+      timestamp: Date.now()
+    });
+    
+    return () => {
+      unsubscribe();
+      
+      // Add debug mode deactivated log
+      logService.addLog({
+        type: 'info',
+        message: 'Debug mode deactivated',
+        timestamp: Date.now()
+      });
+    };
+  }, [isPaused]);
+  
+  const handlePauseToggle = () => {
+    setIsPaused(!isPaused);
+    logService.addLog({
+      type: 'info',
+      message: !isPaused ? 'Debug logging paused' : 'Debug logging resumed',
+      timestamp: Date.now()
+    });
   };
-
-  if (minimized) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <div className="bg-card border border-border rounded-md shadow-lg flex items-center p-1.5 cursor-pointer hover:bg-muted/80">
-          <div className="flex items-center" onClick={() => setMinimized(false)}>
-            <SystemStateIndicators />
-            <span className="ml-2 text-xs font-mono">ENS DEBUG</span>
-          </div>
-          <Button variant="ghost" size="icon" className="h-5 w-5 ml-2" onClick={onClose}>
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  
+  const handleClearLogs = () => {
+    logService.clearLogs();
+    setLogs([]);
+  };
+  
+  const handleCommandSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!commandInput.trim()) return;
+    
+    // In a real implementation, this would execute the command
+    logService.addLog({
+      type: 'command',
+      message: `> ${commandInput}`,
+      timestamp: Date.now()
+    });
+    
+    // Mock command response
+    setTimeout(() => {
+      logService.addLog({
+        type: 'success',
+        message: `Command executed: ${commandInput}`,
+        timestamp: Date.now()
+      });
+    }, 500);
+    
+    setCommandInput('');
+  };
   
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-80">
-      <Card className="shadow-xl border-border">
-        <div className="flex justify-between items-center px-3 py-1.5 border-b border-border">
-          <div className="flex items-center space-x-2">
-            <SystemStateIndicators />
-            <span className="text-xs font-mono">ENS DEBUG MODE</span>
+    <Card className="fixed bottom-4 right-4 w-[500px] h-[400px] shadow-lg z-50 flex flex-col">
+      <CardHeader className="p-3 bg-muted/50">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-sm font-medium flex items-center">
+            <Code className="h-4 w-4 mr-2" />
+            EirosShell Debug Console
+          </CardTitle>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 p-0 overflow-hidden">
+        <div className="flex flex-col h-full">
+          {/* Log display */}
+          <div className="flex-1 p-3 overflow-y-auto bg-muted/20 font-mono text-xs">
+            {logs.length === 0 ? (
+              <div className="text-center text-muted-foreground py-4">
+                <AlertCircle className="h-5 w-5 mx-auto mb-2" />
+                <p>No logs to display</p>
+              </div>
+            ) : (
+              logs.map((log, index) => (
+                <div 
+                  key={index} 
+                  className={`py-0.5 ${
+                    log.type === 'error' ? 'text-red-500' : 
+                    log.type === 'warning' ? 'text-yellow-500' : 
+                    log.type === 'success' ? 'text-green-500' : 
+                    log.type === 'command' ? 'text-purple-500 font-bold' : ''
+                  }`}
+                >
+                  [{new Date(log.timestamp).toLocaleTimeString()}] {log.message}
+                </div>
+              ))
+            )}
           </div>
-          <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMinimized(true)}>
-              <Minimize className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(!expanded)}>
-              {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
-            </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClose}>
-              <X className="h-3 w-3" />
-            </Button>
+          
+          {/* Command input */}
+          <div className="border-t p-2 bg-background">
+            <form onSubmit={handleCommandSubmit} className="flex items-center">
+              <Terminal className="h-4 w-4 mr-2 text-muted-foreground" />
+              <input
+                type="text"
+                value={commandInput}
+                onChange={(e) => setCommandInput(e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none text-sm"
+                placeholder="Enter debug command..."
+              />
+            </form>
           </div>
         </div>
+      </CardContent>
+      
+      <CardFooter className="p-2 bg-muted/30 border-t flex justify-between">
+        <div className="flex items-center space-x-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-7"
+            onClick={handlePauseToggle}
+          >
+            {isPaused ? (
+              <>
+                <Play className="h-3.5 w-3.5 mr-1" />
+                <span className="text-xs">Resume</span>
+              </>
+            ) : (
+              <>
+                <Pause className="h-3.5 w-3.5 mr-1" />
+                <span className="text-xs">Pause</span>
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-7"
+            disabled={logs.length === 0}
+            onClick={handleClearLogs}
+          >
+            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            <span className="text-xs">Clear</span>
+          </Button>
+        </div>
         
-        {expanded && (
-          <CardContent className="p-3 text-xs">
-            <div className="space-y-3">
-              <div>
-                <h3 className="text-xs font-medium mb-1">System Status</h3>
-                <div className="grid grid-cols-2 gap-1">
-                  <Badge variant={isConnectedToAI ? "default" : "outline"} className="justify-center">
-                    AI {isConnectedToAI ? "Connected" : "Disconnected"}
-                  </Badge>
-                  <Badge variant="default" className="justify-center">
-                    Debug Mode Active
-                  </Badge>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-xs font-medium mb-1">System Checks</h3>
-                <div className="grid grid-cols-2 gap-1">
-                  {diagnosticResults.map((result, index) => (
-                    <div key={index} className="flex justify-between text-[10px] py-0.5">
-                      <span>{result.test}:</span>
-                      <span className={result.passed ? "text-green-500" : "text-destructive"}>
-                        {result.passed ? "✓" : "✗"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {commandResult && (
-                <div>
-                  <h3 className="text-xs font-medium mb-1">Last Command Result</h3>
-                  <div className="bg-muted p-2 rounded text-[10px] font-mono max-h-20 overflow-y-auto">
-                    <div className="text-primary-foreground/80">
-                      Type: {commandResult.type}
-                    </div>
-                    <div className={`${
-                      commandResult.status === 'success' ? 'text-green-500' : 'text-destructive'
-                    }`}>
-                      Status: {commandResult.status}
-                    </div>
-                    <div className="truncate">
-                      {commandResult.message}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        )}
-      </Card>
-    </div>
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          className="h-7"
+        >
+          <StepForward className="h-3.5 w-3.5 mr-1" />
+          <span className="text-xs">Step</span>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

@@ -3,72 +3,44 @@ import React from 'react';
 import { TabsContent } from '@/components/ui/tabs';
 import { useShell } from '@/contexts/shell/ShellContext';
 import CommandTab from './CommandTab';
+import InstructionsTab from './InstructionsTab';
+import BrowserPreviewTab from './BrowserPreviewTab';
 import VisionTab from './VisionTab';
 import MemoryTab from './MemoryTab';
 import ChatTab from './ChatTab';
-import BrowserPreviewTab from './BrowserPreviewTab';
-import InstructionsTab from './InstructionsTab';
+import DocumentationTab from './DocumentationTab';
 
 const ShellContent: React.FC = () => {
-  const { 
-    commandResult, 
-    selectedMemory,
-    isAnnotating,
-    annotations,
-    currentAnnotation,
-    browserUrl,
-    setBrowserUrl,
-    handleCommandExecuted,
-    handleMemoryItemSelected,
-    handleClearLogs,
-    handleTakeScreenshot,
-    handleAnalyzeInterface,
-    handleToggleAnnotating,
-    handleCurrentAnnotationChange,
-    handleSaveAnnotation,
-    isConnectedToAI
-  } = useShell();
-
+  const { activeTab, commandResult, handleCommandExecuted } = useShell();
+  
   return (
     <>
-      <TabsContent value="command" className="mt-0">
+      <TabsContent value="command">
         <CommandTab onCommandExecuted={handleCommandExecuted} />
       </TabsContent>
       
-      <TabsContent value="vision" className="mt-0">
-        <VisionTab 
-          commandResult={commandResult}
-          isAnnotating={isAnnotating}
-          annotations={annotations}
-          currentAnnotation={currentAnnotation}
-          onToggleAnnotating={handleToggleAnnotating}
-          onCurrentAnnotationChange={handleCurrentAnnotationChange}
-          onSaveAnnotation={handleSaveAnnotation}
-          onTakeScreenshot={handleTakeScreenshot}
-          onAnalyzeInterface={handleAnalyzeInterface}
-        />
-      </TabsContent>
-      
-      <TabsContent value="memory" className="mt-0">
-        <MemoryTab 
-          selectedMemory={selectedMemory}
-          onMemoryItemSelected={handleMemoryItemSelected}
-        />
-      </TabsContent>
-      
-      <TabsContent value="chat" className="mt-0">
-        <ChatTab 
-          onClearLogs={handleClearLogs}
-          isConnectedToAI={isConnectedToAI}
-        />
-      </TabsContent>
-
-      <TabsContent value="browser" className="mt-0">
-        <BrowserPreviewTab url={browserUrl} setUrl={setBrowserUrl} />
-      </TabsContent>
-
-      <TabsContent value="instructions" className="mt-0">
+      <TabsContent value="instructions">
         <InstructionsTab />
+      </TabsContent>
+      
+      <TabsContent value="browser">
+        <BrowserPreviewTab />
+      </TabsContent>
+      
+      <TabsContent value="vision">
+        <VisionTab />
+      </TabsContent>
+      
+      <TabsContent value="memory">
+        <MemoryTab />
+      </TabsContent>
+      
+      <TabsContent value="chat">
+        <ChatTab />
+      </TabsContent>
+      
+      <TabsContent value="docs">
+        <DocumentationTab />
       </TabsContent>
     </>
   );

@@ -65,7 +65,7 @@ const ShellHeader: React.FC = () => {
   const InstructionsDisplay = isDesktop ? (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
+        <Button variant="ghost" size="icon" className="h-8 w-8">
           <HelpCircle size={16} />
         </Button>
       </SheetTrigger>
@@ -79,7 +79,7 @@ const ShellHeader: React.FC = () => {
   ) : (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
+        <Button variant="ghost" size="icon" className="h-8 w-8">
           <HelpCircle size={16} />
         </Button>
       </DrawerTrigger>

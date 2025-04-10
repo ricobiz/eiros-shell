@@ -133,11 +133,12 @@ export class AIConnectionService {
       this.windowManager.focusWindow();
       
       // Send a test ping to verify the connection is working
-      const chatWindow = this.windowManager.getWindow();
-      if (chatWindow) {
+      // Use the window reference from the windowManager instead of redeclaring
+      const windowRef = this.windowManager.getWindow();
+      if (windowRef) {
         try {
           console.log('Sending initialization ping to ChatGPT window');
-          chatWindow.postMessage({
+          windowRef.postMessage({
             type: 'EIROS_INIT',
             message: 'Initial connection ping'
           }, '*');

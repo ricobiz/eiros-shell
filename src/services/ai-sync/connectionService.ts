@@ -1,7 +1,7 @@
 
 import { logService } from '../LogService';
 import { aiSyncEvents } from './events';
-import { AIWindowManager } from './types';
+import { AIWindowManager, AIConnectionState } from './types';
 
 export class AIConnectionService {
   private connected: boolean = false;
@@ -11,6 +11,7 @@ export class AIConnectionService {
   private lastConnectionAttempt: number = 0;
   private readonly AI_URL = 'https://chat.openai.com/';
   private readonly COOLDOWN_PERIOD = 5000; // 5 second cooldown between connection attempts
+  private connectionState: AIConnectionState = AIConnectionState.DISCONNECTED;
   
   constructor(private windowManager: AIWindowManager) {}
   
@@ -20,6 +21,7 @@ export class AIConnectionService {
       // Check if the window is still open
       if (!this.windowManager.isWindowOpen()) {
         this.connected = false;
+        this.connectionState = AIConnectionState.DISCONNECTED;
         // Emit disconnection event
         aiSyncEvents.emit(false, 'AI window was closed');
         
@@ -31,6 +33,10 @@ export class AIConnectionService {
       }
     }
     return this.connected;
+  }
+  
+  getConnectionState(): AIConnectionState {
+    return this.connectionState;
   }
   
   async connectToAI(): Promise<boolean> {
@@ -57,6 +63,7 @@ export class AIConnectionService {
     
     this.lastConnectionAttempt = now;
     this.connectionAttempts++;
+    this.connectionState = AIConnectionState.CONNECTING;
     
     try {
       // When connecting to browser-based ChatGPT, log the attempt
@@ -70,11 +77,22 @@ export class AIConnectionService {
       const chatWindow = this.windowManager.openWindow(this.AI_URL);
       
       if (!chatWindow) {
+        this.connectionState = AIConnectionState.ERROR;
         throw new Error('Failed to open ChatGPT window. Popup blocker might be active.');
+      }
+      
+      // Introduce a delay to ensure the window has time to load
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Check if window is still open after delay
+      if (!this.windowManager.isWindowOpen()) {
+        this.connectionState = AIConnectionState.ERROR;
+        throw new Error('ChatGPT window was closed too quickly. Popup blocker may be active or window was closed.');
       }
       
       // Mark as connected since we successfully opened the window
       this.connected = true;
+      this.connectionState = AIConnectionState.CONNECTED;
       this.connectionAttempts = 0;
       
       logService.addLog({
@@ -91,6 +109,8 @@ export class AIConnectionService {
       
       return true;
     } catch (error) {
+      this.connectionState = AIConnectionState.ERROR;
+      
       logService.addLog({
         type: 'error',
         message: `Error connecting to AI (attempt ${this.connectionAttempts}/${this.MAX_ATTEMPTS})`,
@@ -123,6 +143,7 @@ export class AIConnectionService {
     this.windowManager.closeWindow();
     
     this.connected = false;
+    this.connectionState = AIConnectionState.DISCONNECTED;
     
     logService.addLog({
       type: 'info',

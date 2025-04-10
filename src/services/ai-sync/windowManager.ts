@@ -14,7 +14,26 @@ export class WindowManager implements AIWindowManager {
     const windowFeatures = options?.windowFeatures || this.DEFAULT_FEATURES;
 
     try {
+      // Close any existing window first
+      if (this.chatWindow && !this.chatWindow.closed) {
+        this.chatWindow.close();
+      }
+      
+      // Open new window
       this.chatWindow = window.open(url, windowName, windowFeatures);
+      
+      // Detect popup blocker
+      if (!this.chatWindow || this.chatWindow.closed || typeof this.chatWindow.closed === 'undefined') {
+        console.error('Popup blocker prevented opening the window');
+        this.chatWindow = null;
+        return null;
+      }
+      
+      // Focus the window and bring to front
+      if (this.chatWindow) {
+        this.chatWindow.focus();
+      }
+      
       return this.chatWindow;
     } catch (error) {
       console.error('Failed to open chat window:', error);

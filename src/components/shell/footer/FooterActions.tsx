@@ -17,9 +17,9 @@ const FooterActions: React.FC<FooterActionsProps> = ({ expanded, onExpandToggle 
       </button>
       
       <div className="flex items-center">
-        <span className="text-accent flex items-center font-serif">
+        <span className="text-muted-foreground text-xs flex items-center font-serif">
           <span className="mr-1.5">
-            <div className="w-[4px] h-3 bg-accent transform rotate-12 inline-block"></div>
+            <div className="w-[3px] h-3 bg-[#1EAEDB] transform rotate-12 inline-block"></div>
           </span>
           <span className="tracking-wide">
             SYMBIOTE ACTIVE

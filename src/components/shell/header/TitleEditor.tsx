@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Edit, Check } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+
 const TitleEditor: React.FC = () => {
-  const [customTitle, setCustomTitle] = useState("E.I.R.O.S. // SPAWN"); // Updated default title
+  const [customTitle, setCustomTitle] = useState("EIROS"); // Updated to just EIROS
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(customTitle);
   const {
@@ -33,10 +35,12 @@ const TitleEditor: React.FC = () => {
       });
     }
   };
+
   const handleTitleSave = () => {
     updateCustomTitle(titleInput);
     setIsEditingTitle(false);
   };
+
   return <div className="flex items-center">
       {isEditingTitle ? <div className="flex items-center ml-1">
           <Input type="text" value={titleInput} onChange={e => setTitleInput(e.target.value)} autoFocus className="h-6 py-1 text-sm w-32 px-[6px]" />
@@ -47,12 +51,9 @@ const TitleEditor: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="link" className="p-0 h-auto">
               <CardTitle className="text-sm flex items-center">
-                <span className="font-serif">
+                <span className="font-serif tracking-wide">
                   {customTitle}
                 </span>
-                <div className="text-xs text-muted-foreground ml-2 font-normal">
-                  (Enhanced Intelligent Reactive Operating Shell)
-                </div>
                 <Edit size={12} className="ml-1 opacity-50" />
               </CardTitle>
             </Button>
@@ -65,4 +66,5 @@ const TitleEditor: React.FC = () => {
         </DropdownMenu>}
     </div>;
 };
+
 export default TitleEditor;

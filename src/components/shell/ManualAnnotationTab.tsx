@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { useShell } from '@/contexts/shell/ShellContext';
 import { commandService } from '@/services/CommandService';
+import { CommandType } from '@/types/types';
 
 interface Screenshot {
   path: string;
@@ -25,7 +24,7 @@ const ManualAnnotationTab: React.FC = () => {
       // First try to get existing screenshots
       const result = await commandService.executeCommand({
         id: `get_screenshots_${Date.now()}`,
-        type: 'GET_SCREENSHOTS',
+        type: CommandType.SCREENSHOT,
         params: { limit: 1 },
         timestamp: Date.now()
       });
@@ -36,9 +35,9 @@ const ManualAnnotationTab: React.FC = () => {
       } else {
         // If no screenshots, take a new one
         const screenshotResult = await handleTakeScreenshot();
-        if (screenshotResult && typeof screenshotResult === 'object' && 'path' in screenshotResult) {
+        if (screenshotResult && typeof screenshotResult === 'object') {
           const newScreenshot: Screenshot = {
-            path: screenshotResult.path as string,
+            path: screenshotResult.path || '',
             timestamp: Date.now()
           };
           setScreenshots([newScreenshot]);
@@ -57,7 +56,7 @@ const ManualAnnotationTab: React.FC = () => {
     try {
       await commandService.executeCommand({
         id: `annotate_${Date.now()}`,
-        type: 'ANNOTATE',
+        type: CommandType.ANNOTATE,
         params: {},
         timestamp: Date.now()
       });

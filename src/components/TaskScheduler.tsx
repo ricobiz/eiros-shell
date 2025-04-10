@@ -14,8 +14,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CalendarClock } from "lucide-react";
+import { useToast } from '@/hooks/use-toast';
 
 const TaskScheduler: React.FC = () => {
+  const { toast } = useToast();
+  
   // Safely access TaskScheduler context
   let tasks: Task[] = [];
   let addTask: (task: Task) => void = () => {};
@@ -63,6 +66,11 @@ const TaskScheduler: React.FC = () => {
         interval: 60,
         active: true,
         name: ''
+      });
+      
+      // Show success toast
+      toast({
+        description: `${newTask.name || 'Task'} has been scheduled to run every ${newTask.interval} seconds`
       });
     }
   };

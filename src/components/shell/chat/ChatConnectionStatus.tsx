@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, AlertOctagon } from 'lucide-react';
 import { aiSyncService } from '@/services/ai-sync';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatConnectionStatusProps {
   isWindowOpen: boolean;
@@ -17,11 +18,13 @@ const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({
   onConnectToChatGPT,
   onEmergencyStop
 }) => {
+  const { t } = useLanguage();
+
   return isWindowOpen ? (
     <div className="flex items-center space-x-2">
       <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs">
         <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
-        ChatGPT подключен
+        {t('aiConnected')}
       </div>
       
       <Button 
@@ -35,7 +38,7 @@ const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({
         }}
       >
         <ExternalLink size={14} />
-        <span>Открыть</span>
+        <span>{t('open')}</span>
       </Button>
       
       <Button
@@ -45,7 +48,7 @@ const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({
         onClick={onEmergencyStop}
       >
         <AlertOctagon size={14} />
-        <span>Стоп</span>
+        <span>{t('stop')}</span>
       </Button>
     </div>
   ) : (
@@ -59,12 +62,12 @@ const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({
       {isConnecting ? (
         <>
           <span className="mr-1.5 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
-          Подключение...
+          {t('loading')}
         </>
       ) : (
         <>
           <ExternalLink size={14} />
-          <span>Подключить ChatGPT</span>
+          <span>{t('connect')}</span>
         </>
       )}
     </Button>

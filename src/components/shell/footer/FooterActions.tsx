@@ -16,8 +16,7 @@ const FooterActions: React.FC<FooterActionsProps> = ({ expanded, onExpandToggle 
         {expanded ? '▲' : '▼'}
       </button>
       
-      <div className="flex items-center space-x-1">
-        <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse"/>
+      <div className="flex items-center">
         <span className="text-muted-foreground">{t('listening')}</span>
       </div>
     </div>

@@ -9,6 +9,7 @@ import ChatConnectionStatus from './chat/ChatConnectionStatus';
 import ChatInput from './chat/ChatInput';
 import { useToast } from '@/hooks/use-toast';
 import { commandService } from '@/services/CommandService';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatTabProps {
   onClearLogs: () => void;
@@ -17,6 +18,7 @@ interface ChatTabProps {
 
 const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { 
     message, 
     setMessage, 
@@ -38,9 +40,9 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
   useEffect(() => {
     if (!isConnectedToAI && !isWindowOpen && chatHistory.length === 0) {
       // Add a welcome message
-      addMessageToChat('Система', 'Нажмите кнопку чтобы связаться с ChatGPT. После успешного подключения вы можете отправить сообщение.');
+      addMessageToChat('Система', t('shellConnected'));
     }
-  }, [isConnectedToAI, isWindowOpen, chatHistory.length, addMessageToChat]);
+  }, [isConnectedToAI, isWindowOpen, chatHistory.length, addMessageToChat, t]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -71,8 +73,8 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
   const handleTestConnection = () => {
     if (!isWindowOpen) {
       toast({
-        title: "Ошибка",
-        description: "Сначала подключитесь к ChatGPT",
+        title: t('connectionError'),
+        description: t('connectionErrorDesc'),
         variant: "destructive"
       });
       return;
@@ -84,7 +86,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     sendMessage();
     
     // Добавляем системное сообщение с инструкцией 
-    addMessageToChat('Система', 'Тестовое сообщение отправлено. Дождитесь ответа от ChatGPT с командой и вставьте его в поле ввода.');
+    addMessageToChat('Система', t('shellConnected'));
   };
 
   return (
@@ -106,7 +108,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
         
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm" onClick={onClearLogs}>
-            Очистить логи
+            {t('clearLogs')}
           </Button>
           
           <ChatConnectionStatus
@@ -119,7 +121,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       </div>
       
       <div className="mt-2">
-        <p className="text-xs text-muted-foreground">Логи:</p>
+        <p className="text-xs text-muted-foreground">{t('loading')}</p>
         <div className="bg-muted/30 p-2 rounded-md max-h-[100px] overflow-auto">
           <LogViewer maxHeight="80px" maxLogs={10} />
         </div>

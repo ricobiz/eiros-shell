@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useCallback } from 'react';
 
 export type LanguageType = 'en' | 'ru';
@@ -24,7 +25,7 @@ const translations: Record<string, Record<string, string>> = {
     screenshot: 'Take Screenshot',
     analyze: 'Analyze UI',
     clearLogs: 'Clear Logs',
-    connect: 'Connect',
+    connect: 'Connect ChatGPT',
     disconnect: 'Disconnect',
     aiConnectedToast: 'AI Connected',
     aiDisconnected: 'AI Disconnected',
@@ -39,7 +40,7 @@ const translations: Record<string, Record<string, string>> = {
     unpinWindow: 'Unpin Window',
     pinned: 'Pinned',
     active: 'Active',
-    aiConnected: 'AI Connected',
+    aiConnected: 'ChatGPT Connected',
     listening: 'Listening',
     open: 'Open',
     stop: 'Stop',

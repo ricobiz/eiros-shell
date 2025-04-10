@@ -68,10 +68,11 @@ const TaskScheduler: React.FC = () => {
       taskScheduler.addTask({
         id: `task-${Date.now()}`,
         name: taskName,
-        command: taskCommand,
-        intervalMs,
-        lastRun: null,
-        status: 'scheduled',
+        type: 'command',
+        content: taskCommand,
+        interval: intervalMs,
+        active: true,
+        lastRun: Date.now()
       });
       
       toast({

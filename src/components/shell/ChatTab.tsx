@@ -10,6 +10,7 @@ import ChatInput from './chat/ChatInput';
 import { useToast } from '@/hooks/use-toast';
 import { commandService } from '@/services/CommandService';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useShell } from '@/contexts/shell/ShellContext';
 
 interface ChatTabProps {
   onClearLogs: () => void;
@@ -19,6 +20,8 @@ interface ChatTabProps {
 const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false }) => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { testAIConnection, isTestingConnection } = useShell();
+  
   const { 
     message, 
     setMessage, 
@@ -40,7 +43,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
   useEffect(() => {
     if (!isConnectedToAI && !isWindowOpen && chatHistory.length === 0) {
       // Add a welcome message
-      addMessageToChat('Система', t('shellConnected'));
+      addMessageToChat('Система', t('shellWelcome'));
     }
   }, [isConnectedToAI, isWindowOpen, chatHistory.length, addMessageToChat, t]);
 
@@ -69,26 +72,35 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     }
   };
 
-  // Добавляем функцию для тестирования связи с ChatGPT
-  const handleTestConnection = () => {
+  // Функция для полного тестирования связи с ChatGPT в обоих направлениях
+  const handleTestConnection = async () => {
     if (!isWindowOpen) {
       toast({
-        title: t('connectionError'),
         description: t('connectionErrorDesc'),
         variant: "destructive"
       });
       return;
     }
     
-    // Отправляем тестовое сообщение с запросом на тестовую команду
-    const testMessage = "Пожалуйста, ответьте командой '/navigate#test123{\"url\": \"https://example.com\"}' чтобы проверить работу системы команд.";
-    setMessage(testMessage);
-    sendMessage();
+    // Add a system message about testing
+    addMessageToChat('Система', t('testingConnection'));
     
-    // Добавляем системное сообщение с инструкцией 
-    addMessageToChat('Система', t('shellConnected'));
+    // Call the testAIConnection function from useShell
+    const success = await testAIConnection();
+    
+    if (success) {
+      // Send a test command message that the shell should recognize
+      const testMessage = "/test#integration_test{\"status\": \"verify\", \"message\": \"Testing bidirectional communication\"}";
+      setMessage(testMessage);
+      sendMessage();
+      
+      // Add explanation message
+      addMessageToChat('Система', t('testInstructions'));
+    } else {
+      addMessageToChat('Система', t('testConnectionFailed'));
+    }
   };
-
+  
   return (
     <div className="flex flex-col h-full space-y-3">
       <div className="bg-muted/30 p-4 rounded-md flex-1 overflow-auto">
@@ -104,6 +116,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           onKeyPress={handleKeyPress}
           onPaste={handlePaste}
           onTestConnection={handleTestConnection}
+          isTestingConnection={isTestingConnection}
         />
         
         <div className="flex items-center justify-between">
@@ -114,14 +127,16 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           <ChatConnectionStatus
             isWindowOpen={isWindowOpen}
             isConnecting={isConnecting}
+            isTestingConnection={isTestingConnection}
             onConnectToChatGPT={connectToChatGPT}
             onEmergencyStop={emergencyStop}
+            onTestConnection={handleTestConnection}
           />
         </div>
       </div>
       
       <div className="mt-2">
-        <p className="text-xs text-muted-foreground">{t('loading')}</p>
+        <p className="text-xs text-muted-foreground">{t('recentLogs')}</p>
         <div className="bg-muted/30 p-2 rounded-md max-h-[100px] overflow-auto">
           <LogViewer maxHeight="80px" maxLogs={10} />
         </div>

@@ -25,9 +25,11 @@ export interface ShellMemoryState {
 
 export interface ShellAIState {
   isConnectedToAI: boolean;
+  isTestingConnection: boolean;
   setIsConnectedToAI: (connected: boolean) => void;
   handleToggleAIConnection: () => Promise<void>;
   handleEmergencyStop: () => void;
+  testAIConnection: () => Promise<boolean>;
 }
 
 export interface ShellUIState {

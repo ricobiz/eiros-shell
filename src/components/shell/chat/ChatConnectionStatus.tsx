@@ -1,22 +1,26 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, AlertOctagon } from 'lucide-react';
+import { ExternalLink, AlertOctagon, Zap } from 'lucide-react';
 import { aiSyncService } from '@/services/ai-sync';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatConnectionStatusProps {
   isWindowOpen: boolean;
   isConnecting: boolean;
+  isTestingConnection?: boolean;
   onConnectToChatGPT: () => void;
   onEmergencyStop: () => void;
+  onTestConnection?: () => void;
 }
 
 const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({ 
   isWindowOpen, 
   isConnecting,
+  isTestingConnection = false,
   onConnectToChatGPT,
-  onEmergencyStop
+  onEmergencyStop,
+  onTestConnection
 }) => {
   const { t } = useLanguage();
 
@@ -26,6 +30,20 @@ const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({
         <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
         {t('aiConnected')}
       </div>
+      
+      {/* Test Connection Button */}
+      {onTestConnection && (
+        <Button 
+          variant={isTestingConnection ? "default" : "outline"}
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={onTestConnection}
+          disabled={isTestingConnection}
+        >
+          <Zap size={14} className={isTestingConnection ? "animate-pulse" : ""} />
+          <span>{isTestingConnection ? t('testing') : t('test')}</span>
+        </Button>
+      )}
       
       <Button 
         variant="outline" 

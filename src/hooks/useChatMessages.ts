@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { aiSyncService } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
 import { commandService } from '@/services/CommandService';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface ChatMessage {
   sender: string;
@@ -12,6 +13,7 @@ export interface ChatMessage {
 
 export function useChatMessages() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState('');
   
@@ -22,26 +24,26 @@ export function useChatMessages() {
       timestamp: Date.now()
     }]);
 
-    // Если сообщение от AI, проверяем, не содержит ли оно команду
+    // If message from AI, check if it contains a command
     if (sender === 'ChatGPT') {
       const command = commandService.parseCommand(text);
       if (command) {
-        // Если это команда, выполняем её
+        // If it's a command, execute it
         toast({
-          title: "Команда обнаружена",
-          description: `Выполняю команду: ${command.type}`,
+          title: t('commandDetected'),
+          description: `${t('executing')}: ${command.type}`,
         });
         
         commandService.executeCommand(command)
           .then((result) => {
-            addMessageToChat('Система', `Команда ${command.type} успешно выполнена`);
-            // Если есть результат, добавляем его в чат
+            addMessageToChat('Система', `${t('commandSuccessful')} ${command.type}`);
+            // If there's a result, add it to chat
             if (result && typeof result === 'object') {
-              addMessageToChat('Система', `Результат: ${JSON.stringify(result, null, 2)}`);
+              addMessageToChat('Система', `${t('result')}: ${JSON.stringify(result, null, 2)}`);
             }
           })
           .catch((error) => {
-            addMessageToChat('Система', `Ошибка при выполнении команды: ${error.message}`);
+            addMessageToChat('Система', `${t('commandError')}: ${error.message}`);
           });
       }
     }
@@ -55,8 +57,8 @@ export function useChatMessages() {
       // Try to send the message
       aiSyncService.sendMessageToAI(message);
       
-      // Add instruction for manual paste
-      addMessageToChat('Система', 'Сообщение скопировано в буфер обмена. Нажмите Ctrl+V (или Cmd+V) в окне ChatGPT чтобы вставить текст: "' + message + '"');
+      // Add instruction for manual paste - now with clearer instructions
+      addMessageToChat('Система', t('messageCopiedToClipboard', { message }));
       
       setMessage('');
     }
@@ -66,7 +68,7 @@ export function useChatMessages() {
     setChatHistory([]);
   };
 
-  // Функция для обработки сообщения от AI
+  // Function to handle AI response
   const handleAIResponse = (text: string) => {
     addMessageToChat('ChatGPT', text);
   };

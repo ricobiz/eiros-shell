@@ -49,7 +49,7 @@ export class AIMessagingService {
         details: { message }
       });
       
-      // In the browser approach, the message is shown to the user to paste manually
+      // In the browser approach, the message is copied to clipboard for manual pasting
       console.log('Ready to send to ChatGPT:', message);
       
       // Try to copy to clipboard
@@ -57,14 +57,14 @@ export class AIMessagingService {
         await navigator.clipboard.writeText(message);
         logService.addLog({
           type: 'info',
-          message: 'Message copied to clipboard for easy pasting',
+          message: 'Message copied to clipboard for pasting into ChatGPT',
           timestamp: Date.now()
         });
         
-        // Show success toast
+        // Show toast with clearer instructions
         toast({
           title: "Message Ready",
-          description: "Message copied to clipboard. Paste it in the ChatGPT window.",
+          description: "Message copied to clipboard. Please paste (Ctrl+V/Cmd+V) into ChatGPT window.",
         });
         
         return true;
@@ -77,7 +77,7 @@ export class AIMessagingService {
         });
         
         this.handleError(MessageErrorType.CLIPBOARD_ERROR, 
-          'Unable to copy message to clipboard. Please copy manually.');
+          'Unable to copy message to clipboard. Please copy the message manually from the chat history.');
         
         return false;
       }

@@ -1,121 +1,155 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { Task } from '@/types/types';
+import { toast } from '@/hooks/use-toast';
 import { aiSyncService } from '@/services/ai-sync';
 import { useLanguage } from './LanguageContext';
 
-export interface ScheduledTask {
-  id: string;
-  message: string;
-  interval: number;
-  enabled: boolean;
-}
-
 interface TaskSchedulerContextType {
-  tasks: ScheduledTask[];
-  addTask: (message: string, interval: number) => void;
-  removeTask: (id: string) => void;
-  toggleTask: (id: string) => void;
+  tasks: Task[];
+  addTask: (task: Omit<Task, 'id'>) => void;
+  removeTask: (taskId: string) => void;
+  toggleTaskActive: (taskId: string) => void;
   isExecutionPaused: boolean;
   toggleExecutionPause: () => void;
 }
 
 const TaskSchedulerContext = createContext<TaskSchedulerContextType | undefined>(undefined);
 
-export const TaskSchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { toast } = useToast();
-  const { t } = useLanguage();
-  const [tasks, setTasks] = useState<ScheduledTask[]>(() => {
-    const savedTasks = localStorage.getItem('scheduledTasks');
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
-  const [isExecutionPaused, setIsExecutionPaused] = useState(false);
-  const [intervalIds, setIntervalIds] = useState<Record<string, number>>({});
+interface TaskSchedulerProviderProps {
+  children: React.ReactNode;
+}
 
+export const TaskSchedulerProvider: React.FC<TaskSchedulerProviderProps> = ({ children }) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isExecutionPaused, setIsExecutionPaused] = useState(false);
+  const { t } = useLanguage();
+  
+  // Load tasks from localStorage on mount
+  useEffect(() => {
+    const storedTasks = localStorage.getItem('scheduledTasks');
+    if (storedTasks) {
+      try {
+        setTasks(JSON.parse(storedTasks));
+      } catch (error) {
+        console.error('Failed to parse stored tasks', error);
+      }
+    }
+  }, []);
+  
+  // Save tasks to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('scheduledTasks', JSON.stringify(tasks));
   }, [tasks]);
-
+  
+  // Task execution effect
   useEffect(() => {
-    // Clear existing intervals when tasks change or pause status changes
-    Object.values(intervalIds).forEach(id => window.clearInterval(id));
+    if (isExecutionPaused) return;
     
-    if (isExecutionPaused) {
-      setIntervalIds({});
-      return;
-    }
-
-    // Set up new intervals for enabled tasks
-    const newIntervalIds: Record<string, number> = {};
+    const intervalIds: NodeJS.Timeout[] = [];
+    
     tasks.forEach(task => {
-      if (task.enabled) {
-        const id = window.setInterval(() => {
-          aiSyncService.sendMessage(task.message);
-        }, task.interval * 1000);
+      if (!task.active) return;
+      
+      const interval = setInterval(() => {
+        if (isExecutionPaused) return;
         
-        newIntervalIds[task.id] = id as unknown as number;
-      }
+        // Execute the task
+        try {
+          if (task.type === 'message' && task.content) {
+            // Use the aiSyncService to send a message
+            if (aiSyncService.isConnected()) {
+              // The aiSyncService should have a method to send messages to ChatGPT
+              aiSyncService.sendMessageToAI(task.content);
+              
+              toast({
+                title: t('taskExecuted'),
+                description: `${t('sentMessage')}: "${task.content.substring(0, 30)}${task.content.length > 30 ? '...' : ''}"`,
+              });
+            } else {
+              toast({
+                title: t('taskFailed'),
+                description: t('notConnectedToAI'),
+                variant: "destructive",
+              });
+            }
+          } else if (task.type === 'command' && task.content) {
+            // Execute command logic would go here
+            console.log('Executing command:', task.content);
+            
+            toast({
+              title: t('taskExecuted'),
+              description: `${t('executedCommand')}: "${task.content.substring(0, 30)}${task.content.length > 30 ? '...' : ''}"`,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to execute scheduled task', error);
+          toast({
+            title: t('taskFailed'),
+            description: String(error),
+            variant: "destructive",
+          });
+        }
+      }, task.interval * 1000); // Convert to milliseconds
+      
+      intervalIds.push(interval);
     });
     
-    setIntervalIds(newIntervalIds);
-    
+    // Cleanup function to clear all intervals
     return () => {
-      // Clean up intervals on unmount
-      Object.values(newIntervalIds).forEach(id => window.clearInterval(id));
+      intervalIds.forEach(id => clearInterval(id));
     };
-  }, [tasks, isExecutionPaused]);
-
-  const addTask = (message: string, interval: number) => {
-    const newTask: ScheduledTask = {
-      id: `task_${Date.now()}`,
-      message,
-      interval,
-      enabled: true
+  }, [tasks, isExecutionPaused, t]);
+  
+  const addTask = (task: Omit<Task, 'id'>) => {
+    const newTask: Task = {
+      ...task,
+      id: Date.now().toString(),
+      active: true
     };
     
     setTasks(prevTasks => [...prevTasks, newTask]);
     
     toast({
-      title: t('taskScheduled'),
-      description: `${message} (${interval}s)`,
+      title: t('taskAdded'),
+      description: t('taskScheduledEvery').replace('{interval}', String(task.interval)),
     });
   };
-
-  const removeTask = (id: string) => {
-    // Clear the interval first
-    if (intervalIds[id]) {
-      window.clearInterval(intervalIds[id]);
-      const newIntervalIds = { ...intervalIds };
-      delete newIntervalIds[id];
-      setIntervalIds(newIntervalIds);
-    }
-    
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+  
+  const removeTask = (taskId: string) => {
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
     
     toast({
-      title: t('taskDeleted'),
-      description: id,
+      title: t('taskRemoved'),
+      description: t('taskRemovedDesc'),
     });
   };
-
-  const toggleTask = (id: string) => {
+  
+  const toggleTaskActive = (taskId: string) => {
     setTasks(prevTasks => 
       prevTasks.map(task => 
-        task.id === id ? { ...task, enabled: !task.enabled } : task
+        task.id === taskId 
+          ? { ...task, active: !task.active } 
+          : task
       )
     );
   };
-
+  
   const toggleExecutionPause = () => {
     setIsExecutionPaused(prev => !prev);
+    
+    toast({
+      title: !isExecutionPaused ? t('executionPaused') : t('executionResumed'),
+      description: !isExecutionPaused ? t('allTasksPaused') : t('allTasksResumed'),
+    });
   };
-
+  
   return (
     <TaskSchedulerContext.Provider value={{
       tasks,
       addTask,
       removeTask,
-      toggleTask,
+      toggleTaskActive,
       isExecutionPaused,
       toggleExecutionPause
     }}>

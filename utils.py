@@ -12,10 +12,14 @@ import time
 from pathlib import Path
 import psutil
 
-def setup_logging(log_file=None):
+def setup_logging(log_file=None, level=logging.INFO):
     """Настраивает и возвращает логгер"""
     logger = logging.getLogger("EirosShell")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(level)
+    
+    # Clear any existing handlers
+    if logger.handlers:
+        logger.handlers = []
     
     # Добавляем форматирование
     formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -23,12 +27,14 @@ def setup_logging(log_file=None):
     # Добавляем вывод в консоль
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
+    console_handler.setLevel(level)
     logger.addHandler(console_handler)
     
     # Добавляем вывод в файл, если он указан
     if log_file:
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
+        file_handler.setLevel(level)
         logger.addHandler(file_handler)
     
     return logger
@@ -152,3 +158,16 @@ X-GNOME-Autostart-enabled=true
     except Exception as e:
         logger.error(f"Ошибка при настройке автозапуска: {str(e)}")
         return False
+
+def load_dotenv():
+    """Load environment variables from .env file"""
+    env_path = Path('.env')
+    if env_path.exists():
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                    
+                key, value = line.split('=', 1)
+                os.environ[key.strip()] = value.strip().strip('"\'')

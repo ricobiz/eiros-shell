@@ -1,151 +1,84 @@
 
-import { logService } from '../LogService';
-import { AIConnectionService } from './connectionService';
-import { AIMessagingService } from './messagingService';
-import { AutoReconnectService } from './autoReconnect';
-import { ChatGPTWindowManager } from './windowManager';
 import { aiSyncEvents } from './events';
 
 class AISyncService {
-  private windowManager: ChatGPTWindowManager;
-  private connectionService: AIConnectionService;
-  private messagingService: AIMessagingService;
-  private autoReconnectService: AutoReconnectService;
-  private pendingMessages: string[] = [];
-  private isConnecting = false;
+  private connected: boolean = false;
   
   constructor() {
-    this.windowManager = new ChatGPTWindowManager();
-    this.connectionService = new AIConnectionService(this.windowManager);
-    this.messagingService = new AIMessagingService(this.windowManager);
-    this.autoReconnectService = new AutoReconnectService(this.connectionService);
-    
-    // We'll only start auto-reconnect when a message is explicitly sent
-    // to avoid aggressive window opening
+    // Initialize connection state
+    this.connected = false;
   }
   
-  isConnected(): boolean {
-    return this.connectionService.isConnected();
-  }
-  
+  /**
+   * Connect to the AI backend
+   */
   async connectToAI(): Promise<boolean> {
-    // Prevent multiple simultaneous connection attempts
-    if (this.isConnecting) {
-      logService.addLog({
-        type: 'info',
-        message: 'Connection attempt already in progress',
-        timestamp: Date.now()
-      });
-      return this.isConnected();
+    try {
+      // Connection logic would go here
+      // For now, we're simulating a connection
+      this.connected = true;
+      aiSyncEvents.emit(true, 'Connected to AI system');
+      return true;
+    } catch (error) {
+      console.error('Failed to connect to AI:', error);
+      this.connected = false;
+      aiSyncEvents.emit(false, 'Failed to connect to AI system');
+      return false;
     }
-    
-    this.isConnecting = true;
+  }
+  
+  /**
+   * Disconnect from the AI backend
+   */
+  disconnectFromAI(): void {
+    // Disconnection logic would go here
+    this.connected = false;
+    aiSyncEvents.emit(false, 'Disconnected from AI system');
+  }
+  
+  /**
+   * Check if currently connected to the AI backend
+   */
+  isConnected(): boolean {
+    return this.connected;
+  }
+  
+  /**
+   * Emergency stop - halt all operations
+   */
+  emergencyStop(): void {
+    this.connected = false;
+    // Emergency stop logic would go here
+    aiSyncEvents.emit(false, 'Emergency stop triggered');
+  }
+  
+  /**
+   * Clean up resources
+   */
+  cleanup(): void {
+    if (this.connected) {
+      this.disconnectFromAI();
+    }
+  }
+  
+  /**
+   * Send a message to the AI
+   */
+  sendMessageToAI(message: string): boolean {
+    if (!this.connected) {
+      console.error('Cannot send message: not connected to AI');
+      return false;
+    }
     
     try {
-      const result = await this.connectionService.connectToAI();
-      
-      // If we successfully connected, maybe start auto-reconnect
-      if (result) {
-        // Now that the user has explicitly requested a connection,
-        // we can set up auto-reconnect
-        this.autoReconnectService.setupAutoReconnect();
-      }
-      
-      return result;
-    } finally {
-      this.isConnecting = false;
+      // Message sending logic would go here
+      console.log('Sending message to AI:', message);
+      // In a real implementation, this would connect to the backend
+      return true;
+    } catch (error) {
+      console.error('Failed to send message to AI:', error);
+      return false;
     }
-  }
-  
-  disconnectFromAI(): void {
-    // First make sure the auto-reconnect is completely stopped
-    this.autoReconnectService.stopAutoReconnect();
-    
-    // Force close any open window
-    this.windowManager.closeWindow();
-    
-    // Finally mark as disconnected
-    this.connectionService.disconnectFromAI();
-    
-    // Clear any pending messages
-    this.pendingMessages = [];
-    
-    logService.addLog({
-      type: 'info',
-      message: 'Соединение с ChatGPT полностью остановлено',
-      timestamp: Date.now()
-    });
-  }
-  
-  async sendMessageToAI(message: string): Promise<void> {
-    // Queue message first
-    this.pendingMessages.push(message);
-    
-    // If we're not connected, try to connect first
-    if (!this.connectionService.isConnected()) {
-      // Try to reconnect first
-      const connected = await this.connectToAI();
-      if (!connected) {
-        logService.addLog({
-          type: 'warning',
-          message: 'Невозможно отправить сообщение: не удалось подключиться к AI',
-          timestamp: Date.now()
-        });
-        return;
-      }
-    }
-    
-    // Try to send the first pending message
-    if (this.pendingMessages.length > 0) {
-      const nextMessage = this.pendingMessages.shift()!;
-      this.sendMessageAfterConnection(nextMessage);
-    }
-  }
-  
-  private async sendMessageAfterConnection(message: string): Promise<void> {
-    logService.addLog({
-      type: 'info',
-      message: 'Попытка отправить сообщение в ChatGPT',
-      timestamp: Date.now()
-    });
-    
-    const success = await this.messagingService.sendMessage(message);
-    
-    if (!success && this.pendingMessages.length > 0) {
-      // If sending failed and we have more messages, try again later
-      setTimeout(() => {
-        this.sendMessageToAI(this.pendingMessages.shift()!);
-      }, 5000); // Try again in 5 seconds
-    }
-  }
-  
-  // Emergency stop - completely stops all reconnection attempts and closes window
-  emergencyStop(): void {
-    this.autoReconnectService.stopAutoReconnect();
-    this.windowManager.closeWindow();
-    this.connectionService.disconnectFromAI();
-    this.pendingMessages = [];
-    
-    logService.addLog({
-      type: 'warning',
-      message: 'АВАРИЙНАЯ ОСТАНОВКА: Все подключения к AI остановлены',
-      timestamp: Date.now()
-    });
-    
-    // Emit disconnect event
-    aiSyncEvents.emit(false, 'Аварийная остановка выполнена');
-  }
-  
-  // Method to clean up resources when service is no longer needed
-  cleanup(): void {
-    this.autoReconnectService.stopAutoReconnect();
-    this.connectionService.disconnectFromAI();
-    this.pendingMessages = [];
-  }
-  
-  // Check if auto-reconnect is enabled
-  isAutoReconnectEnabled(): boolean {
-    return this.autoReconnectService.isAutoReconnectEnabled();
   }
 }
 

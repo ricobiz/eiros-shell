@@ -22,7 +22,6 @@ from pattern_matcher import pattern_matcher  # Import the pattern matcher
 log_dir = Path(os.path.expanduser("~")) / "EirosShell" / "logs"
 log_dir.mkdir(parents=True, exist_ok=True)
 log_file = log_dir / f"eiros_shell_{time.strftime('%Y%m%d_%H%M%S')}.log"
-logger = setup_logging(log_file)
 
 # Get the debug GUI instance if available
 debug_gui = None
@@ -31,9 +30,13 @@ try:
 except ImportError:
     pass
 
-async def main():
+async def main(debug_mode=False):
+    """Main entry point for EirosShell"""
+    # Setup logging with appropriate level
+    logger = setup_logging(log_file, level=logging.DEBUG if debug_mode else logging.INFO)
+    
     try:
-        logger.info("Запуск EirosShell v0.7...")
+        logger.info(f"Запуск EirosShell v0.7 {'в режиме отладки' if debug_mode else ''}...")
         
         # Update debug GUI status if available
         if debug_gui:
@@ -57,7 +60,7 @@ async def main():
         pattern_matcher.load_patterns()
         
         # Инициализация браузера
-        browser_controller = BrowserController()
+        browser_controller = BrowserController(debug_mode=debug_mode)
         browser = await browser_controller.launch_browser()
         
         if not browser:
@@ -72,7 +75,7 @@ async def main():
         
         # Вход в OpenAI
         login_handler = OpenAILoginHandler(browser_controller)
-        logged_in = await login_handler.login()
+        logged_in = await login_handler.login(debug_mode=debug_mode)
         
         if not logged_in:
             logger.error("Не удалось войти в OpenAI. Завершение работы.")
@@ -86,7 +89,7 @@ async def main():
             debug_gui.update_status(False, "Connecting to chat...")
         
         # Подключение к чату
-        chat_connector = ChatConnector(browser_controller)
+        chat_connector = ChatConnector(browser_controller, debug_mode=debug_mode)
         connected = await chat_connector.connect_to_chat()
         
         if not connected:

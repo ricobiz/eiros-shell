@@ -1,68 +1,57 @@
+export type LogType = 'info' | 'warning' | 'error' | 'success';
 
-export interface Command {
-  id: string;
-  type: CommandType;
-  params: Record<string, any>;
+export interface LogEntry {
+  type: LogType;
+  message: string;
   timestamp: number;
+  details?: any;
 }
 
-export enum CommandType {
-  CLICK = 'click',
-  TYPE = 'type',
-  NAVIGATE = 'navigate',
-  SCREENSHOT = 'screenshot',
-  LOGIN = 'login',
-  MEMORY_SAVE = 'memory_save',
-  MEMORY_RETRIEVE = 'memory_retrieve',
-  ANALYZE = 'analyze',
-  AUTO_LOGIN = 'auto_login',
-  WAIT = 'wait',
+export type CommandType = 
+  | 'click' 
+  | 'type' 
+  | 'navigation' 
+  | 'wait' 
+  | 'screenshot' 
+  | 'analyze' 
+  | 'conditional' 
+  | 'loop' 
+  | 'variable' 
+  | 'record'
+  | 'memory_save'
+  | 'memory_retrieve'
+  | 'annotate'
+  | 'schedule';
+
+export interface Command {
+  type: CommandType;
+  id: string;
+  params: Record<string, any>;
 }
 
 export interface MemoryItem {
-  id: string;
   type: MemoryType;
   data: any;
-  tags: string[];
-  createdAt: number;
-  lastAccessed?: number;
+  timestamp?: number;
+  tags?: string[];
+  expiration?: number;
 }
 
 export enum MemoryType {
   COMMAND = 'command',
+  RESULT = 'result',
+  PATTERN = 'pattern',
   SCREENSHOT = 'screenshot',
-  ELEMENT = 'element',
-  FLOW = 'flow',
-  CREDENTIALS = 'credentials',
+  VARIABLE = 'variable',
+  USER_ANNOTATION = 'user_annotation'
 }
 
-export interface ScreenElement {
+export interface Task {
   id: string;
-  type: string;
-  rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  text?: string;
-  role?: string;
-  confidence: number;
-}
-
-export interface LogEntry {
-  timestamp: number;
-  type: 'info' | 'warning' | 'error' | 'success';
-  message: string;
-  details?: any;
-}
-
-export interface AuthConfig {
-  service: string;
-  username: string;
-  password: string;
-  url?: string;
-  usernameSelector?: string;
-  passwordSelector?: string;
-  submitSelector?: string;
+  type: 'message' | 'command';
+  content: string;
+  interval: number; // in seconds
+  active: boolean;
+  name?: string;
+  lastExecuted?: number;
 }

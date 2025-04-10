@@ -30,7 +30,12 @@ const ShellContent: React.FC = () => {
     selectedMemory,
     handleMemoryItemSelected,
     handleClearLogs,
-    isConnectedToAI
+    isConnectedToAI,
+    patternLearningMode,
+    setPatternLearningMode,
+    handleRetrainPattern,
+    handleDeletePattern,
+    handleExportPatterns
   } = useShell();
   
   return (

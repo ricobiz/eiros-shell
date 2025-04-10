@@ -45,8 +45,18 @@ export interface ShellUIState {
   handleCurrentAnnotationChange: (annotation: {element: string, description: string}) => void;
 }
 
+export interface ShellPatternState {
+  patternLearningMode: 'disabled' | 'active' | 'autonomous';
+  setPatternLearningMode: (mode: 'disabled' | 'active' | 'autonomous') => void;
+  handleRetrainPattern: (patternId: string) => Promise<void>;
+  handleDeletePattern: (patternId: string) => void;
+  handleExportPatterns: () => void;
+  handleImportPatterns: (json: string) => void;
+}
+
 export type ShellContextType = ShellTabsState & 
   ShellCommandState & 
   ShellMemoryState & 
   ShellAIState & 
-  ShellUIState;
+  ShellUIState & 
+  ShellPatternState;

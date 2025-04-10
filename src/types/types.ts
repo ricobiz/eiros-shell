@@ -25,7 +25,9 @@ export enum CommandType {
   ANNOTATE = 'annotate',
   SCHEDULE = 'schedule',
   LOGIN = 'login',
-  AUTO_LOGIN = 'auto_login'
+  AUTO_LOGIN = 'auto_login',
+  PATTERN_LEARN = 'pattern_learn',
+  PATTERN_RECALL = 'pattern_recall'
 }
 
 export interface Command {
@@ -54,7 +56,8 @@ export enum MemoryType {
   VARIABLE = 'variable',
   USER_ANNOTATION = 'user_annotation',
   CREDENTIALS = 'credentials',
-  ELEMENT = 'element'
+  ELEMENT = 'element',
+  ERROR = 'error'
 }
 
 export interface Task {
@@ -68,3 +71,36 @@ export interface Task {
   enabled?: boolean;
   message?: string;
 }
+
+export interface UIPattern {
+  id: string;
+  selector: string;
+  url: string;
+  text?: string;
+  attributes?: Record<string, string>;
+  imagePath?: string;
+  region?: [number, number, number, number]; // [x, y, width, height]
+  center?: [number, number]; // [x, y]
+  successRate: number;
+  timesUsed: number;
+  lastUsed: number;
+  createdAt: number;
+  tags: string[];
+  status: 'stable' | 'unstable' | 'learning';
+  fallbackSelectors?: string[];
+  errorHistory?: {
+    code: string;
+    message: string;
+    timestamp: number;
+  }[];
+}
+
+export interface PatternStats {
+  total: number;
+  successful: number;
+  failed: number;
+  byUrl: Record<string, number>;
+  byType: Record<string, number>;
+  errorCategories: Record<string, number>;
+}
+

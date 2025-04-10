@@ -6,6 +6,7 @@ import { useShellCommands } from '@/hooks/useShellCommands';
 import { useShellMemory } from '@/hooks/useShellMemory';
 import { useAISync } from '@/hooks/useAISync';
 import { useShellUI } from '@/hooks/useShellUI';
+import { useShellPatterns } from '@/hooks/useShellPatterns';
 
 const ShellContext = createContext<ShellContextType | undefined>(undefined);
 
@@ -16,6 +17,7 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const memoryState = useShellMemory();
   const aiState = useAISync();
   const uiState = useShellUI();
+  const patternState = useShellPatterns();
 
   // Combine all states into a single value object
   const value: ShellContextType = {
@@ -23,7 +25,8 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ...commandState,
     ...memoryState,
     ...aiState,
-    ...uiState
+    ...uiState,
+    ...patternState
   };
 
   return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>;

@@ -6,8 +6,17 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Command, MonitorSmartphone, Brain, MessageSquare, FileText, Pencil, Settings, Eye } from 'lucide-react';
 
 const TabNavigation: React.FC = () => {
-  const { activeTab } = useShell();
+  const { activeTab, patternLearningMode } = useShell();
   const { t } = useLanguage();
+  
+  // Get brain animation class based on learning mode
+  const getBrainAnimation = () => {
+    switch (patternLearningMode) {
+      case 'autonomous': return 'text-green-400 animate-pulse';
+      case 'active': return 'text-yellow-400';
+      default: return '';
+    }
+  };
   
   return (
     <TabsList className="grid grid-cols-9">
@@ -32,7 +41,7 @@ const TabNavigation: React.FC = () => {
       </TabsTrigger>
       
       <TabsTrigger value="memory" className="flex items-center gap-1 text-xs">
-        <Brain className="h-3.5 w-3.5" />
+        <Brain className={`h-3.5 w-3.5 ${getBrainAnimation()}`} />
         <span>{t('memoryTab')}</span>
       </TabsTrigger>
       

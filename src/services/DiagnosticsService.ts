@@ -130,6 +130,31 @@ class DiagnosticsService {
       }, 2000);
     });
   }
+
+  // Add the missing methods for autostart functionality
+  async isAutostartEnabled(): Promise<boolean> {
+    // In a real implementation, this would check if autostart is enabled in the OS
+    // For this frontend implementation, we'll simulate the result by storing in localStorage
+    try {
+      const autostartEnabled = localStorage.getItem('eirosShell_autostartEnabled');
+      return autostartEnabled === 'true';
+    } catch (error) {
+      console.error("Failed to check autostart status:", error);
+      return false;
+    }
+  }
+
+  async configureAutostart(enable: boolean): Promise<boolean> {
+    // In a real implementation, this would configure autostart in the OS
+    // For this frontend implementation, we'll simulate by storing in localStorage
+    try {
+      localStorage.setItem('eirosShell_autostartEnabled', enable.toString());
+      return true;
+    } catch (error) {
+      console.error("Failed to configure autostart:", error);
+      return false;
+    }
+  }
 }
 
 export const diagnosticsService = new DiagnosticsService();

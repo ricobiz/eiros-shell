@@ -42,7 +42,8 @@ export async function handleLoginCommand(command: Command): Promise<void> {
     const navigateCommand: Command = {
       id: `login_nav_${Date.now()}`,
       type: CommandType.NAVIGATION,
-      params: { url }
+      params: { url },
+      timestamp: Date.now() // Add the timestamp
     };
     
     try {
@@ -72,7 +73,8 @@ export async function handleLoginCommand(command: Command): Promise<void> {
       params: {
         element: usernameSelector,
         text: username
-      }
+      },
+      timestamp: Date.now() // Add the timestamp
     };
     
     const typePasswordCommand: Command = {
@@ -81,7 +83,8 @@ export async function handleLoginCommand(command: Command): Promise<void> {
       params: {
         element: passwordSelector,
         text: password
-      }
+      },
+      timestamp: Date.now() // Add the timestamp
     };
     
     const clickSubmitCommand: Command = {
@@ -89,7 +92,8 @@ export async function handleLoginCommand(command: Command): Promise<void> {
       type: CommandType.CLICK,
       params: {
         element: submitSelector
-      }
+      },
+      timestamp: Date.now() // Add the timestamp
     };
     
     // Here we would execute these commands in sequence
@@ -129,7 +133,8 @@ export async function performAutoLogin(service: string): Promise<boolean> {
       usernameSelector,
       passwordSelector,
       submitSelector
-    }
+    },
+    timestamp: Date.now() // Add the timestamp
   };
   
   try {

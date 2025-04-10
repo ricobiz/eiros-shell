@@ -2,9 +2,11 @@
 import { useState, useEffect } from 'react';
 import { aiSyncService, aiSyncEvents } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function useAISync() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isConnectedToAI, setIsConnectedToAI] = useState(false);
 
   const handleToggleAIConnection = async () => {
@@ -12,8 +14,8 @@ export function useAISync() {
       aiSyncService.disconnectFromAI();
       setIsConnectedToAI(false);
       toast({
-        title: "AI отключен",
-        description: "Shell отключен от AI",
+        title: t('aiDisconnected'),
+        description: t('shellDisconnected'),
       });
     } else {
       const connected = await aiSyncService.connectToAI();
@@ -21,13 +23,13 @@ export function useAISync() {
       
       if (connected) {
         toast({
-          title: "AI подключен",
-          description: "Shell успешно подключен к AI",
+          title: t('aiConnectedToast'),
+          description: t('shellConnected'),
         });
       } else {
         toast({
-          title: "Ошибка подключения",
-          description: "Не удалось подключиться к AI. Попробуйте снова.",
+          title: t('connectionError'),
+          description: t('connectionErrorDesc'),
           variant: "destructive",
         });
       }
@@ -38,8 +40,8 @@ export function useAISync() {
     aiSyncService.emergencyStop();
     setIsConnectedToAI(false);
     toast({
-      title: "Аварийная остановка",
-      description: "Все подключения к AI остановлены",
+      title: t('emergencyStopTitle'),
+      description: t('emergencyStopDesc'),
       variant: "destructive",
     });
   };
@@ -59,7 +61,7 @@ export function useAISync() {
       
       if (message) {
         toast({
-          title: connected ? "AI подключен" : "AI отключен",
+          title: connected ? t('aiConnectedToast') : t('aiDisconnected'),
           description: message,
           variant: connected ? "default" : "destructive",
         });
@@ -69,7 +71,7 @@ export function useAISync() {
     return () => {
       unsubscribe();
     };
-  }, [toast]);
+  }, [toast, t]);
 
   return {
     isConnectedToAI,

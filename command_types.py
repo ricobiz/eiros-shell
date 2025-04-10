@@ -17,4 +17,5 @@ class CommandType:
     RECORD = "record"
     MEMORY_SAVE = "memory_save"
     MEMORY_RETRIEVE = "memory_retrieve"
-    ANNOTATE = "annotate"  # New command type for manual annotation
+    ANNOTATE = "annotate"  # Command type for manual annotation
+    SCHEDULE = "schedule"  # New command type for scheduled tasks

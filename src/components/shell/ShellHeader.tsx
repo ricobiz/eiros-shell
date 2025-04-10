@@ -36,11 +36,16 @@ import InstructionsTab from './InstructionsTab';
 import { useShell } from '@/contexts/shell/ShellContext';
 import { aiSyncService } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
+import TaskScheduler from '@/components/TaskScheduler';
+import EmergencyPauseButton from '@/components/EmergencyPauseButton';
 
 const ShellHeader: React.FC = () => {
   const { isPinned, isConnectedToAI, handleTogglePin, handleToggleAIConnection } = useShell();
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const Instructions = () => (
     <div className="px-2 py-4">
@@ -51,8 +56,8 @@ const ShellHeader: React.FC = () => {
   const handleEmergencyStop = () => {
     aiSyncService.emergencyStop();
     toast({
-      title: "Аварийная остановка",
-      description: "Все подключения к ChatGPT остановлены",
+      title: t('emergencyStopTitle'),
+      description: t('emergencyStopDesc'),
       variant: "destructive",
     });
   };
@@ -99,11 +104,17 @@ const ShellHeader: React.FC = () => {
           
           <div className="flex items-center ml-3">
             <Cpu size={14} className="text-accent" />
-            <CardTitle className="text-sm ml-1">Shell</CardTitle>
+            <CardTitle className="text-sm ml-1">{t('shell')}</CardTitle>
           </div>
         </div>
         
         <div className="flex items-center space-x-1">
+          <LanguageSelector />
+          
+          <TaskScheduler />
+          
+          <EmergencyPauseButton />
+          
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -117,18 +128,18 @@ const ShellHeader: React.FC = () => {
                     <div className="flex items-center">
                       <span className="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
                       <Unlink size={14} className="mr-1" />
-                      <span className="text-xs">Отключить</span>
+                      <span className="text-xs">{t('disconnect')}</span>
                     </div>
                   ) : (
                     <div className="flex items-center">
                       <Link size={14} className="mr-1" />
-                      <span className="text-xs">Подключить</span>
+                      <span className="text-xs">{t('connect')}</span>
                     </div>
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isConnectedToAI ? 'Отключить от AI' : 'Подключить к AI'}
+                {isConnectedToAI ? t('disconnect') : t('connect')}
               </TooltipContent>
             </Tooltip>
 
@@ -142,11 +153,11 @@ const ShellHeader: React.FC = () => {
                     onClick={handleEmergencyStop}
                   >
                     <AlertOctagon size={14} className="mr-1" />
-                    <span className="text-xs">Стоп</span>
+                    <span className="text-xs">{t('stop')}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Аварийная остановка всех подключений
+                  {t('emergencyStop')}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -163,7 +174,7 @@ const ShellHeader: React.FC = () => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isPinned ? 'Открепить окно' : 'Закрепить окно (всегда поверх)'}
+                {isPinned ? t('unpinWindow') : t('pinWindow')}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

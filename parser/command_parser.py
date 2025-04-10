@@ -1,9 +1,10 @@
 
 """
-Main command parser that delegates to specialized parsers
+Module for parsing and routing commands
 """
 
 import logging
+import uuid
 from typing import Dict, Any, Optional
 
 from .format_detector import detect_command_format
@@ -11,28 +12,18 @@ from .json_parser import parse_json_command
 from .marked_parser import parse_marked_command
 from .directive_parser import parse_directive_command
 from .implicit_parser import parse_implicit_command
+from .manual_reference_parser import parse_manual_reference_command
 
 logger = logging.getLogger("EirosShell")
 
 class CommandParser:
-    def __init__(self, initial_counter=0):
-        """
-        Initialize the command parser
-        
-        Args:
-            initial_counter: Initial value for the command counter
-        """
-        self.command_counter = initial_counter
+    """
+    Parser for extracting and routing commands from messages
+    """
     
-    def parse_command(self, message: str) -> Optional[Dict[str, Any]]:
+    def parse(self, message: str) -> Optional[Dict[str, Any]]:
         """
         Parse a message and extract a command
-        
-        Supported formats:
-        1. JSON: {"command": "navigation", "params": {"url": "https://example.com"}}
-        2. Marked: [command: navigation] [url: https://example.com]
-        3. Directive: #navigate to https://example.com
-        4. Implicit: "go to https://example.com"
         
         Args:
             message: The message to parse
@@ -40,37 +31,27 @@ class CommandParser:
         Returns:
             A dictionary with the parsed command or None if no command is found
         """
+        # Generate a unique command ID
+        command_id = f"cmd_{uuid.uuid4().hex[:8]}"
+        
         try:
-            # Increment command counter
-            self.command_counter += 1
+            # Detect the message format
+            cmd_format = detect_command_format(message)
             
-            # Generate command ID
-            command_id = f"cmd_{self.command_counter}"
-            
-            # Detect command format
-            format_type = detect_command_format(message)
-            
-            if format_type == "json":
+            # Route to the appropriate parser
+            if cmd_format == 'json':
                 return parse_json_command(message, command_id)
-            elif format_type == "marked":
+            elif cmd_format == 'marked':
                 return parse_marked_command(message, command_id)
-            elif format_type == "directive":
+            elif cmd_format == 'directive':
                 return parse_directive_command(message, command_id)
-            elif format_type == "implicit":
+            elif cmd_format == 'manual_ref':
+                return parse_manual_reference_command(message, command_id)
+            elif cmd_format == 'implicit':
                 return parse_implicit_command(message, command_id)
                 
-            logger.info("No command found in message")
             return None
             
         except Exception as e:
-            logger.error(f"Error in command parser: {str(e)}")
+            logger.error(f"Error parsing command: {str(e)}")
             return None
-    
-    def get_command_counter(self) -> int:
-        """
-        Get the current value of the command counter
-        
-        Returns:
-            The current command counter value
-        """
-        return self.command_counter

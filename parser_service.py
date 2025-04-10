@@ -9,6 +9,7 @@ from parser.json_parser import parse_json_command
 from parser.marked_parser import parse_marked_command
 from parser.directive_parser import parse_directive_command
 from parser.implicit_parser import parse_implicit_command
+from parser.manual_reference_parser import parse_manual_reference_command
 
 # Create a single instance to be shared
 default_parser = CommandParser()
@@ -20,5 +21,6 @@ __all__ = [
     'parse_json_command', 
     'parse_marked_command',
     'parse_directive_command',
-    'parse_implicit_command'
+    'parse_implicit_command',
+    'parse_manual_reference_command'
 ]

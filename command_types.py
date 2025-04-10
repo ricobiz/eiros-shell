@@ -3,17 +3,18 @@
 Command types for EirosShell
 """
 
-from enum import Enum, auto
-
 class CommandType:
-    NAVIGATION = "navigate"
+    """Command types"""
     CLICK = "click"
     TYPE = "type"
+    NAVIGATION = "navigation"
     WAIT = "wait"
     SCREENSHOT = "screenshot"
     ANALYZE = "analyze"
-    SET = "set"
-    IF = "if"
-    REPEAT = "repeat"
-    RECORD = "record"  # New command type for pattern recording
-    CHAIN = "chain"    # Command type for chains
+    CONDITIONAL = "if"
+    LOOP = "repeat"
+    VARIABLE = "variable"
+    RECORD = "record"
+    MEMORY_SAVE = "memory_save"
+    MEMORY_RETRIEVE = "memory_retrieve"
+    ANNOTATE = "annotate"  # New command type for manual annotation

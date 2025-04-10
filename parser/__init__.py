@@ -9,6 +9,7 @@ from .marked_parser import parse_marked_command
 from .directive_parser import parse_directive_command
 from .implicit_parser import parse_implicit_command
 from .command_parser import CommandParser
+from .manual_reference_parser import parse_manual_reference_command
 
 __all__ = [
     'detect_command_format',
@@ -16,5 +17,6 @@ __all__ = [
     'parse_marked_command',
     'parse_directive_parser',
     'parse_implicit_command',
+    'parse_manual_reference_command',
     'CommandParser'
 ]

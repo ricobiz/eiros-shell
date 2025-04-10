@@ -11,7 +11,7 @@ const ExecutionStatus: React.FC = () => {
   
   try {
     const taskScheduler = useTaskScheduler();
-    isExecutionPaused = taskScheduler.isExecutionPaused;
+    isExecutionPaused = taskScheduler?.isExecutionPaused || false;
   } catch (error) {
     console.error('TaskScheduler context not available:', error);
     return null;

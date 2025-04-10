@@ -20,8 +20,8 @@ const HeaderButtons: React.FC = () => {
   
   try {
     const taskScheduler = useTaskScheduler();
-    isExecutionPaused = taskScheduler.isExecutionPaused;
-    toggleExecutionPause = taskScheduler.toggleExecutionPause;
+    isExecutionPaused = taskScheduler?.isExecutionPaused || false;
+    toggleExecutionPause = taskScheduler?.toggleExecutionPause || (() => {});
   } catch (error) {
     console.error('TaskScheduler context not available:', error);
   }

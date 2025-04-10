@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Cpu, Edit, Check } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+
 const TitleEditor: React.FC = () => {
-  const [customTitle, setCustomTitle] = useState("Shell Assistant"); // Default custom title
+  const [customTitle, setCustomTitle] = useState("E.I.R.O.S. // SPAWN"); // Updated default title
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(customTitle);
   const {
@@ -33,22 +35,30 @@ const TitleEditor: React.FC = () => {
       });
     }
   };
+  
   const handleTitleSave = () => {
     updateCustomTitle(titleInput);
     setIsEditingTitle(false);
   };
-  return <div className="flex items-center ml-3">
-      
-      {isEditingTitle ? <div className="flex items-center ml-1">
+  
+  return (
+    <div className="flex items-center ml-3">
+      {isEditingTitle ? (
+        <div className="flex items-center ml-1">
           <Input type="text" value={titleInput} onChange={e => setTitleInput(e.target.value)} className="h-6 py-1 px-2 text-sm w-32" autoFocus />
           <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={handleTitleSave}>
             <Check size={14} />
           </Button>
-        </div> : <DropdownMenu>
+        </div>
+      ) : (
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="link" className="p-0 h-auto">
-              <CardTitle className="text-sm ml-1 flex items-center">
+              <CardTitle className="text-sm ml-1 flex items-center font-mono font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#21e6c1] to-cyan-500">
                 {customTitle}
+                <div className="text-xs text-muted-foreground ml-2 font-normal">
+                  (Enhanced Intelligent Reactive Operating Shell)
+                </div>
                 <Edit size={12} className="ml-1 opacity-50" />
               </CardTitle>
             </Button>
@@ -58,7 +68,10 @@ const TitleEditor: React.FC = () => {
               Edit title
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>}
-    </div>;
+        </DropdownMenu>
+      )}
+    </div>
+  );
 };
+
 export default TitleEditor;

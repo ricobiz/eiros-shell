@@ -25,7 +25,7 @@ const HeaderButtons: React.FC = () => {
               className="relative h-8 w-8 cursor-pointer flex items-center justify-center"
               aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
             >
-              <div className="absolute transform rotate-[45deg] h-5 w-[3px] bg-green-500 hover:bg-green-600 active:bg-green-700"></div>
+              <div className="absolute transform rotate-[45deg] h-5 w-3 bg-green-500 hover:bg-green-600 active:bg-green-700"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -42,7 +42,7 @@ const HeaderButtons: React.FC = () => {
               className="relative h-8 w-8 cursor-pointer flex items-center justify-center"
               aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
             >
-              <div className="absolute transform rotate-[45deg] h-5 w-[3px] bg-[#FFBD44] hover:bg-[#E0A93E] active:bg-[#C19435]"></div>
+              <div className="absolute transform rotate-[45deg] h-5 w-3 bg-[#FFBD44] hover:bg-[#E0A93E] active:bg-[#C19435]"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -59,7 +59,7 @@ const HeaderButtons: React.FC = () => {
               className="relative h-8 w-8 cursor-pointer flex items-center justify-center"
               aria-label={t('emergencyStop')}
             >
-              <div className="absolute transform rotate-[45deg] h-5 w-[3px] bg-destructive hover:bg-red-600 active:bg-red-700"></div>
+              <div className="absolute transform rotate-[45deg] h-5 w-3 bg-destructive hover:bg-red-600 active:bg-red-700"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>

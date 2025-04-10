@@ -56,9 +56,11 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
         console.log('Received message from ChatGPT window in useChatConnection:', event.data);
         
         // Add message to chat
+        const messageContent = event.data.message || event.data.content || 'Empty response received';
+        
         addMessageToChat(
           'ChatGPT', 
-          event.data.message || event.data.content || 'Empty response received'
+          messageContent
         );
         
         // Log the received message
@@ -66,7 +68,7 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
           type: 'success',
           message: 'Received response from ChatGPT',
           timestamp: Date.now(),
-          details: { messageLength: (event.data.message || '').length }
+          details: { messageLength: (messageContent).length }
         });
       }
     };
@@ -101,32 +103,24 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
         
         addMessageToChat('Система', 'Connection established! You can now send messages directly to ChatGPT.');
         
-        // Inject script into ChatGPT window to enable communication back
-        // This is a simplified example, in practice you would set up a more robust messaging system
-        const chatWindow = windowManager.getWindow();
-        console.log('Chat window reference obtained:', chatWindow ? 'valid' : 'null');
+        // Send a test message to verify bidirectional communication
+        const initialTestMessage = {
+          type: 'EIROS_INIT',
+          message: 'Initializing communication channel'
+        };
         
+        const chatWindow = windowManager.getWindow();
         if (chatWindow) {
           try {
-            chatWindow.postMessage({ 
-              type: 'EIROS_INIT', 
-              message: 'Setting up communication channel' 
-            }, '*');
+            chatWindow.postMessage(initialTestMessage, '*');
             
-            // Log that we're initializing
             logService.addLog({
               type: 'info',
-              message: 'Initialized communication channel with ChatGPT window',
+              message: 'Sent initialization message to ChatGPT window',
               timestamp: Date.now()
             });
           } catch (error) {
-            console.error('Failed to inject communication script:', error);
-            logService.addLog({
-              type: 'error',
-              message: 'Failed to initialize communication channel',
-              timestamp: Date.now(),
-              details: error
-            });
+            console.error('Failed to send initialization message:', error);
           }
         }
       } else {
@@ -140,6 +134,14 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
       }
     } catch (error) {
       console.error('Error during connection:', error);
+      
+      toast({
+        title: "Connection Error",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive"
+      });
+      
+      addMessageToChat('Система', `Connection error: ${error instanceof Error ? error.message : "Unknown error occurred"}`);
     } finally {
       setIsConnecting(false);
       console.log('Connection process completed');

@@ -83,7 +83,7 @@ export class AIConnectionService {
       }
       
       // Introduce a delay to ensure the window has time to load
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2500));
       
       // Check if window is still open after delay
       if (!this.windowManager.isWindowOpen()) {
@@ -91,14 +91,32 @@ export class AIConnectionService {
         throw new Error('ChatGPT window was closed too quickly. Popup blocker may be active or window was closed.');
       }
       
-      // Mark as connected since we successfully opened the window
+      // Inject the communication script into the ChatGPT window
+      try {
+        const injectionSuccess = await this.injectCommunicationScript();
+        if (!injectionSuccess) {
+          this.connectionState = AIConnectionState.ERROR;
+          throw new Error('Failed to inject communication script into ChatGPT window.');
+        }
+        
+        logService.addLog({
+          type: 'success',
+          message: 'Communication script injected into ChatGPT window',
+          timestamp: Date.now()
+        });
+      } catch (error) {
+        this.connectionState = AIConnectionState.ERROR;
+        throw new Error(`Script injection failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      
+      // Mark as connected since we successfully opened the window and injected the script
       this.connected = true;
       this.connectionState = AIConnectionState.CONNECTED;
       this.connectionAttempts = 0;
       
       logService.addLog({
         type: 'success',
-        message: 'ChatGPT browser window opened',
+        message: 'ChatGPT browser window opened and communication established',
         timestamp: Date.now()
       });
       
@@ -133,6 +151,89 @@ export class AIConnectionService {
       // Emit sync event
       aiSyncEvents.emit(false, `Failed to connect to AI system: ${errorMessage}`);
       
+      return false;
+    }
+  }
+  
+  private async injectCommunicationScript(): Promise<boolean> {
+    try {
+      const chatWindow = this.windowManager.getWindow();
+      if (!chatWindow) {
+        return false;
+      }
+      
+      // First method: Try to inject via script element
+      try {
+        const scriptUrl = new URL('/ai_injection.js', window.location.origin).href;
+        
+        // Create a script element
+        chatWindow.document.head.insertAdjacentHTML(
+          'beforeend',
+          `<script src="${scriptUrl}" id="eiros-shell-script" async></script>`
+        );
+        
+        // Wait for script to load
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        // Check if script was loaded
+        const scriptElement = chatWindow.document.getElementById('eiros-shell-script');
+        if (scriptElement) {
+          logService.addLog({
+            type: 'info',
+            message: 'Script element injected into ChatGPT window',
+            timestamp: Date.now()
+          });
+          return true;
+        }
+      } catch (e) {
+        logService.addLog({
+          type: 'warning',
+          message: 'Script element injection failed, trying direct code injection',
+          timestamp: Date.now(),
+          details: e instanceof Error ? e.message : String(e)
+        });
+      }
+      
+      // Second method: Fetch the script content and inject directly
+      try {
+        const response = await fetch('/ai_injection.js');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch injection script: ${response.status}`);
+        }
+        
+        const scriptContent = await response.text();
+        
+        // Create a script element with the content
+        const scriptElement = chatWindow.document.createElement('script');
+        scriptElement.id = 'eiros-shell-script-direct';
+        scriptElement.textContent = scriptContent;
+        chatWindow.document.head.appendChild(scriptElement);
+        
+        logService.addLog({
+          type: 'info',
+          message: 'Script code directly injected into ChatGPT window',
+          timestamp: Date.now()
+        });
+        
+        return true;
+      } catch (e) {
+        logService.addLog({
+          type: 'error',
+          message: 'Direct script injection failed',
+          timestamp: Date.now(),
+          details: e instanceof Error ? e.message : String(e)
+        });
+      }
+      
+      // If we reached here, both methods failed
+      return false;
+    } catch (error) {
+      logService.addLog({
+        type: 'error',
+        message: 'Failed to inject communication script',
+        timestamp: Date.now(),
+        details: error instanceof Error ? error.message : String(error)
+      });
       return false;
     }
   }

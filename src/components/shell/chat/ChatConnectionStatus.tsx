@@ -31,7 +31,7 @@ const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({
         {t('aiConnected')}
       </div>
       
-      {/* Test Connection Button */}
+      {/* Test Connection Button - Always enabled when connected */}
       {onTestConnection && (
         <Button 
           variant={isTestingConnection ? "default" : "outline"}
@@ -51,7 +51,8 @@ const ChatConnectionStatus: React.FC<ChatConnectionStatusProps> = ({
         className="flex items-center gap-1"
         onClick={() => {
           if (aiSyncService.isConnected()) {
-            window.open('https://chat.openai.com/', 'ChatGPT', 'width=800,height=600');
+            const chatWindow = window.open('https://chat.openai.com/', 'ChatGPT', 'width=800,height=600');
+            if (chatWindow) chatWindow.focus();
           }
         }}
         title={t('openChatGPT')}

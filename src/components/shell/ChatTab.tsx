@@ -25,21 +25,9 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
   const { t } = useLanguage();
   
   // Access shell context safely
-  let testAIConnection = async () => { 
-    console.log('Fallback testAIConnection called'); 
-    return false; 
-  };
-  let isTestingConnection = false;
-  
-  try {
-    console.log('Attempting to access shell context in ChatTab');
-    const shell = useShell();
-    testAIConnection = shell.testAIConnection;
-    isTestingConnection = shell.isTestingConnection;
-    console.log('Successfully accessed shell context in ChatTab');
-  } catch (error) {
-    console.error('Failed to access shell context in ChatTab:', error);
-  }
+  const shellContext = useShell();
+  const testAIConnection = shellContext.testAIConnection;
+  const isTestingConnection = shellContext.isTestingConnection;
   
   const { 
     message, 
@@ -81,10 +69,12 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     
     const handleMessage = (event: MessageEvent) => {
       // Check if this is a message from ChatGPT
-      if (event.data && typeof event.data === 'object' && event.data.type === 'CHATGPT_RESPONSE') {
+      if (event.data && typeof event.data === 'object' && 
+          (event.data.type === 'CHATGPT_RESPONSE' || event.data.type === 'EIROS_RESPONSE')) {
         console.log('Received message from ChatGPT in ChatTab:', event.data);
         // Process the response
-        handleAIResponse(event.data.message);
+        const messageContent = event.data.message || event.data.content || 'Empty response received';
+        handleAIResponse(messageContent);
       }
     };
     
@@ -128,28 +118,33 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       // Send a test command message that the shell should recognize
       console.log('Test successful, sending integration test command');
       const testMessage = "/test#integration_test{\"status\": \"verify\", \"message\": \"Testing bidirectional communication\"}";
-      setMessage(testMessage);
-      sendMessage();
       
-      // Add explanation message
-      addMessageToChat('Система', 'Testing automatic bidirectional communication with ChatGPT...');
+      // Send directly to ChatGPT
+      const sent = aiSyncService.sendMessageToAI(testMessage);
       
-      // Test sending instructions
-      console.log('Getting instructions file');
-      const instructions = await aiSyncService.getInstructionsFile();
-      if (instructions) {
-        addMessageToChat('Система', 'Sending integration instructions to ChatGPT...');
-        const instructionSent = aiSyncService.sendMessageToAI(
-          "SHELL INSTRUCTIONS: Below are instructions for interacting with this shell:\n\n" + 
-          instructions.substring(0, 500) + "..."
-        );
+      if (sent) {
+        // Add explanation message
+        addMessageToChat('Система', 'Test message sent successfully. Testing bidirectional communication with ChatGPT...');
         
-        console.log('Instructions sent result:', instructionSent);
-        if (instructionSent) {
-          addMessageToChat('Система', 'Instructions sent successfully');
-        } else {
-          addMessageToChat('Система', 'Failed to send instructions to ChatGPT');
+        // Test sending instructions
+        console.log('Getting instructions file');
+        const instructions = await aiSyncService.getInstructionsFile();
+        if (instructions) {
+          addMessageToChat('Система', 'Sending integration instructions to ChatGPT...');
+          const instructionSent = aiSyncService.sendMessageToAI(
+            "SHELL INSTRUCTIONS: Below are instructions for interacting with this shell:\n\n" + 
+            instructions.substring(0, 500) + "..."
+          );
+          
+          console.log('Instructions sent result:', instructionSent);
+          if (instructionSent) {
+            addMessageToChat('Система', 'Instructions sent successfully');
+          } else {
+            addMessageToChat('Система', 'Failed to send instructions to ChatGPT');
+          }
         }
+      } else {
+        addMessageToChat('Система', 'Failed to send test message to ChatGPT');
       }
     } else {
       console.log('Test failed');

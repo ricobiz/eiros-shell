@@ -34,14 +34,18 @@ const ManualAnnotationTab: React.FC = () => {
         setCurrentScreenshot(result.screenshots[0]);
       } else {
         // If no screenshots, take a new one
-        const screenshotResult = await handleTakeScreenshot();
-        if (screenshotResult && typeof screenshotResult === 'object') {
-          const newScreenshot: Screenshot = {
-            path: screenshotResult.path || '',
-            timestamp: Date.now()
-          };
-          setScreenshots([newScreenshot]);
-          setCurrentScreenshot(newScreenshot);
+        await handleTakeScreenshot();
+        // Then try to get the newly taken screenshot
+        const newResult = await commandService.executeCommand({
+          id: `get_new_screenshots_${Date.now()}`,
+          type: CommandType.SCREENSHOT,
+          params: { limit: 1 },
+          timestamp: Date.now()
+        });
+        
+        if (newResult && newResult.screenshots && newResult.screenshots.length > 0) {
+          setScreenshots(newResult.screenshots);
+          setCurrentScreenshot(newResult.screenshots[0]);
         }
       }
     } catch (error) {

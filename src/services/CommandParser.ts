@@ -11,7 +11,32 @@ export class CommandParser {
       
       if (match) {
         const [, typeStr, id, paramsJson] = match;
-        const type = typeStr as CommandType;
+        let type: CommandType;
+        
+        // Map command type aliases to actual command types
+        switch (typeStr.toLowerCase()) {
+          case 'shell': 
+            type = CommandType.SHELL; 
+            break;
+          case 'restart': 
+            type = CommandType.RESTART; 
+            break;
+          case 'kill': 
+            type = CommandType.KILL; 
+            break;
+          case 'read': 
+            type = CommandType.READ_FILE; 
+            break;
+          case 'write': 
+            type = CommandType.WRITE_FILE; 
+            break;
+          case 'ls': 
+            type = CommandType.LIST_DIR; 
+            break;
+          default:
+            // Try to use the direct command type
+            type = typeStr as CommandType;
+        }
         
         // Validate command type
         const validTypes = Object.values(CommandType);

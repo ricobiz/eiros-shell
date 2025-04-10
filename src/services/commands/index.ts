@@ -10,6 +10,14 @@ import { handleMemorySaveCommand, handleMemoryRetrieveCommand } from './memoryCo
 import { handleLoginCommand } from './loginCommand';
 import { handleAutoLoginCommand } from './autoLoginCommand';
 import { handlePatternLearnCommand, handlePatternRecallCommand } from './patternCommands';
+import { 
+  handleShellCommand,
+  handleRestartCommand,
+  handleKillCommand,
+  handleReadFileCommand,
+  handleWriteFileCommand,
+  handleListDirCommand
+} from './systemCommands';
 
 export const commandHandlers = {
   [CommandType.CLICK]: handleClickCommand,
@@ -24,4 +32,11 @@ export const commandHandlers = {
   [CommandType.AUTO_LOGIN]: handleAutoLoginCommand,
   [CommandType.PATTERN_LEARN]: handlePatternLearnCommand,
   [CommandType.PATTERN_RECALL]: handlePatternRecallCommand,
+  // New system commands
+  [CommandType.SHELL]: handleShellCommand,
+  [CommandType.RESTART]: handleRestartCommand,
+  [CommandType.KILL]: handleKillCommand,
+  [CommandType.READ_FILE]: handleReadFileCommand,
+  [CommandType.WRITE_FILE]: handleWriteFileCommand,
+  [CommandType.LIST_DIR]: handleListDirCommand
 };

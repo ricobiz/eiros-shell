@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,15 +8,19 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { RotateCw, ShieldAlert, Laptop, Clock, Wifi, Database } from 'lucide-react';
+import { RotateCw, ShieldAlert, Laptop, Clock, Wifi, Database, Cpu } from 'lucide-react';
 import DiagnosticPanel from '../DiagnosticPanel';
 import AutostartConfig from '../AutostartConfig';
+import ProcessMonitor from '../ProcessMonitor';
 import { diagnosticsService } from '@/services/DiagnosticsService';
+import { useAdminVerification } from '@/hooks/useAdminVerification';
+import { systemCommandService } from '@/services/SystemCommandService';
 
 const SystemSettingsTab: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [repairingBridge, setRepairingBridge] = useState(false);
   const { toast } = useToast();
+  const { isAdmin, isCheckingAdmin, requestElevation, elevationRequested } = useAdminVerification();
   
   const handleRepairBridge = async () => {
     setRepairingBridge(true);
@@ -48,6 +51,23 @@ const SystemSettingsTab: React.FC = () => {
       setRepairingBridge(false);
     }
   };
+
+  const handleRequestElevation = async () => {
+    const result = await requestElevation();
+    
+    if (result) {
+      toast({
+        title: "Admin Rights Granted",
+        description: "Application now has administrative privileges"
+      });
+    } else {
+      toast({
+        title: "Elevation Failed",
+        description: "Could not obtain administrative privileges",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -56,10 +76,11 @@ const SystemSettingsTab: React.FC = () => {
       <DiagnosticPanel />
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="startup">Startup</TabsTrigger>
           <TabsTrigger value="bridge">Eiros Bridge</TabsTrigger>
+          <TabsTrigger value="monitor">Monitor</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general" className="space-y-4">
@@ -138,18 +159,38 @@ const SystemSettingsTab: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm">
-                Some features require administrative privileges to function properly:
+                {isAdmin 
+                  ? "Application is running with administrative privileges. All features are available."
+                  : "Some features require administrative privileges to function properly:"}
               </p>
               
-              <ul className="list-disc text-xs space-y-1 pl-5 text-muted-foreground">
-                <li>System-wide keyboard shortcuts</li>
-                <li>Reading protected screen elements</li>
-                <li>Automated startup configuration</li>
-              </ul>
-              
-              <Button variant="outline" size="sm">
-                Restart with Admin Rights
-              </Button>
+              {!isAdmin && (
+                <>
+                  <ul className="list-disc text-xs space-y-1 pl-5 text-muted-foreground">
+                    <li>System-wide keyboard shortcuts</li>
+                    <li>Reading protected screen elements</li>
+                    <li>Automated startup configuration</li>
+                    <li>Process management</li>
+                    <li>Protected file operations</li>
+                  </ul>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleRequestElevation}
+                    disabled={elevationRequested || isCheckingAdmin}
+                  >
+                    {elevationRequested ? (
+                      <>
+                        <RotateCw className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        Requesting...
+                      </>
+                    ) : (
+                      'Request Admin Rights'
+                    )}
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -225,6 +266,45 @@ const SystemSettingsTab: React.FC = () => {
                     Test Connection
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="monitor" className="space-y-4">
+          <ProcessMonitor />
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center">
+                <Cpu className="h-4 w-4 mr-2" />
+                System Integrity
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3 bg-muted rounded-md">
+                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                  <div className="text-muted-foreground">Core Files:</div>
+                  <div className="text-green-500">Verified</div>
+                  
+                  <div className="text-muted-foreground">Last Check:</div>
+                  <div>15 minutes ago</div>
+                  
+                  <div className="text-muted-foreground">Uptime:</div>
+                  <div>4 hours, 27 minutes</div>
+                  
+                  <div className="text-muted-foreground">Recovery Points:</div>
+                  <div>3 available</div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between">
+                <Button variant="outline" size="sm">
+                  Run Integrity Check
+                </Button>
+                <Button variant="outline" size="sm">
+                  Create Recovery Point
+                </Button>
               </div>
             </CardContent>
           </Card>

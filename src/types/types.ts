@@ -1,4 +1,3 @@
-
 export type LogType = 'info' | 'warning' | 'error' | 'success';
 
 export interface LogEntry {
@@ -27,7 +26,13 @@ export enum CommandType {
   LOGIN = 'login',
   AUTO_LOGIN = 'auto_login',
   PATTERN_LEARN = 'pattern_learn',
-  PATTERN_RECALL = 'pattern_recall'
+  PATTERN_RECALL = 'pattern_recall',
+  SHELL = 'shell',
+  RESTART = 'restart',
+  KILL = 'kill',
+  READ_FILE = 'read_file',
+  WRITE_FILE = 'write_file',
+  LIST_DIR = 'list_dir'
 }
 
 export interface Command {
@@ -104,3 +109,24 @@ export interface PatternStats {
   errorCategories: Record<string, number>;
 }
 
+export interface SystemCommandResult {
+  success: boolean;
+  output?: string;
+  error?: string;
+  exitCode?: number;
+  executedAsAdmin?: boolean;
+}
+
+export interface FileOperationResult {
+  success: boolean;
+  content?: string;
+  error?: string;
+  path: string;
+  entries?: string[];
+  stats?: {
+    size: number;
+    modified: string;
+    created: string;
+    isDirectory: boolean;
+  };
+}

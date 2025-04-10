@@ -1,28 +1,44 @@
 
-import { CommandType } from "../types/types";
+import { CommandType } from '@/types/types';
 
-export function getCommandHelp(): Record<string, string> {
+export const getCommandHelp = () => {
   return {
-    [CommandType.CLICK]: "Click on an element or coordinates: { x, y, element, waitAfter }",
-    [CommandType.TYPE]: "Type text into an element: { text, element, waitAfter }",
-    [CommandType.NAVIGATION]: "Navigate to a URL: { url }",
-    [CommandType.WAIT]: "Wait for specified duration: { duration }ms",
-    [CommandType.SCREENSHOT]: "Take a screenshot of the current page",
-    [CommandType.ANALYZE]: "Analyze the current page for elements",
-    [CommandType.MEMORY_SAVE]: "Save data to memory: { type, data, tags }",
-    [CommandType.MEMORY_RETRIEVE]: "Retrieve data from memory: { id, type, tags, limit }",
-    [CommandType.LOGIN]: "Store credentials and login: { service, username, password, url, usernameSelector, passwordSelector, submitSelector }",
-    [CommandType.AUTO_LOGIN]: "Auto login using saved credentials: { service }"
+    [CommandType.CLICK]: 'Click on an element identified by selector',
+    [CommandType.TYPE]: 'Type text into an element identified by selector',
+    [CommandType.NAVIGATION]: 'Navigate to a URL',
+    [CommandType.WAIT]: 'Wait for a specified duration in seconds',
+    [CommandType.SCREENSHOT]: 'Take a screenshot of the current page',
+    [CommandType.ANALYZE]: 'Analyze the page structure and elements',
+    [CommandType.MEMORY_SAVE]: 'Save data to memory',
+    [CommandType.MEMORY_RETRIEVE]: 'Retrieve data from memory',
+    [CommandType.LOGIN]: 'Perform a login operation',
+    [CommandType.AUTO_LOGIN]: 'Perform an automatic login operation',
+    [CommandType.PATTERN_LEARN]: 'Learn a new UI pattern',
+    [CommandType.PATTERN_RECALL]: 'Recall and use a learned UI pattern',
+    // New system commands
+    [CommandType.SHELL]: 'Execute a shell command',
+    [CommandType.RESTART]: 'Restart the system or application',
+    [CommandType.KILL]: 'Terminate a process by name',
+    [CommandType.READ_FILE]: 'Read content from a file',
+    [CommandType.WRITE_FILE]: 'Write content to a file',
+    [CommandType.LIST_DIR]: 'List contents of a directory'
   };
-}
+};
 
-export function getCommandExamples(): Record<string, string> {
+export const getCommandExamples = () => {
   return {
-    "Click": `/click#btn1{ "element": ".submit-button", "waitAfter": 500 }`,
-    "Type": `/type#input1{ "text": "Hello world", "element": "#message-input" }`,
-    "Navigate": `/navigate#go1{ "url": "https://example.com" }`,
-    "Login": `/login#auth1{ "service": "chatgpt", "username": "user@example.com", "password": "password123", "url": "https://chat.openai.com/", "usernameSelector": "#username", "passwordSelector": "#password", "submitSelector": "#login-button" }`,
-    "Auto-login": `/auto_login#quick1{ "service": "chatgpt" }`,
-    "Wait": `/wait#pause1{ "duration": 2000 }`
+    click: '/click#cmd1{"selector": ".btn-submit"}',
+    type: '/type#cmd2{"selector": "#username", "text": "user123"}',
+    navigation: '/navigation#cmd3{"url": "https://example.com"}',
+    wait: '/wait#cmd4{"duration": 3}',
+    screenshot: '/screenshot#cmd5{}',
+    analyze: '/analyze#cmd6{}',
+    // New system command examples
+    shell: '/shell#cmd88{"cmd": "dir /s", "asAdmin": true}',
+    restart: '/restart#cmd89{}',
+    kill: '/kill#cmd90{"process": "chrome.exe"}',
+    readFile: '/read_file#cmd91{"path": "D:/data/logs.txt"}',
+    writeFile: '/write_file#cmd92{"path": "C:/Users/xxx/out.txt", "text": "Done"}',
+    listDir: '/list_dir#cmd93{"path": "D:/projects"}'
   };
-}
+};

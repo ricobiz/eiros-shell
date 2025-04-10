@@ -1,4 +1,3 @@
-
 """
 Скрипт для запуска EirosShell
 """
@@ -72,9 +71,9 @@ async def main():
         # Initialize debug GUI if not in headless mode
         if not headless_mode:
             try:
-                from debug_gui import initialize_debug_gui
+                from gui import initialize_debug_gui
                 logger.info("Запуск отладочного интерфейса...")
-                debug_gui = initialize_debug_gui(debug_mode)
+                debug_gui = initialize_debug_gui()
                 logger.info("Отладочный интерфейс запущен")
             except ImportError as e:
                 logger.warning(f"Не удалось запустить отладочный интерфейс: {str(e)}")

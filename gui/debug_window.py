@@ -1,119 +1,19 @@
 
 """
-EirosShell Debug GUI
-A visual interface for monitoring and debugging the EirosShell
+Main debug window implementation for EirosShell
 """
 
-import sys
 import os
-import logging
-import asyncio
 import json
-import time
-from pathlib import Path
+import sys
 from datetime import datetime
-from queue import Queue
-from threading import Thread
+from pathlib import Path
 
-try:
-    from PyQt5 import QtWidgets, QtGui, QtCore
-    from PyQt5.QtCore import Qt, pyqtSignal, QSize
-    from PyQt5.QtGui import QColor, QIcon, QTextCursor, QFont
-except ImportError:
-    print("PyQt5 is not installed. Install it with: pip install PyQt5")
-    print("Then restart EirosShell with: python start_eiros_shell.py")
-    sys.exit(1)
+from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import Qt, pyqtSignal, QSize
+from PyQt5.QtGui import QColor, QIcon, QTextCursor, QFont
 
-# Configure logger for this module
-logger = logging.getLogger("EirosShell.DebugGUI")
-
-class LogQueueHandler(logging.Handler):
-    """Handler to forward log records to a queue for the GUI"""
-    
-    def __init__(self, log_queue):
-        super().__init__()
-        self.log_queue = log_queue
-        
-    def emit(self, record):
-        try:
-            # Format the record
-            log_entry = self.format(record)
-            # Add timestamp and level for GUI processing
-            entry_data = {
-                'message': log_entry,
-                'levelname': record.levelname,
-                'timestamp': datetime.fromtimestamp(record.created).strftime('%H:%M:%S'),
-                'raw_record': {
-                    'msg': record.msg,
-                    'levelname': record.levelname,
-                    'created': record.created
-                }
-            }
-            
-            # Check if this is a command result
-            if hasattr(record, 'command_id') and hasattr(record, 'command_status'):
-                entry_data['command_id'] = record.command_id
-                entry_data['command_status'] = record.command_status
-                entry_data['command_type'] = getattr(record, 'command_type', 'unknown')
-            
-            self.log_queue.put(entry_data)
-        except Exception:
-            self.handleError(record)
-
-class CommandTableModel(QtCore.QAbstractTableModel):
-    """Model for the command history table"""
-    
-    def __init__(self, data=None):
-        super().__init__()
-        self._data = data or []
-        self.headers = ["ID", "Type", "Status", "Time"]
-        
-    def data(self, index, role):
-        if not index.isValid():
-            return None
-            
-        if role == Qt.DisplayRole:
-            return self._data[index.row()][index.column()]
-            
-        if role == Qt.BackgroundRole:
-            status = self._data[index.row()][2]
-            if status == "success":
-                return QColor(200, 250, 200)  # Light green
-            elif status == "error":
-                return QColor(250, 200, 200)  # Light red
-            return None
-            
-        return None
-        
-    def rowCount(self, parent=None):
-        return len(self._data)
-        
-    def columnCount(self, parent=None):
-        return len(self.headers)
-        
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return self.headers[section]
-        return None
-        
-    def addCommand(self, cmd_data):
-        """Add a new command to the top of the table"""
-        self.beginInsertRows(QtCore.QModelIndex(), 0, 0)
-        # Format: [ID, Type, Status, Time]
-        new_row = [
-            cmd_data.get('command_id', 'unknown'),
-            cmd_data.get('command_type', 'unknown'),
-            cmd_data.get('command_status', 'unknown'),
-            cmd_data.get('timestamp', datetime.now().strftime('%H:%M:%S'))
-        ]
-        self._data.insert(0, new_row)
-        
-        # Keep only the most recent 20 commands
-        if len(self._data) > 20:
-            self._data.pop()
-            
-        self.endInsertRows()
-        return True
+from .command_table import CommandTableModel
 
 class DebugWindow(QtWidgets.QMainWindow):
     """Main debug window for EirosShell"""
@@ -227,7 +127,7 @@ class DebugWindow(QtWidgets.QMainWindow):
         self.log_text.setTextCursor(cursor)
         
         # Format log with timestamp and color based on level
-        timestamp = log_data.get('timestamp', time.strftime('%H:%M:%S'))
+        timestamp = log_data.get('timestamp', datetime.now().strftime('%H:%M:%S'))
         level = log_data.get('levelname', 'INFO')
         message = log_data.get('message', '')
         
@@ -325,6 +225,8 @@ class DebugWindow(QtWidgets.QMainWindow):
         
         if reply == QtWidgets.QMessageBox.Yes:
             # Signal the main process to restart
+            import logging
+            logger = logging.getLogger("EirosShell")
             logger.info("Restart requested from GUI")
             # This will be implemented with main process integration
             
@@ -354,10 +256,14 @@ class DebugWindow(QtWidgets.QMainWindow):
         if self.btn_pause.text().startswith("⏸️"):
             self.btn_pause.setText("▶️ Resume Execution")
             # Signal to pause
+            import logging
+            logger = logging.getLogger("EirosShell")
             logger.info("Execution paused from GUI")
         else:
             self.btn_pause.setText("⏸️ Pause Execution")
             # Signal to resume
+            import logging
+            logger = logging.getLogger("EirosShell")
             logger.info("Execution resumed from GUI")
             
     def on_test_command(self):
@@ -401,6 +307,8 @@ class DebugWindow(QtWidgets.QMainWindow):
         try:
             params = json.loads(params_json)
             # This will be implemented with command execution integration
+            import logging
+            logger = logging.getLogger("EirosShell")
             logger.info(f"Test command: {cmd_type} with params: {params}")
             QtWidgets.QMessageBox.information(
                 self,
@@ -414,125 +322,3 @@ class DebugWindow(QtWidgets.QMainWindow):
                 "Invalid JSON",
                 "The parameters are not valid JSON. Please check and try again."
             )
-
-class DebugGUI:
-    """Main class to manage the debug GUI"""
-    
-    def __init__(self):
-        self.app = None
-        self.window = None
-        self.log_queue = Queue()
-        self.running = False
-        
-    def setup_logging(self):
-        """Set up logging to capture logs for the GUI"""
-        root_logger = logging.getLogger("EirosShell")
-        
-        # Create our custom handler
-        handler = LogQueueHandler(self.log_queue)
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-        handler.setFormatter(formatter)
-        
-        # Add it to the root logger
-        root_logger.addHandler(handler)
-        
-    def start_in_thread(self):
-        """Start the GUI in a separate thread"""
-        self.gui_thread = Thread(target=self.start, daemon=True)
-        self.gui_thread.start()
-        return self.gui_thread
-        
-    def start(self):
-        """Start the GUI application"""
-        self.running = True
-        self.app = QtWidgets.QApplication(sys.argv)
-        self.window = DebugWindow()
-        self.window.show()
-        
-        # Start log processing
-        log_thread = Thread(target=self.process_logs, daemon=True)
-        log_thread.start()
-        
-        # Set up logging
-        self.setup_logging()
-        
-        # Run the application
-        self.app.exec_()
-        self.running = False
-        
-    def process_logs(self):
-        """Process logs from the queue and update the GUI"""
-        while self.running:
-            try:
-                # Process all available logs
-                while not self.log_queue.empty():
-                    log_data = self.log_queue.get()
-                    
-                    # Check if this is a command result
-                    if 'command_id' in log_data:
-                        self.window.updateSignal.emit({
-                            'command': {
-                                'command_id': log_data['command_id'],
-                                'command_status': log_data['command_status'],
-                                'command_type': log_data.get('command_type', 'unknown'),
-                                'message': log_data['message'],
-                                'timestamp': log_data['timestamp']
-                            }
-                        })
-                        
-                    # Send log to display
-                    self.window.updateSignal.emit({'log': log_data})
-                    
-                # Sleep briefly to avoid consuming too much CPU
-                time.sleep(0.1)
-            except Exception as e:
-                print(f"Error in log processing: {str(e)}")
-                time.sleep(1)  # Sleep longer on error
-                
-    def update_status(self, is_connected, message=""):
-        """Update the connection status display"""
-        if self.window and self.running:
-            self.window.updateSignal.emit({
-                'status': {
-                    'connected': is_connected,
-                    'message': message
-                }
-            })
-            
-    def update_current_command(self, command_text):
-        """Update the current command display"""
-        if self.window and self.running:
-            self.window.updateSignal.emit({
-                'current_command': command_text
-            })
-            
-    def log_command_result(self, command_id, command_type, status, message):
-        """Log a command result to the GUI"""
-        if self.window and self.running:
-            self.window.updateSignal.emit({
-                'command': {
-                    'command_id': command_id,
-                    'command_type': command_type,
-                    'command_status': status,
-                    'message': message,
-                    'timestamp': datetime.now().strftime('%H:%M:%S')
-                }
-            })
-
-# Global instance
-debug_gui = None
-
-def initialize_debug_gui():
-    """Initialize and start the debug GUI"""
-    global debug_gui
-    
-    if debug_gui is None:
-        debug_gui = DebugGUI()
-        debug_gui.start_in_thread()
-        
-    return debug_gui
-
-if __name__ == "__main__":
-    # Test the GUI directly
-    gui = DebugGUI()
-    gui.start()

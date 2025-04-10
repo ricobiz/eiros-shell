@@ -1,4 +1,3 @@
-
 """
 EirosShell v0.7 - Автономная оболочка для работы с ChatGPT
 Основной файл загрузки и инициализации системы
@@ -26,7 +25,7 @@ log_file = log_dir / f"eiros_shell_{time.strftime('%Y%m%d_%H%M%S')}.log"
 # Get the debug GUI instance if available
 debug_gui = None
 try:
-    from debug_gui import debug_gui
+    from gui import debug_gui
 except ImportError:
     pass
 
@@ -93,7 +92,7 @@ async def main(debug_mode=False):
         connected = await chat_connector.connect_to_chat()
         
         if not connected:
-            logger.error("Не удалось подключиться к чату. Завершение работы.")
+            logger.error("Не удалось подключаться к чату. Завершение работы.")
             if debug_gui:
                 debug_gui.update_status(False, "Chat connection failed")
             await browser_controller.close_browser()

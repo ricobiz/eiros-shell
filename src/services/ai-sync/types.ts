@@ -8,6 +8,7 @@ export interface AIWindowManager {
   closeWindow(): void;
   isWindowOpen(): boolean;
   focusWindow(): boolean;
+  getWindow(): Window | null; // Add the missing method
 }
 
 export interface AIConnectionOptions {

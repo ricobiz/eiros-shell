@@ -26,9 +26,9 @@ const HeaderButtons: React.FC = () => {
               aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
             >
               <div className="flex space-x-0.5 items-center justify-center">
-                <div className="h-3 w-0.5 transform rotate-12 bg-green-500"></div>
-                <div className="h-3 w-0.5 transform rotate-12 bg-green-500"></div>
-                <div className="h-3 w-0.5 transform rotate-12 bg-green-500"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-green-500"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-green-500"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-green-500"></div>
               </div>
             </button>
           </TooltipTrigger>
@@ -47,9 +47,9 @@ const HeaderButtons: React.FC = () => {
               aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
             >
               <div className="flex space-x-0.5 items-center justify-center">
-                <div className="h-3 w-0.5 transform rotate-12 bg-[#FFBD44]"></div>
-                <div className="h-3 w-0.5 transform rotate-12 bg-[#FFBD44]"></div>
-                <div className="h-3 w-0.5 transform rotate-12 bg-[#FFBD44]"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-[#FFBD44]"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-[#FFBD44]"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-[#FFBD44]"></div>
               </div>
             </button>
           </TooltipTrigger>
@@ -68,9 +68,9 @@ const HeaderButtons: React.FC = () => {
               aria-label={t('emergencyStop')}
             >
               <div className="flex space-x-0.5 items-center justify-center">
-                <div className="h-3 w-0.5 transform rotate-12 bg-destructive"></div>
-                <div className="h-3 w-0.5 transform rotate-12 bg-destructive"></div>
-                <div className="h-3 w-0.5 transform rotate-12 bg-destructive"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-destructive"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-destructive"></div>
+                <div className="h-3 w-[3px] transform rotate-12 bg-destructive"></div>
               </div>
             </button>
           </TooltipTrigger>

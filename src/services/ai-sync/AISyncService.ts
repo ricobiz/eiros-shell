@@ -68,6 +68,9 @@ class AISyncService {
    */
   private handleWindowMessage = (event: MessageEvent): void => {
     try {
+      // Log all messages for debugging
+      console.log('Window message received:', event.data);
+      
       // Check if this is a message from ChatGPT
       if (event.data && typeof event.data === 'object' && 
           (event.data.type === 'CHATGPT_RESPONSE' || event.data.type === 'EIROS_RESPONSE')) {
@@ -117,6 +120,13 @@ class AISyncService {
    */
   isConnected(): boolean {
     return this.connectionService.isConnected();
+  }
+  
+  /**
+   * Get the ChatGPT window reference directly (for debugging)
+   */
+  getChatGPTWindow(): Window | null {
+    return windowManager.getWindow();
   }
   
   /**

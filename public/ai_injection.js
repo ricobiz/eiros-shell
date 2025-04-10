@@ -10,12 +10,21 @@ window.addEventListener('message', function(event) {
   if (event.data && (event.data.type === 'EIROS_SHELL_MESSAGE' || event.data.type === 'EIROS_INIT')) {
     console.log("EirosShell: Processing shell message:", event.data);
     
+    // Send confirmation back to parent window
+    window.parent.postMessage({
+      type: 'EIROS_RESPONSE',
+      content: 'Message received in ChatGPT window: ' + (event.data.message || 'No message content'),
+      status: 'received'
+    }, '*');
+    
     // Process the message
     if (event.data.type === 'EIROS_SHELL_MESSAGE') {
       // Find the ChatGPT input field
       const inputField = document.querySelector('textarea[placeholder], .input-area textarea');
       
       if (inputField) {
+        console.log("EirosShell: Found input field, setting value:", event.data.message);
+        
         // Set the text in the input field
         inputField.value = event.data.message;
         
@@ -27,6 +36,7 @@ window.addEventListener('message', function(event) {
         setTimeout(() => {
           const sendButton = document.querySelector('button[aria-label="Send message"], .send-button');
           if (sendButton) {
+            console.log("EirosShell: Found send button, clicking it");
             sendButton.click();
             console.log("EirosShell: Message sent to ChatGPT");
             
@@ -34,10 +44,20 @@ window.addEventListener('message', function(event) {
             startResponseMonitoring();
           } else {
             console.error("EirosShell: Send button not found");
+            window.parent.postMessage({
+              type: 'EIROS_RESPONSE',
+              content: 'Error: Send button not found in ChatGPT interface',
+              status: 'error'
+            }, '*');
           }
         }, 100);
       } else {
         console.error("EirosShell: Input field not found");
+        window.parent.postMessage({
+          type: 'EIROS_RESPONSE',
+          content: 'Error: Input field not found in ChatGPT interface',
+          status: 'error'
+        }, '*');
       }
     } else if (event.data.type === 'EIROS_INIT') {
       console.log("EirosShell: Initialization message received");
@@ -46,6 +66,15 @@ window.addEventListener('message', function(event) {
         type: 'EIROS_RESPONSE',
         content: 'Connection established with ChatGPT window',
         status: 'connected'
+      }, '*');
+      
+      // Send environment information for debugging
+      window.parent.postMessage({
+        type: 'EIROS_RESPONSE',
+        content: 'Environment info: ' + 
+                 'URL=' + window.location.href + ', ' + 
+                 'hasTextarea=' + (!!document.querySelector('textarea') ? 'yes' : 'no'),
+        status: 'info'
       }, '*');
     }
   }
@@ -57,10 +86,12 @@ function startResponseMonitoring() {
   
   // Track current message count
   let lastMessageCount = document.querySelectorAll('.message, .chat-message, .prose, .markdown').length;
+  console.log("EirosShell: Initial message count:", lastMessageCount);
   
   // Set up an interval to check for new messages
   const checkInterval = setInterval(() => {
     const currentMessages = document.querySelectorAll('.message, .chat-message, .prose, .markdown');
+    console.log("EirosShell: Current message count:", currentMessages.length);
     
     // If we have more messages than before, the newest one is likely ChatGPT's response
     if (currentMessages.length > lastMessageCount) {
@@ -85,6 +116,7 @@ function startResponseMonitoring() {
           
           // Clear the interval as we've captured the response
           clearInterval(checkInterval);
+          console.log("EirosShell: Response monitoring completed");
         }
       }
       
@@ -108,3 +140,16 @@ window.parent.postMessage({
 }, '*');
 
 console.log("EirosShell: Setup complete, ready to receive messages");
+
+// Set up a heartbeat to periodically check if the connection is still active
+setInterval(() => {
+  try {
+    window.parent.postMessage({
+      type: 'EIROS_RESPONSE',
+      content: 'ChatGPT heartbeat',
+      status: 'heartbeat'
+    }, '*');
+  } catch (e) {
+    console.error("EirosShell: Heartbeat error:", e);
+  }
+}, 10000); // Every 10 seconds

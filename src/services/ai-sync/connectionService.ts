@@ -82,6 +82,8 @@ export class AIConnectionService {
         throw new Error(errorMessage);
       }
       
+      console.log('ChatGPT window opened successfully, reference:', chatWindow);
+      
       // Introduce a delay to ensure the window has time to load
       await new Promise(resolve => setTimeout(resolve, 2500));
       
@@ -90,6 +92,8 @@ export class AIConnectionService {
         this.connectionState = AIConnectionState.ERROR;
         throw new Error('ChatGPT window was closed too quickly. Popup blocker may be active or window was closed.');
       }
+      
+      console.log('ChatGPT window remains open after delay, proceeding with script injection');
       
       // Inject the communication script into the ChatGPT window
       try {
@@ -104,6 +108,8 @@ export class AIConnectionService {
           message: 'Communication script injected into ChatGPT window',
           timestamp: Date.now()
         });
+        
+        console.log('Script injection succeeded');
       } catch (error) {
         this.connectionState = AIConnectionState.ERROR;
         throw new Error(`Script injection failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -125,6 +131,20 @@ export class AIConnectionService {
       
       // Focus the window
       this.windowManager.focusWindow();
+      
+      // Send a test ping to verify the connection is working
+      const chatWindow = this.windowManager.getWindow();
+      if (chatWindow) {
+        try {
+          console.log('Sending initialization ping to ChatGPT window');
+          chatWindow.postMessage({
+            type: 'EIROS_INIT',
+            message: 'Initial connection ping'
+          }, '*');
+        } catch (err) {
+          console.warn('Failed to send initialization ping:', err);
+        }
+      }
       
       return true;
     } catch (error) {
@@ -159,12 +179,24 @@ export class AIConnectionService {
     try {
       const chatWindow = this.windowManager.getWindow();
       if (!chatWindow) {
+        console.error('Unable to get window reference for script injection');
         return false;
       }
+      
+      console.log('Starting script injection process');
       
       // First method: Try to inject via script element
       try {
         const scriptUrl = new URL('/ai_injection.js', window.location.origin).href;
+        console.log('Injecting script from URL:', scriptUrl);
+        
+        // Log the script URL and ensure it's accessible
+        try {
+          const testFetch = await fetch(scriptUrl);
+          console.log('Script file accessibility check result:', testFetch.ok ? 'accessible' : 'not accessible', 'Status:', testFetch.status);
+        } catch (fetchError) {
+          console.error('Failed to fetch script file:', fetchError);
+        }
         
         // Create a script element
         chatWindow.document.head.insertAdjacentHTML(
@@ -184,6 +216,8 @@ export class AIConnectionService {
             timestamp: Date.now()
           });
           return true;
+        } else {
+          console.warn('Script element not found in document after injection attempt');
         }
       } catch (e) {
         logService.addLog({
@@ -192,16 +226,20 @@ export class AIConnectionService {
           timestamp: Date.now(),
           details: e instanceof Error ? e.message : String(e)
         });
+        console.error('Error during script element injection:', e);
       }
       
       // Second method: Fetch the script content and inject directly
       try {
+        console.log('Attempting direct code injection');
         const response = await fetch('/ai_injection.js');
         if (!response.ok) {
           throw new Error(`Failed to fetch injection script: ${response.status}`);
         }
         
         const scriptContent = await response.text();
+        console.log('Fetched script content length:', scriptContent.length);
+        console.log('Script content preview:', scriptContent.substring(0, 100) + '...');
         
         // Create a script element with the content
         const scriptElement = chatWindow.document.createElement('script');
@@ -215,6 +253,16 @@ export class AIConnectionService {
           timestamp: Date.now()
         });
         
+        // Wait a short time and check if a test function exists in the window
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        console.log('Direct injection completed, checking for success indicators');
+        
+        // Send a test message to verify the communication channel
+        chatWindow.postMessage({
+          type: 'EIROS_INIT',
+          message: 'Checking injection status'
+        }, '*');
+        
         return true;
       } catch (e) {
         logService.addLog({
@@ -223,9 +271,11 @@ export class AIConnectionService {
           timestamp: Date.now(),
           details: e instanceof Error ? e.message : String(e)
         });
+        console.error('Error during direct script injection:', e);
       }
       
       // If we reached here, both methods failed
+      console.error('All script injection methods failed');
       return false;
     } catch (error) {
       logService.addLog({
@@ -234,6 +284,7 @@ export class AIConnectionService {
         timestamp: Date.now(),
         details: error instanceof Error ? error.message : String(error)
       });
+      console.error('Fatal error during script injection process:', error);
       return false;
     }
   }

@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
-import MemoryPanel from '../MemoryPanel';
-import { MemoryItem, MemoryType } from '@/types/types';
+import { MemoryItem } from '@/types/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Brain, Zap, History, AlertTriangle } from 'lucide-react';
 import { logService } from '@/services/LogService';
+import MemoryPanel from '../memory/MemoryPanel';
 
 interface MemoryTabProps {
   selectedMemory: MemoryItem | null;

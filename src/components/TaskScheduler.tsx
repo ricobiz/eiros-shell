@@ -16,7 +16,26 @@ import {
 import { CalendarClock } from "lucide-react";
 
 const TaskScheduler: React.FC = () => {
-  const { tasks, addTask, removeTask, toggleTaskActive, isExecutionPaused, toggleExecutionPause } = useTaskScheduler();
+  // Safely access TaskScheduler context
+  let tasks: Task[] = [];
+  let addTask: (task: Task) => void = () => {};
+  let removeTask: (id: string) => void = () => {};
+  let toggleTaskActive: (id: string) => void = () => {};
+  let isExecutionPaused = false;
+  let toggleExecutionPause: () => void = () => {};
+  
+  try {
+    const taskScheduler = useTaskScheduler();
+    tasks = taskScheduler.tasks;
+    addTask = taskScheduler.addTask;
+    removeTask = taskScheduler.removeTask;
+    toggleTaskActive = taskScheduler.toggleTaskActive;
+    isExecutionPaused = taskScheduler.isExecutionPaused;
+    toggleExecutionPause = taskScheduler.toggleExecutionPause;
+  } catch (error) {
+    console.error('TaskScheduler context not available:', error);
+  }
+  
   const [newTask, setNewTask] = useState<Partial<Task>>({
     type: 'command',
     content: '',

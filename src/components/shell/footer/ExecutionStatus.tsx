@@ -4,8 +4,18 @@ import { useTaskScheduler } from '@/contexts/TaskSchedulerContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const ExecutionStatus: React.FC = () => {
-  const { isExecutionPaused } = useTaskScheduler();
   const { t } = useLanguage();
+  
+  // Safely access TaskScheduler context
+  let isExecutionPaused = false;
+  
+  try {
+    const taskScheduler = useTaskScheduler();
+    isExecutionPaused = taskScheduler.isExecutionPaused;
+  } catch (error) {
+    console.error('TaskScheduler context not available:', error);
+    return null;
+  }
   
   if (!isExecutionPaused) return null;
   

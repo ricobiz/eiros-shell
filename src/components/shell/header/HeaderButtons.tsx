@@ -12,8 +12,19 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const HeaderButtons: React.FC = () => {
   const { isConnectedToAI, handleToggleAIConnection, handleEmergencyStop } = useShell();
-  const { isExecutionPaused, toggleExecutionPause } = useTaskScheduler();
   const { t } = useLanguage();
+  
+  // Safely access the TaskScheduler context, with fallback values
+  let isExecutionPaused = false;
+  let toggleExecutionPause = () => {};
+  
+  try {
+    const taskScheduler = useTaskScheduler();
+    isExecutionPaused = taskScheduler.isExecutionPaused;
+    toggleExecutionPause = taskScheduler.toggleExecutionPause;
+  } catch (error) {
+    console.error('TaskScheduler context not available:', error);
+  }
   
   return (
     <div className="flex items-center gap-3 mr-3">

@@ -55,7 +55,7 @@ const TitleEditor: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="link" className="p-0 h-auto">
               <CardTitle className="text-sm flex items-center">
-                <span className="font-serif italic font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-[#21e6c1] tracking-wide">
+                <span className="font-serif">
                   {customTitle}
                 </span>
                 <div className="text-xs text-muted-foreground ml-2 font-normal">

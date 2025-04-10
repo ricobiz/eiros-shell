@@ -8,6 +8,7 @@ import { useAISync } from '@/hooks/useAISync';
 import { useShellUI } from '@/hooks/useShellUI';
 import { useShellPatterns } from '@/hooks/useShellPatterns';
 
+// Create the context with undefined as initial value
 const ShellContext = createContext<ShellContextType | undefined>(undefined);
 
 export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

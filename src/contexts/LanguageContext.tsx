@@ -1,8 +1,10 @@
 import React, { createContext, useContext } from 'react';
 
+export type LanguageType = 'en' | 'ru';
+
 interface LanguageContextType {
-  language: string;
-  setLanguage: (language: string) => void;
+  language: LanguageType;
+  setLanguage: (language: LanguageType) => void;
   t: (key: string) => string;
 }
 
@@ -17,7 +19,7 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = React.useState(localStorage.getItem('language') || 'en');
+  const [language, setLanguage] = React.useState<LanguageType>((localStorage.getItem('language') as LanguageType) || 'en');
 
   React.useEffect(() => {
     localStorage.setItem('language', language);

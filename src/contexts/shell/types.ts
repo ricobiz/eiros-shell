@@ -27,6 +27,7 @@ export interface ShellAIState {
   isConnectedToAI: boolean;
   setIsConnectedToAI: (connected: boolean) => void;
   handleToggleAIConnection: () => Promise<void>;
+  handleEmergencyStop: () => void;
 }
 
 export interface ShellUIState {

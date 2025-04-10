@@ -13,12 +13,15 @@ import ShellHeader from './shell/ShellHeader';
 import ShellFooter from './shell/ShellFooter';
 import TabNavigation from './shell/TabNavigation';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 const ShellInterface: React.FC = () => {
   return (
-    <ShellProvider>
-      <ShellContainer />
-    </ShellProvider>
+    <LanguageProvider>
+      <ShellProvider>
+        <ShellContainer />
+      </ShellProvider>
+    </LanguageProvider>
   );
 };
 

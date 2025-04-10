@@ -8,16 +8,16 @@ import {
   TooltipTrigger 
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Cpu, 
   Pin, 
   PinOff, 
   HelpCircle,
-  Link,
-  Unlink,
-  AlertOctagon,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Edit,
+  Check
 } from 'lucide-react';
 import { 
   Sheet,
@@ -33,15 +33,19 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import InstructionsTab from './InstructionsTab';
 import { useShell } from '@/contexts/shell/ShellContext';
-import { aiSyncService } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import TaskScheduler from '@/components/TaskScheduler';
-import EmergencyPauseButton from '@/components/EmergencyPauseButton';
 import { useTaskScheduler } from '@/contexts/TaskSchedulerContext';
 
 const ShellHeader: React.FC = () => {
@@ -52,6 +56,8 @@ const ShellHeader: React.FC = () => {
   const { isExecutionPaused, toggleExecutionPause } = useTaskScheduler();
   const [expanded, setExpanded] = React.useState(false);
   const [customTitle, setCustomTitle] = React.useState("Shell Assistant"); // Default custom title
+  const [isEditingTitle, setIsEditingTitle] = React.useState(false);
+  const [titleInput, setTitleInput] = React.useState(customTitle);
   
   const Instructions = () => (
     <div className="px-2 py-4">
@@ -101,13 +107,25 @@ const ShellHeader: React.FC = () => {
     const savedTitle = localStorage.getItem('shellCustomTitle');
     if (savedTitle) {
       setCustomTitle(savedTitle);
+      setTitleInput(savedTitle);
     }
   }, []);
 
   // Save custom title to localStorage when it changes
   const updateCustomTitle = (newTitle: string) => {
-    setCustomTitle(newTitle);
-    localStorage.setItem('shellCustomTitle', newTitle);
+    if (newTitle.trim()) {
+      setCustomTitle(newTitle);
+      localStorage.setItem('shellCustomTitle', newTitle);
+      toast({
+        title: "Title updated",
+        description: "The shell title has been updated."
+      });
+    }
+  };
+
+  const handleTitleSave = () => {
+    updateCustomTitle(titleInput);
+    setIsEditingTitle(false);
   };
 
   return (
@@ -160,7 +178,44 @@ const ShellHeader: React.FC = () => {
           
           <div className="flex items-center ml-3">
             <Cpu size={14} className="text-accent" />
-            <CardTitle className="text-sm ml-1">{customTitle}</CardTitle>
+            {isEditingTitle ? (
+              <div className="flex items-center ml-1">
+                <Input 
+                  type="text" 
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  className="h-6 py-1 px-2 text-sm w-32"
+                  autoFocus
+                />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 ml-1" 
+                  onClick={handleTitleSave}
+                >
+                  <Check size={14} />
+                </Button>
+              </div>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="link" className="p-0 h-auto">
+                    <CardTitle className="text-sm ml-1 flex items-center">
+                      {customTitle}
+                      <Edit size={12} className="ml-1 opacity-50" />
+                    </CardTitle>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  className="bg-background border border-border shadow-md p-2 min-w-[150px]" 
+                  align="start"
+                >
+                  <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
+                    Edit title
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
         

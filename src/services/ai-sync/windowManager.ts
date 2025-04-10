@@ -62,6 +62,10 @@ export class WindowManager implements AIWindowManager {
   isWindowOpen(): boolean {
     return this.chatWindow !== null && !this.chatWindow.closed;
   }
+  
+  getWindow(): Window | null {
+    return this.isWindowOpen() ? this.chatWindow : null;
+  }
 
   focusWindow(): boolean {
     if (this.isWindowOpen() && this.chatWindow) {

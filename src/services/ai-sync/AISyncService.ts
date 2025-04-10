@@ -1,3 +1,4 @@
+
 import { aiSyncEvents } from './events';
 import { logService } from '../LogService';
 import { messagingService } from './messagingService';
@@ -25,6 +26,9 @@ class AISyncService {
           message: 'Successfully connected to AI',
           timestamp: Date.now()
         });
+        
+        // After successful connection, set up a message listener
+        this.setupMessageListener();
       }
       
       return connected;
@@ -35,7 +39,7 @@ class AISyncService {
         type: 'error',
         message: 'Failed to connect to AI',
         timestamp: Date.now(),
-        details: error
+        details: error instanceof Error ? error.message : String(error)
       });
       
       return false;
@@ -43,9 +47,62 @@ class AISyncService {
   }
   
   /**
+   * Set up listener for messages from ChatGPT window
+   */
+  private setupMessageListener(): void {
+    // Remove any existing listeners first to prevent duplicates
+    window.removeEventListener('message', this.handleWindowMessage);
+    
+    // Add the event listener
+    window.addEventListener('message', this.handleWindowMessage);
+    
+    logService.addLog({
+      type: 'info',
+      message: 'Message listener set up for ChatGPT communication',
+      timestamp: Date.now()
+    });
+  }
+  
+  /**
+   * Handle messages from ChatGPT window
+   */
+  private handleWindowMessage = (event: MessageEvent): void => {
+    try {
+      // Check if this is a message from ChatGPT
+      if (event.data && typeof event.data === 'object' && 
+          (event.data.type === 'CHATGPT_RESPONSE' || event.data.type === 'EIROS_RESPONSE')) {
+        
+        console.log('Received message from ChatGPT window:', event.data);
+        
+        // Process the response
+        messagingService.processAIResponse(event.data.message || event.data.content, true);
+        
+        logService.addLog({
+          type: 'info',
+          message: 'Received message from ChatGPT',
+          timestamp: Date.now(),
+          details: { message: event.data.message || event.data.content }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling window message:', error);
+      
+      logService.addLog({
+        type: 'error',
+        message: 'Error handling window message',
+        timestamp: Date.now(),
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  };
+  
+  /**
    * Disconnect from the AI backend
    */
   disconnectFromAI(): void {
+    // Remove message listener
+    window.removeEventListener('message', this.handleWindowMessage);
+    
     this.connectionService.disconnectFromAI();
     
     logService.addLog({
@@ -66,6 +123,9 @@ class AISyncService {
    * Emergency stop - halt all operations
    */
   emergencyStop(): void {
+    // Remove message listener
+    window.removeEventListener('message', this.handleWindowMessage);
+    
     this.connectionService.disconnectFromAI();
     
     logService.addLog({
@@ -79,6 +139,9 @@ class AISyncService {
    * Clean up resources
    */
   cleanup(): void {
+    // Remove message listener
+    window.removeEventListener('message', this.handleWindowMessage);
+    
     if (this.isConnected()) {
       this.disconnectFromAI();
     }

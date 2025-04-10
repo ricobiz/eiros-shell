@@ -59,6 +59,16 @@ export function useAISync() {
         description: t('testingSendingMessage'),
       });
       
+      // Verify that the window is still open
+      if (!aiSyncService.isConnected()) {
+        toast({
+          description: "ChatGPT window is closed. Please reconnect.",
+          variant: "destructive",
+        });
+        setIsTestingConnection(false);
+        return false;
+      }
+      
       // Send the test message to AI
       const testMessage = "/test#connectivity_test{\"message\": \"This is a test message to verify shell-AI connectivity\"}";
       const messageSent = aiSyncService.sendMessageToAI(testMessage);
@@ -68,10 +78,41 @@ export function useAISync() {
           description: t('testMessageSent'),
         });
         
-        // Send instructions file to AI
+        // Also automatically send instructions file to AI
         await sendInstructionsToAI();
         
-        return true;
+        // Add a listener for messages for a short period
+        const timeoutPromise = new Promise<boolean>(resolve => {
+          const timeout = setTimeout(() => {
+            resolve(false);
+          }, 5000);
+          
+          const responseHandler = (event: MessageEvent) => {
+            if (event.data && event.data.type === 'CHATGPT_RESPONSE') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', responseHandler);
+              resolve(true);
+            }
+          };
+          
+          window.addEventListener('message', responseHandler);
+        });
+        
+        // Wait for response or timeout
+        const received = await timeoutPromise;
+        
+        if (received) {
+          toast({
+            description: "Received response from ChatGPT!",
+          });
+        } else {
+          toast({
+            description: "No response received from ChatGPT within timeout period.",
+            variant: "warning",
+          });
+        }
+        
+        return messageSent;
       } else {
         toast({
           description: t('testMessageFailed'),

@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { commandService } from '@/services/CommandService';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useShell } from '@/contexts/shell/ShellContext';
+import { aiSyncService } from '@/services/ai-sync';
 
 interface ChatTabProps {
   onClearLogs: () => void;
@@ -49,6 +50,24 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     }
   }, [isConnectedToAI, isWindowOpen, chatHistory.length, addMessageToChat, t]);
 
+  // Listen for messages from ChatGPT window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Check if this is a message from ChatGPT
+      if (event.data && typeof event.data === 'object' && event.data.type === 'CHATGPT_RESPONSE') {
+        console.log('Received message from ChatGPT:', event.data);
+        // Process the response
+        handleAIResponse(event.data.message);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [handleAIResponse]);
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -80,6 +99,22 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       
       // Add explanation message
       addMessageToChat('Система', 'Testing automatic bidirectional communication with ChatGPT...');
+      
+      // Test sending instructions
+      const instructions = await aiSyncService.getInstructionsFile();
+      if (instructions) {
+        addMessageToChat('Система', 'Sending integration instructions to ChatGPT...');
+        const instructionSent = aiSyncService.sendMessageToAI(
+          "SHELL INSTRUCTIONS: Below are instructions for interacting with this shell:\n\n" + 
+          instructions.substring(0, 500) + "..."
+        );
+        
+        if (instructionSent) {
+          addMessageToChat('Система', 'Instructions sent successfully');
+        } else {
+          addMessageToChat('Система', 'Failed to send instructions to ChatGPT');
+        }
+      }
     } else {
       addMessageToChat('Система', t('testConnectionFailed'));
     }

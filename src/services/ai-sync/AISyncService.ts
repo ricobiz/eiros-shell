@@ -135,51 +135,22 @@ class AISyncService {
     }
     
     try {
-      // In a real implementation, this could load from a file or API
-      const instructions = `
-# EirosShell - AI Integration Instructions
-Version: 0.7.0
-
-## Command Format
-EirosShell accepts commands in the following format:
-/command_type#command_id{parameters}
-
-Example: /click#btn1{"selector": "#login-button"}
-
-## Available Command Types
-${Object.values(CommandType).map(cmd => `- ${cmd}`).join('\n')}
-
-## Command Parameters
-- click: {"selector": "CSS Selector"}
-- type: {"selector": "CSS Selector", "text": "Text to type"}
-- navigation: {"url": "https://example.com"}
-- wait: {"duration": seconds}
-- screenshot: {}
-- analyze: {}
-- conditional: {"condition": "expr", "then": [commands], "else": [commands]}
-- loop: {"times": number, "do": [commands]}
-- variable: {"name": "varName", "value": "value"}
-
-## Response Format
-Commands return responses in the following format:
-[оболочка]: Команда #cmd123: command_type → parameters — status. #log_id
-
-## Advanced Features
-- Variables: Access with $varName syntax
-- Command Chains: /chain#id[/cmd1{params}, /cmd2{params}]
-- Conditional execution: if/then/else logic
-- Loops: Repeat commands multiple times
-
-## Integration
-The shell will automatically parse AI responses for commands and execute them.
-Commands can be nested and chained for complex automation workflows.
-`;
-
+      // In a real implementation, this would load from the ai_integration_instructions.txt file
+      // For now, we'll use fetch to get the file content from the public directory
+      const response = await fetch('/ai_integration_instructions.txt');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load instructions file: ${response.status}`);
+      }
+      
+      const instructions = await response.text();
       this.instructionsCache = instructions;
       return instructions;
     } catch (error) {
       console.error('Error loading instructions:', error);
-      return 'Error loading instructions file';
+      
+      // Fallback to a basic set of instructions if file loading fails
+      return '[EirosShell AI Bootstrap Instructions]\n\nYou are connected to EirosShell — an autonomous AI-interactive shell.\n\n✅ Use the DSL format for commands.\n\nExample: /click#cmd1{ "element": "#submit" }';
     }
   }
   

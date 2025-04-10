@@ -16,8 +16,9 @@ from chat_finder import ChatFinder
 logger = logging.getLogger("EirosShell")
 
 class ChatConnector:
-    def __init__(self, browser_controller):
+    def __init__(self, browser_controller, debug_mode=False):
         self.browser = browser_controller
+        self.debug_mode = debug_mode
         self.config_manager = ChatConfigManager()
         self.message_handler = ChatMessageHandler(browser_controller)
         self.chat_finder = ChatFinder(browser_controller, self.config_manager)
@@ -65,3 +66,32 @@ class ChatConnector:
         Возвращает текст ответа или None, если ответ не получен за timeout секунд.
         """
         return await self.message_handler.wait_for_response(timeout)
+    
+    async def send_instructions(self):
+        """
+        Отправляет инструкции для интеграции с AI из файла
+        """
+        try:
+            instruction_path = Path(__file__).parent / "ai_integration_instructions.txt"
+            
+            if not instruction_path.exists():
+                logger.error("Файл инструкций не найден")
+                return False
+                
+            with open(instruction_path, 'r', encoding='utf-8') as f:
+                instructions = f.read()
+                
+            logger.info("Отправка инструкций интеграции с AI...")
+            success = await self.send_message(instructions)
+            
+            if success:
+                logger.info("Инструкции успешно отправлены")
+                return True
+            else:
+                logger.error("Ошибка при отправке инструкций")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Ошибка при отправке инструкций: {str(e)}")
+            return False
+

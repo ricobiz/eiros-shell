@@ -1,3 +1,4 @@
+
 """
 EirosShell v0.7 - Автономная оболочка для работы с ChatGPT
 Основной файл загрузки и инициализации системы
@@ -106,6 +107,22 @@ async def main(debug_mode=False):
         boot_message = "[оболочка]: Это EirosShell v0.7. Подключение установлено. Готова к работе. #boot"
         await chat_connector.send_message(boot_message)
         logger.info("Приветственное сообщение отправлено.")
+        
+        # Send AI integration instructions
+        try:
+            logger.info("Sending AI integration instructions...")
+            ai_instructions_path = Path(__file__).parent / "ai_integration_instructions.txt"
+            
+            if ai_instructions_path.exists():
+                with open(ai_instructions_path, "r", encoding="utf-8") as f:
+                    ai_instructions = f.read()
+                
+                await chat_connector.send_message(ai_instructions)
+                logger.info("AI integration instructions sent successfully.")
+            else:
+                logger.warning("AI integration instructions file not found.")
+        except Exception as e:
+            logger.error(f"Failed to send AI integration instructions: {str(e)}")
         
         # Инициализация исполнителя команд
         command_executor = CommandExecutor(browser_controller, chat_connector)

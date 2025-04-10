@@ -8,6 +8,8 @@ interface TaskSchedulerContextType {
   removeTask: (id: string) => void;
   toggleTaskActive: (id: string) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
+  isExecutionPaused: boolean;
+  toggleExecutionPause: () => void;
 }
 
 const TaskSchedulerContext = createContext<TaskSchedulerContextType>({
@@ -15,13 +17,16 @@ const TaskSchedulerContext = createContext<TaskSchedulerContextType>({
   addTask: () => {},
   removeTask: () => {},
   toggleTaskActive: () => {},
-  updateTask: () => {}
+  updateTask: () => {},
+  isExecutionPaused: false,
+  toggleExecutionPause: () => {}
 });
 
 export const useTaskScheduler = () => useContext(TaskSchedulerContext);
 
 export const TaskSchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [isExecutionPaused, setIsExecutionPaused] = useState(false);
 
   const addTask = (task: Task) => {
     setTasks(prev => [...prev, task]);
@@ -47,13 +52,19 @@ export const TaskSchedulerProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  const toggleExecutionPause = () => {
+    setIsExecutionPaused(prev => !prev);
+  };
+
   return (
     <TaskSchedulerContext.Provider value={{ 
       tasks, 
       addTask, 
       removeTask, 
       toggleTaskActive,
-      updateTask
+      updateTask,
+      isExecutionPaused,
+      toggleExecutionPause
     }}>
       {children}
     </TaskSchedulerContext.Provider>

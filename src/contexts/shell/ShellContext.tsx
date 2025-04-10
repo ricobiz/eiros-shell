@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { ShellContextType } from './types';
 import { useShellTabs } from '@/hooks/useShellTabs';
 import { useShellCommands } from '@/hooks/useShellCommands';
@@ -30,13 +30,21 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ...patternState
   };
 
+  useEffect(() => {
+    console.log('ShellProvider initialized with context value:', Object.keys(value));
+  }, [value]);
+
   return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>;
 };
 
 export const useShell = (): ShellContextType => {
   const context = useContext(ShellContext);
+  
   if (context === undefined) {
+    console.error('useShell was called outside of ShellProvider - context is undefined');
     throw new Error('useShell must be used within a ShellProvider');
   }
+  
+  console.log('useShell called successfully, returning context with keys:', Object.keys(context));
   return context;
 };

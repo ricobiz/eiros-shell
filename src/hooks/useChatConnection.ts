@@ -7,14 +7,18 @@ import { logService } from '@/services/LogService';
 import { windowManager } from '@/services/ai-sync/windowManager';
 
 export function useChatConnection(addMessageToChat: (sender: string, text: string) => void) {
+  console.log('useChatConnection hook initializing');
   const { toast } = useToast();
   const [isWindowOpen, setIsWindowOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   
   // Check connection status on component mount and set up periodic checks
   useEffect(() => {
+    console.log('Setting up connection status check');
+    
     const checkConnectionStatus = () => {
       const isConnected = aiSyncService.isConnected();
+      console.log('Checking connection status:', isConnected ? 'connected' : 'disconnected');
       setIsWindowOpen(isConnected);
       
       // Log connection check results for debugging
@@ -42,6 +46,8 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
 
   // Listen for messages from ChatGPT window
   useEffect(() => {
+    console.log('Setting up message listener from ChatGPT window');
+    
     const handleMessage = (event: MessageEvent) => {
       // Check if this is a message from ChatGPT
       if (event.data && typeof event.data === 'object' && 
@@ -73,12 +79,18 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
   }, [addMessageToChat]);
 
   const connectToChatGPT = async () => {
-    if (isConnecting) return;
+    console.log('ConnectToChatGPT called');
+    if (isConnecting) {
+      console.log('Already connecting, ignoring request');
+      return;
+    }
     
     setIsConnecting(true);
+    console.log('Starting connection process');
     
     try {
       const success = await aiSyncService.connectToAI();
+      console.log('Connection attempt result:', success ? 'success' : 'failed');
       setIsWindowOpen(success);
       
       if (success) {
@@ -92,6 +104,8 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
         // Inject script into ChatGPT window to enable communication back
         // This is a simplified example, in practice you would set up a more robust messaging system
         const chatWindow = windowManager.getWindow();
+        console.log('Chat window reference obtained:', chatWindow ? 'valid' : 'null');
+        
         if (chatWindow) {
           try {
             chatWindow.postMessage({ 
@@ -124,12 +138,16 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
         
         addMessageToChat('Система', 'Connection error. Please try again or check browser automation permissions.');
       }
+    } catch (error) {
+      console.error('Error during connection:', error);
     } finally {
       setIsConnecting(false);
+      console.log('Connection process completed');
     }
   };
   
   const emergencyStop = () => {
+    console.log('Emergency stop requested');
     aiSyncService.emergencyStop();
     setIsWindowOpen(false);
     

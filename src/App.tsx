@@ -1,20 +1,15 @@
 
-import React from 'react';
-import { ShellProvider } from './contexts/shell/ShellContext';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { TaskSchedulerProvider } from './contexts/TaskSchedulerContext';
-import ShellContainer from './components/shell/ShellContainer';
+import React, { useEffect } from 'react';
+import ShellInterface from './components/ShellInterface';
 
 function App() {
+  useEffect(() => {
+    console.log('App component mounted - root component');
+  }, []);
+
   return (
     <div className="w-full h-full min-h-screen bg-background text-foreground">
-      <LanguageProvider>
-        <TaskSchedulerProvider>
-          <ShellProvider>
-            <ShellContainer />
-          </ShellProvider>
-        </TaskSchedulerProvider>
-      </LanguageProvider>
+      <ShellInterface />
     </div>
   );
 }

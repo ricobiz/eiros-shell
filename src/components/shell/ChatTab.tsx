@@ -19,9 +19,27 @@ interface ChatTabProps {
 }
 
 const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false }) => {
+  console.log('ChatTab rendering with isConnectedToAI:', isConnectedToAI);
+  
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { testAIConnection, isTestingConnection } = useShell();
+  
+  // Access shell context safely
+  let testAIConnection = async () => { 
+    console.log('Fallback testAIConnection called'); 
+    return false; 
+  };
+  let isTestingConnection = false;
+  
+  try {
+    console.log('Attempting to access shell context in ChatTab');
+    const shell = useShell();
+    testAIConnection = shell.testAIConnection;
+    isTestingConnection = shell.isTestingConnection;
+    console.log('Successfully accessed shell context in ChatTab');
+  } catch (error) {
+    console.error('Failed to access shell context in ChatTab:', error);
+  }
   
   const { 
     message, 
@@ -42,7 +60,14 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
   
   // Only add welcome message if not connected
   useEffect(() => {
+    console.log('ChatTab welcome message effect running', {
+      isConnectedToAI,
+      isWindowOpen,
+      chatHistoryLength: chatHistory.length
+    });
+    
     if (!isConnectedToAI && !isWindowOpen && chatHistory.length === 0) {
+      console.log('Adding welcome messages');
       // Add a welcome message
       addMessageToChat('Система', t('shellWelcome'));
       // Add integration info message
@@ -52,10 +77,12 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
 
   // Listen for messages from ChatGPT window
   useEffect(() => {
+    console.log('Setting up ChatGPT message listener in ChatTab');
+    
     const handleMessage = (event: MessageEvent) => {
       // Check if this is a message from ChatGPT
       if (event.data && typeof event.data === 'object' && event.data.type === 'CHATGPT_RESPONSE') {
-        console.log('Received message from ChatGPT:', event.data);
+        console.log('Received message from ChatGPT in ChatTab:', event.data);
         // Process the response
         handleAIResponse(event.data.message);
       }
@@ -65,6 +92,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     
     return () => {
       window.removeEventListener('message', handleMessage);
+      console.log('Removed ChatGPT message listener in ChatTab');
     };
   }, [handleAIResponse]);
 
@@ -77,7 +105,10 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
 
   // Function for full bidirectional testing of ChatGPT connection
   const handleTestConnection = async () => {
+    console.log('Test connection button clicked');
+    
     if (!isWindowOpen) {
+      console.log('Window not open, displaying error');
       toast({
         description: t('connectionErrorDesc'),
         variant: "destructive"
@@ -89,10 +120,13 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     addMessageToChat('Система', t('testingConnection'));
     
     // Call the testAIConnection function from useShell
+    console.log('Calling testAIConnection');
     const success = await testAIConnection();
+    console.log('Test result:', success);
     
     if (success) {
       // Send a test command message that the shell should recognize
+      console.log('Test successful, sending integration test command');
       const testMessage = "/test#integration_test{\"status\": \"verify\", \"message\": \"Testing bidirectional communication\"}";
       setMessage(testMessage);
       sendMessage();
@@ -101,6 +135,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       addMessageToChat('Система', 'Testing automatic bidirectional communication with ChatGPT...');
       
       // Test sending instructions
+      console.log('Getting instructions file');
       const instructions = await aiSyncService.getInstructionsFile();
       if (instructions) {
         addMessageToChat('Система', 'Sending integration instructions to ChatGPT...');
@@ -109,6 +144,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           instructions.substring(0, 500) + "..."
         );
         
+        console.log('Instructions sent result:', instructionSent);
         if (instructionSent) {
           addMessageToChat('Система', 'Instructions sent successfully');
         } else {
@@ -116,6 +152,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
         }
       }
     } else {
+      console.log('Test failed');
       addMessageToChat('Система', t('testConnectionFailed'));
     }
   };

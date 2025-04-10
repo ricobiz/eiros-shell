@@ -1,15 +1,18 @@
+
 import { useState, useEffect } from 'react';
 import { aiSyncService, aiSyncEvents } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function useAISync() {
+  console.log('Initializing useAISync hook');
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isConnectedToAI, setIsConnectedToAI] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
 
   const handleToggleAIConnection = async () => {
+    console.log('Toggle AI connection called, current state:', isConnectedToAI);
     if (isConnectedToAI) {
       aiSyncService.disconnectFromAI();
       setIsConnectedToAI(false);
@@ -17,7 +20,9 @@ export function useAISync() {
         description: t('shellDisconnected'),
       });
     } else {
+      console.log('Attempting to connect to AI...');
       const connected = await aiSyncService.connectToAI();
+      console.log('Connection result:', connected);
       setIsConnectedToAI(connected);
       
       if (connected) {
@@ -34,6 +39,7 @@ export function useAISync() {
   };
   
   const handleEmergencyStop = () => {
+    console.log('Emergency stop called');
     aiSyncService.emergencyStop();
     setIsConnectedToAI(false);
     toast({
@@ -43,7 +49,9 @@ export function useAISync() {
   };
   
   const testAIConnection = async () => {
+    console.log('Testing AI connection');
     if (!isConnectedToAI) {
+      console.log('Not connected, cannot test');
       toast({
         description: t('connectFirst'),
         variant: "destructive",
@@ -52,6 +60,7 @@ export function useAISync() {
     }
     
     setIsTestingConnection(true);
+    console.log('Setting testing flag to true');
     
     try {
       toast({
@@ -60,6 +69,7 @@ export function useAISync() {
       
       // Verify that the window is still open
       if (!aiSyncService.isConnected()) {
+        console.log('Window is closed, cannot test');
         toast({
           description: "ChatGPT window is closed. Please reconnect.",
           variant: "destructive",
@@ -69,8 +79,10 @@ export function useAISync() {
       }
       
       // Send the test message to AI
+      console.log('Sending test message to AI');
       const testMessage = "/test#connectivity_test{\"message\": \"This is a test message to verify shell-AI connectivity\"}";
       const messageSent = aiSyncService.sendMessageToAI(testMessage);
+      console.log('Test message sent result:', messageSent);
       
       if (messageSent) {
         toast({
@@ -81,13 +93,16 @@ export function useAISync() {
         await sendInstructionsToAI();
         
         // Add a listener for messages for a short period
+        console.log('Setting up response listener with timeout');
         const timeoutPromise = new Promise<boolean>(resolve => {
           const timeout = setTimeout(() => {
+            console.log('Response timeout reached');
             resolve(false);
           }, 5000);
           
           const responseHandler = (event: MessageEvent) => {
             if (event.data && event.data.type === 'CHATGPT_RESPONSE') {
+              console.log('Received response during testing');
               clearTimeout(timeout);
               window.removeEventListener('message', responseHandler);
               resolve(true);
@@ -99,6 +114,7 @@ export function useAISync() {
         
         // Wait for response or timeout
         const received = await timeoutPromise;
+        console.log('Response received?', received);
         
         if (received) {
           toast({
@@ -128,17 +144,22 @@ export function useAISync() {
       return false;
     } finally {
       setIsTestingConnection(false);
+      console.log('Setting testing flag to false');
     }
   };
   
   const sendInstructionsToAI = async () => {
+    console.log('Sending instructions to AI');
     try {
       const instructions = await aiSyncService.getInstructionsFile();
+      console.log('Instructions loaded:', instructions ? 'success' : 'failed');
+      
       if (instructions) {
         const sent = aiSyncService.sendMessageToAI(
           "SHELL INSTRUCTIONS: Below are the instructions for interacting with EirosShell:\n\n" + 
           instructions
         );
+        console.log('Instructions sent:', sent);
         
         if (sent) {
           toast({
@@ -152,15 +173,20 @@ export function useAISync() {
   };
 
   useEffect(() => {
-    setIsConnectedToAI(aiSyncService.isConnected());
+    const isConnected = aiSyncService.isConnected();
+    console.log('Initial connection check in useAISync:', isConnected);
+    setIsConnectedToAI(isConnected);
     
     return () => {
       aiSyncService.cleanup();
+      console.log('Cleaning up AI sync service');
     };
   }, []);
 
   useEffect(() => {
+    console.log('Setting up aiSyncEvents subscription');
     const unsubscribe = aiSyncEvents.subscribe((connected, message) => {
+      console.log('AI sync event received:', connected, message);
       setIsConnectedToAI(connected);
       
       if (message) {
@@ -173,6 +199,7 @@ export function useAISync() {
     
     return () => {
       unsubscribe();
+      console.log('Unsubscribed from aiSyncEvents');
     };
   }, [toast, t]);
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -21,8 +21,42 @@ import { Button } from '../ui/button';
 import { Bug, CheckCircle, Settings } from 'lucide-react';
 
 const ShellContainer: React.FC = () => {
-  const shell = useShell();
-  const { activeTab, setActiveTab, isPinned } = shell;
+  useEffect(() => {
+    console.log('ShellContainer mounting - about to access context');
+    try {
+      // Test if we can access the context before using it
+      const testContext = useShell();
+      console.log('Context accessed successfully in ShellContainer:', 
+        testContext ? 'Context exists with keys: ' + Object.keys(testContext).join(', ') : 'Context is empty');
+    } catch (error) {
+      console.error('Error accessing ShellContext in ShellContainer:', error);
+    }
+  }, []);
+
+  // Safely try to access the shell context or provide fallback values
+  let shell;
+  let activeTab = 'command';
+  let setActiveTab = (tab: string) => console.log('Fallback setActiveTab:', tab);
+  let isPinned = false;
+  let handleToggleAIConnection = () => console.log('Fallback handleToggleAIConnection');
+  let handleEmergencyStop = () => console.log('Fallback handleEmergencyStop');
+  let testAIConnection = async () => { console.log('Fallback testAIConnection'); return false; };
+  let isTestingConnection = false;
+  
+  try {
+    shell = useShell();
+    activeTab = shell.activeTab;
+    setActiveTab = shell.setActiveTab;
+    isPinned = shell.isPinned;
+    handleToggleAIConnection = shell.handleToggleAIConnection;
+    handleEmergencyStop = shell.handleEmergencyStop;
+    testAIConnection = shell.testAIConnection;
+    isTestingConnection = shell.isTestingConnection;
+    console.log('Successfully extracted shell properties');
+  } catch (error) {
+    console.error('Failed to access shell context:', error);
+  }
+  
   const [expanded, setExpanded] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showAutostart, setShowAutostart] = useState(false);
@@ -32,6 +66,7 @@ const ShellContainer: React.FC = () => {
   
   // Listen for changes in expanded state from header component
   React.useEffect(() => {
+    console.log('Setting up shell-expand listener');
     const handleExpand = (e: CustomEvent<boolean>) => {
       setExpanded(e.detail);
     };

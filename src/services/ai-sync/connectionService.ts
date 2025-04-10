@@ -78,7 +78,8 @@ export class AIConnectionService {
       
       if (!chatWindow) {
         this.connectionState = AIConnectionState.ERROR;
-        throw new Error('Failed to open ChatGPT window. Popup blocker might be active.');
+        const errorMessage = 'Failed to open ChatGPT window. Check if popup blocker is active or permissions are granted.';
+        throw new Error(errorMessage);
       }
       
       // Introduce a delay to ensure the window has time to load
@@ -111,11 +112,13 @@ export class AIConnectionService {
     } catch (error) {
       this.connectionState = AIConnectionState.ERROR;
       
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
       logService.addLog({
         type: 'error',
         message: `Error connecting to AI (attempt ${this.connectionAttempts}/${this.MAX_ATTEMPTS})`,
         timestamp: Date.now(),
-        details: error
+        details: errorMessage
       });
       
       if (this.connectionAttempts >= this.MAX_ATTEMPTS) {
@@ -128,7 +131,7 @@ export class AIConnectionService {
       }
       
       // Emit sync event
-      aiSyncEvents.emit(false, 'Failed to connect to AI system');
+      aiSyncEvents.emit(false, `Failed to connect to AI system: ${errorMessage}`);
       
       return false;
     }

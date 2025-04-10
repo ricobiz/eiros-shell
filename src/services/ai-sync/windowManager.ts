@@ -24,19 +24,30 @@ export class WindowManager implements AIWindowManager {
       
       // Detect popup blocker
       if (!this.chatWindow || this.chatWindow.closed || typeof this.chatWindow.closed === 'undefined') {
-        console.error('Popup blocker prevented opening the window');
-        this.chatWindow = null;
-        return null;
+        const errorMessage = 'Popup blocker prevented opening the window';
+        console.error(errorMessage);
+        throw new Error(errorMessage);
       }
       
       // Focus the window and bring to front
       if (this.chatWindow) {
         this.chatWindow.focus();
+        
+        // Add event listener for window close
+        const interval = setInterval(() => {
+          if (this.chatWindow && this.chatWindow.closed) {
+            clearInterval(interval);
+            console.log('ChatGPT window was closed by user');
+            this.chatWindow = null;
+          }
+        }, 1000);
       }
       
       return this.chatWindow;
     } catch (error) {
-      console.error('Failed to open chat window:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to open chat window:', errorMessage);
+      this.chatWindow = null;
       return null;
     }
   }
@@ -54,8 +65,13 @@ export class WindowManager implements AIWindowManager {
 
   focusWindow(): boolean {
     if (this.isWindowOpen() && this.chatWindow) {
-      this.chatWindow.focus();
-      return true;
+      try {
+        this.chatWindow.focus();
+        return true;
+      } catch (error) {
+        console.error('Failed to focus window:', error);
+        return false;
+      }
     }
     return false;
   }

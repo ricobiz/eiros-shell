@@ -11,7 +11,25 @@ import ChatTab from './ChatTab';
 import DocumentationTab from './DocumentationTab';
 
 const ShellContent: React.FC = () => {
-  const { activeTab, commandResult, handleCommandExecuted } = useShell();
+  const { 
+    activeTab, 
+    commandResult, 
+    handleCommandExecuted,
+    browserUrl,
+    setBrowserUrl,
+    isAnnotating,
+    annotations,
+    currentAnnotation,
+    handleToggleAnnotating,
+    handleCurrentAnnotationChange,
+    handleSaveAnnotation,
+    handleTakeScreenshot,
+    handleAnalyzeInterface,
+    selectedMemory,
+    handleMemoryItemSelected,
+    handleClearLogs,
+    isConnectedToAI
+  } = useShell();
   
   return (
     <>
@@ -24,19 +42,35 @@ const ShellContent: React.FC = () => {
       </TabsContent>
       
       <TabsContent value="browser">
-        <BrowserPreviewTab />
+        <BrowserPreviewTab url={browserUrl} setUrl={setBrowserUrl} />
       </TabsContent>
       
       <TabsContent value="vision">
-        <VisionTab />
+        <VisionTab
+          commandResult={commandResult}
+          isAnnotating={isAnnotating}
+          annotations={annotations}
+          currentAnnotation={currentAnnotation}
+          onToggleAnnotating={handleToggleAnnotating}
+          onCurrentAnnotationChange={handleCurrentAnnotationChange}
+          onSaveAnnotation={handleSaveAnnotation}
+          onTakeScreenshot={handleTakeScreenshot}
+          onAnalyzeInterface={handleAnalyzeInterface}
+        />
       </TabsContent>
       
       <TabsContent value="memory">
-        <MemoryTab />
+        <MemoryTab
+          selectedMemory={selectedMemory}
+          onMemoryItemSelected={handleMemoryItemSelected}
+        />
       </TabsContent>
       
       <TabsContent value="chat">
-        <ChatTab />
+        <ChatTab
+          onClearLogs={handleClearLogs}
+          isConnectedToAI={isConnectedToAI}
+        />
       </TabsContent>
       
       <TabsContent value="docs">

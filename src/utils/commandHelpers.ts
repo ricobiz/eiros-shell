@@ -1,18 +1,18 @@
 
 import { CommandType } from "../types/types";
 
-export function getCommandHelp(): Record<CommandType, string> {
+export function getCommandHelp(): Record<string, string> {
   return {
     [CommandType.CLICK]: "Click on an element or coordinates: { x, y, element, waitAfter }",
     [CommandType.TYPE]: "Type text into an element: { text, element, waitAfter }",
-    [CommandType.NAVIGATE]: "Navigate to a URL: { url }",
+    [CommandType.NAVIGATION]: "Navigate to a URL: { url }",
+    [CommandType.WAIT]: "Wait for specified duration: { duration }ms",
     [CommandType.SCREENSHOT]: "Take a screenshot of the current page",
-    [CommandType.LOGIN]: "Store credentials and login: { service, username, password, url, usernameSelector, passwordSelector, submitSelector }",
+    [CommandType.ANALYZE]: "Analyze the current page for elements",
     [CommandType.MEMORY_SAVE]: "Save data to memory: { type, data, tags }",
     [CommandType.MEMORY_RETRIEVE]: "Retrieve data from memory: { id, type, tags, limit }",
-    [CommandType.ANALYZE]: "Analyze the current page for elements",
-    [CommandType.AUTO_LOGIN]: "Auto login using saved credentials: { service }",
-    [CommandType.WAIT]: "Wait for specified duration: { duration }ms"
+    [CommandType.LOGIN]: "Store credentials and login: { service, username, password, url, usernameSelector, passwordSelector, submitSelector }",
+    [CommandType.AUTO_LOGIN]: "Auto login using saved credentials: { service }"
   };
 }
 

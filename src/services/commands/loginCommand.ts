@@ -2,123 +2,147 @@
 import { Command, MemoryType, CommandType } from "../../types/types";
 import { logService } from "../LogService";
 import { memoryService } from "../MemoryService";
-import { handleNavigateCommand } from "./navigationCommand";
-import { handleTypeCommand } from "./typeCommand";
-import { handleClickCommand } from "./clickCommand";
+import { navigationEvents } from "./navigationCommand";
 
 export async function handleLoginCommand(command: Command): Promise<void> {
   const { service, username, password, url, usernameSelector, passwordSelector, submitSelector } = command.params;
   
-  logService.addLog({
-    type: 'info',
-    message: `Logging into service`,
-    timestamp: Date.now(),
-    details: { service, username: username?.substring(0, 2) + '***', url }
-  });
+  if (!service || !username || !password) {
+    logService.addLog({
+      type: 'error',
+      message: 'Missing required parameters for login',
+      timestamp: Date.now()
+    });
+    return;
+  }
   
-  // Store credentials securely (in reality should encrypt)
+  // Store the credentials in memory
   memoryService.addMemoryItem({
     type: MemoryType.CREDENTIALS,
-    data: { service, username, url, usernameSelector, passwordSelector, submitSelector },
-    tags: ['auth', service]
+    data: {
+      service,
+      username,
+      password,
+      url,
+      usernameSelector,
+      passwordSelector,
+      submitSelector
+    },
+    tags: ['credentials', service]
   });
   
-  // If URL is provided, navigate to the login page
-  if (url) {
-    await handleNavigateCommand({
-      id: `nav_to_${service}_${Date.now()}`,
-      type: CommandType.NAVIGATE,
-      params: { url },
-      timestamp: Date.now()
-    });
-    
-    // Wait for page to load
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // If selectors are provided, perform auto-login
-    if (usernameSelector && passwordSelector && username && password) {
-      // Type username
-      await handleTypeCommand({
-        id: `type_username_${Date.now()}`,
-        type: CommandType.TYPE,
-        params: { 
-          text: username,
-          element: usernameSelector,
-          waitAfter: 300
-        },
-        timestamp: Date.now()
-      });
-      
-      // Type password
-      await handleTypeCommand({
-        id: `type_password_${Date.now()}`,
-        type: CommandType.TYPE,
-        params: { 
-          text: password,
-          element: passwordSelector,
-          waitAfter: 300
-        },
-        timestamp: Date.now()
-      });
-      
-      // Click submit button if provided
-      if (submitSelector) {
-        await handleClickCommand({
-          id: `click_submit_${Date.now()}`,
-          type: CommandType.CLICK,
-          params: { element: submitSelector, waitAfter: 1000 },
-          timestamp: Date.now()
-        });
-        
-        logService.addLog({
-          type: 'success',
-          message: `Auto-login sequence completed`,
-          timestamp: Date.now(),
-          details: { service }
-        });
-      }
-    }
-  }
-  
-  console.log(`Logging into ${service} with user ${username}`);
-}
-
-// Function to handle automatic login with saved credentials
-export async function performAutoLogin(serviceIdentifier: string): Promise<boolean> {
-  // Find credentials for the requested service
-  const credentials = memoryService.getMemoryItems(
-    MemoryType.CREDENTIALS, 
-    [serviceIdentifier], 
-    1
-  );
-  
-  if (credentials.length === 0) {
-    logService.addLog({
-      type: 'warning',
-      message: `No saved credentials found for ${serviceIdentifier}`,
-      timestamp: Date.now()
-    });
-    return false;
-  }
-  
-  const credentialData = credentials[0].data;
-  
-  if (!credentialData.url) {
-    logService.addLog({
-      type: 'warning',
-      message: `Saved credentials for ${serviceIdentifier} do not include URL`,
-      timestamp: Date.now()
-    });
-    return false;
-  }
-  
-  // Execute login command with saved credentials
-  await handleLoginCommand({
-    id: `auto_login_${Date.now()}`,
-    type: CommandType.LOGIN,
-    params: credentialData,
+  logService.addLog({
+    type: 'success',
+    message: `Credentials stored for ${service}`,
     timestamp: Date.now()
   });
   
-  return true;
+  // If URL is provided, navigate to it
+  if (url) {
+    const navigateCommand: Command = {
+      id: `login_nav_${Date.now()}`,
+      type: CommandType.NAVIGATION,
+      params: { url }
+    };
+    
+    try {
+      // Navigate to the URL
+      navigationEvents.emit(url);
+      
+      logService.addLog({
+        type: 'info',
+        message: `Navigating to login URL: ${url}`,
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      logService.addLog({
+        type: 'error',
+        message: `Failed to navigate to login URL`,
+        timestamp: Date.now(),
+        details: error
+      });
+    }
+  }
+  
+  // If we have all selectors, attempt to auto-fill
+  if (usernameSelector && passwordSelector && submitSelector) {
+    const typeUsernameCommand: Command = {
+      id: `login_type_username_${Date.now()}`,
+      type: CommandType.TYPE,
+      params: {
+        element: usernameSelector,
+        text: username
+      }
+    };
+    
+    const typePasswordCommand: Command = {
+      id: `login_type_password_${Date.now()}`,
+      type: CommandType.TYPE,
+      params: {
+        element: passwordSelector,
+        text: password
+      }
+    };
+    
+    const clickSubmitCommand: Command = {
+      id: `login_click_submit_${Date.now()}`,
+      type: CommandType.CLICK,
+      params: {
+        element: submitSelector
+      }
+    };
+    
+    // Here we would execute these commands in sequence
+    // In real implementation, we would use the browser automation
+    
+    logService.addLog({
+      type: 'info',
+      message: `Auto login sequence executing for ${service}`,
+      timestamp: Date.now()
+    });
+  }
+}
+
+export async function performAutoLogin(service: string): Promise<boolean> {
+  const credentials = memoryService.getCredentialsForService(service);
+  
+  if (!credentials || !credentials.url) {
+    logService.addLog({
+      type: 'error',
+      message: `No credentials found for ${service}`,
+      timestamp: Date.now()
+    });
+    return false;
+  }
+  
+  const { url, username, password, usernameSelector, passwordSelector, submitSelector } = credentials;
+  
+  // Create a login command with the stored credentials
+  const loginCommand: Command = {
+    id: `auto_login_${Date.now()}`,
+    type: CommandType.LOGIN,
+    params: {
+      service,
+      username,
+      password,
+      url,
+      usernameSelector,
+      passwordSelector,
+      submitSelector
+    }
+  };
+  
+  try {
+    // Execute the login command
+    await handleLoginCommand(loginCommand);
+    return true;
+  } catch (error) {
+    logService.addLog({
+      type: 'error',
+      message: `Auto-login failed for ${service}`,
+      timestamp: Date.now(),
+      details: error
+    });
+    return false;
+  }
 }

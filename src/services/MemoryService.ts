@@ -1,3 +1,4 @@
+
 import { MemoryItem, MemoryType } from "../types/types";
 
 class MemoryService {
@@ -70,12 +71,16 @@ class MemoryService {
     
     if (tags && tags.length > 0) {
       filtered = filtered.filter(item => 
-        tags.some(tag => item.tags.includes(tag))
+        tags.some(tag => item.tags && item.tags.includes(tag))
       );
     }
     
     // Sort by recency (newest first)
-    filtered.sort((a, b) => b.createdAt - a.createdAt);
+    filtered.sort((a, b) => {
+      const aCreated = a.createdAt || 0;
+      const bCreated = b.createdAt || 0;
+      return bCreated - aCreated;
+    });
     
     return filtered.slice(0, limit);
   }
@@ -109,7 +114,7 @@ class MemoryService {
     
     return this.memoryStore.filter(item => {
       // Search in tags
-      if (item.tags.some(tag => tag.toLowerCase().includes(queryLower))) {
+      if (item.tags && item.tags.some(tag => tag.toLowerCase().includes(queryLower))) {
         return true;
       }
       

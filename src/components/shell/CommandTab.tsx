@@ -22,12 +22,15 @@ const CommandTab: React.FC<CommandTabProps> = ({ onCommandExecuted }) => {
         
         <p>Available commands:</p>
         <ul className="space-y-1 pl-4">
-          {Object.values(CommandType).map((cmd) => (
-            <li key={cmd} className="text-xs">
-              <code className="bg-muted px-1 rounded-sm">{cmd}</code>
-              <span className="ml-2">{commandHelp[cmd] || ''}</span>
-            </li>
-          ))}
+          {Object.keys(CommandType).map((cmdKey) => {
+            const cmd = CommandType[cmdKey as keyof typeof CommandType];
+            return (
+              <li key={cmdKey} className="text-xs">
+                <code className="bg-muted px-1 rounded-sm">{cmd}</code>
+                <span className="ml-2">{commandHelp[cmd] || ''}</span>
+              </li>
+            );
+          })}
         </ul>
         
         <p>Examples:</p>

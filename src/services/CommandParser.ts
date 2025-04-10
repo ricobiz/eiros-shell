@@ -14,7 +14,8 @@ export class CommandParser {
         const type = typeStr as CommandType;
         
         // Validate command type
-        if (!Object.values(CommandType).includes(type)) {
+        const validTypes = Object.values(CommandType);
+        if (!validTypes.includes(type)) {
           logService.addLog({
             type: 'error',
             message: `Invalid command type: ${typeStr}`,
@@ -27,7 +28,7 @@ export class CommandParser {
           const params = JSON.parse(`{${paramsJson}}`);
           return {
             id,
-            type: type,
+            type,
             params,
             timestamp: Date.now()
           };

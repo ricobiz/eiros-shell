@@ -4,43 +4,37 @@ import { logService } from "../LogService";
 import { memoryService } from "../MemoryService";
 
 export async function handleAnalyzeCommand(command: Command): Promise<any> {
-  const { imageData, area } = command.params;
-  
   logService.addLog({
     type: 'info',
-    message: `Analyzing content`,
-    timestamp: Date.now(),
-    details: area ? { area } : {}
+    message: `Analyzing page structure`,
+    timestamp: Date.now()
   });
   
-  // This would be a real vision analysis in a complete implementation
-  // For now, return mock data
-  const mockAnalysisResult = {
-    elements: [
-      {
-        id: 'elem_1',
-        type: 'button',
-        rect: { x: 100, y: 200, width: 80, height: 30 },
-        text: 'Send',
-        confidence: 0.95
-      },
-      {
-        id: 'elem_2',
-        type: 'input',
-        rect: { x: 50, y: 150, width: 300, height: 40 },
-        role: 'textbox',
-        confidence: 0.98
-      }
-    ],
-    text: 'Detected text content from image'
-  };
+  // In real implementation, this would analyze the DOM
+  // Here we create mock analysis results
+  const mockPageElements = [
+    { type: 'button', selector: '#submit-btn', text: 'Submit', visible: true },
+    { type: 'input', selector: '#username', placeholder: 'Username', visible: true },
+    { type: 'input', selector: '#password', type: 'password', visible: true },
+    { type: 'link', selector: '.forgot-password', text: 'Forgot password?', visible: true },
+    { type: 'div', selector: '.error-message', visible: false }
+  ];
   
   // Store analysis results in memory
-  memoryService.addMemoryItem({
-    type: MemoryType.ELEMENT,
-    data: mockAnalysisResult,
-    tags: ['analysis', 'ui', command.id]
+  mockPageElements.forEach(element => {
+    memoryService.addMemoryItem({
+      type: MemoryType.ELEMENT,
+      data: element,
+      tags: ['element', element.type, element.selector]
+    });
   });
   
-  return mockAnalysisResult;
+  logService.addLog({
+    type: 'success',
+    message: `Page analysis complete`,
+    timestamp: Date.now(),
+    details: { elementCount: mockPageElements.length }
+  });
+  
+  return { elements: mockPageElements };
 }

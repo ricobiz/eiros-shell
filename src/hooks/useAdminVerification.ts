@@ -1,81 +1,62 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { systemCommandService } from '@/services/SystemCommandService';
-import { logService } from '@/services/LogService';
+import { toast } from 'sonner';
 
-export function useAdminVerification() {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
-  const [elevationRequested, setElevationRequested] = useState(false);
-  
-  useEffect(() => {
-    const verifyAdminRights = async () => {
-      try {
-        setIsCheckingAdmin(true);
-        const hasAdminRights = systemCommandService.hasAdminRights();
-        setIsAdmin(hasAdminRights);
-        
-        if (!hasAdminRights) {
-          logService.addLog({
-            type: 'warning',
-            message: 'Application is running without admin privileges, some features may be limited',
-            timestamp: Date.now()
-          });
-        } else {
-          logService.addLog({
-            type: 'info',
-            message: 'Application is running with admin privileges',
-            timestamp: Date.now()
-          });
-        }
-      } catch (error) {
-        logService.addLog({
-          type: 'error',
-          message: 'Error verifying admin rights',
-          timestamp: Date.now(),
-          details: error
-        });
-        setIsAdmin(false);
-      } finally {
-        setIsCheckingAdmin(false);
-      }
-    };
-    
-    verifyAdminRights();
-  }, []);
-  
-  const requestElevation = async (): Promise<boolean> => {
+/**
+ * Hook for handling admin verification and elevation
+ */
+export const useAdminVerification = () => {
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+
+  /**
+   * Check if the current process has admin rights
+   */
+  const checkAdminStatus = useCallback(async () => {
     try {
-      setElevationRequested(true);
-      const result = await systemCommandService.requestElevation();
-      setIsAdmin(result);
+      const hasAdmin = systemCommandService.hasAdminRights();
+      setIsAdmin(hasAdmin);
+      return hasAdmin;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+  }, []);
+
+  /**
+   * Request elevation of privileges
+   */
+  const requestElevation = useCallback(async (): Promise<boolean> => {
+    try {
+      setIsVerifying(true);
       
-      if (!result) {
-        logService.addLog({
-          type: 'warning',
-          message: 'Elevation request was denied, some features will be limited',
-          timestamp: Date.now()
-        });
+      toast.info('Requesting administrative privileges...');
+      
+      // Request elevation
+      const result = await systemCommandService.requestElevation();
+      
+      if (result) {
+        setIsAdmin(true);
+        toast.success('Administrative privileges granted');
+      } else {
+        toast.error('Failed to get administrative privileges');
       }
       
       return result;
     } catch (error) {
-      logService.addLog({
-        type: 'error',
-        message: 'Error requesting elevation',
-        timestamp: Date.now(),
-        details: error
-      });
+      console.error('Error requesting elevation:', error);
+      toast.error('Error requesting administrative privileges');
       return false;
     } finally {
-      setElevationRequested(false);
+      setIsVerifying(false);
     }
-  };
-  
+  }, []);
+
   return {
     isAdmin,
-    isCheckingAdmin,
-    elevationRequested,
+    isVerifying,
+    checkAdminStatus,
     requestElevation
   };
-}
+};

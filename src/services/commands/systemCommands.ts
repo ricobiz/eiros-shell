@@ -1,191 +1,183 @@
 
-import { Command, CommandType } from '@/types/types';
-import { logService } from '@/services/LogService';
+import { Command, CommandType, MemoryType, SystemCommandResult, FileOperationResult } from '@/types/types';
 import { systemCommandService } from '@/services/SystemCommandService';
 import { memoryService } from '@/services/MemoryService';
-import { MemoryType } from '@/types/types';
+import { logService } from '@/services/LogService';
 
-export const handleShellCommand = async (command: Command) => {
+/**
+ * Execute a shell command
+ */
+export const handleShellCommand = async (command: Command): Promise<any> => {
   try {
-    const { cmd, asAdmin = false } = command.params;
-    
-    if (!cmd) {
-      logService.addLog({
-        type: 'error',
-        message: 'Shell command missing required "cmd" parameter',
-        timestamp: Date.now(),
-        details: command
-      });
-      return { success: false, error: 'Missing required parameter: cmd' };
-    }
-    
+    const { command: cmd, asAdmin = false } = command.params;
+
     logService.addLog({
       type: 'info',
-      message: `Executing shell command: ${cmd}${asAdmin ? ' (as admin)' : ''}`,
-      timestamp: Date.now()
+      message: `Executing shell command: ${cmd}`,
+      timestamp: Date.now(),
+      details: { command, asAdmin }
     });
-    
+
+    // Execute the command
     const result = await systemCommandService.executeShellCommand(cmd, asAdmin);
-    
-    // Store result in memory
+
+    // Store the result in memory
     memoryService.addMemoryItem({
       type: MemoryType.RESULT,
       data: {
-        command,
-        result
+        command: cmd,
+        result: result
       },
-      tags: ['shell', 'command', asAdmin ? 'admin' : 'user']
+      tags: ['shell', 'command'],
+      createdAt: Date.now()
     });
-    
+
     return result;
   } catch (error) {
     logService.addLog({
       type: 'error',
-      message: 'Error in shell command handler',
+      message: 'Failed to execute shell command',
       timestamp: Date.now(),
-      details: { error, command }
+      details: error
     });
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      exitCode: 1
-    };
+    throw error;
   }
 };
 
-export const handleRestartCommand = async (command: Command) => {
+/**
+ * Restart the system
+ */
+export const handleRestartCommand = async (command: Command): Promise<any> => {
   try {
     logService.addLog({
-      type: 'warning',
-      message: 'System restart requested',
-      timestamp: Date.now(),
-      details: command
+      type: 'info',
+      message: 'Requesting system restart',
+      timestamp: Date.now()
     });
-    
-    return await systemCommandService.restartSystem();
+
+    // Request system restart
+    const result = await systemCommandService.restartSystem();
+
+    return result;
   } catch (error) {
     logService.addLog({
       type: 'error',
-      message: 'Error in restart command handler',
+      message: 'Failed to restart system',
       timestamp: Date.now(),
-      details: { error, command }
+      details: error
     });
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      exitCode: 1
-    };
+    throw error;
   }
 };
 
-export const handleKillCommand = async (command: Command) => {
+/**
+ * Kill a process
+ */
+export const handleKillCommand = async (command: Command): Promise<any> => {
   try {
     const { process } = command.params;
-    
-    if (!process) {
-      logService.addLog({
-        type: 'error',
-        message: 'Kill command missing required "process" parameter',
-        timestamp: Date.now(),
-        details: command
-      });
-      return { success: false, error: 'Missing required parameter: process' };
-    }
-    
-    return await systemCommandService.killProcess(process);
+
+    logService.addLog({
+      type: 'info',
+      message: `Killing process: ${process}`,
+      timestamp: Date.now()
+    });
+
+    // Kill the process
+    const result = await systemCommandService.killProcess(process);
+
+    return result;
   } catch (error) {
     logService.addLog({
       type: 'error',
-      message: 'Error in kill command handler',
+      message: 'Failed to kill process',
       timestamp: Date.now(),
-      details: { error, command }
+      details: error
     });
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      exitCode: 1
-    };
+    throw error;
   }
 };
 
-export const handleReadFileCommand = async (command: Command) => {
+/**
+ * Read a file
+ */
+export const handleReadFileCommand = async (command: Command): Promise<any> => {
   try {
     const { path } = command.params;
-    
-    if (!path) {
-      return { success: false, error: 'Missing required parameter: path', path: '' };
-    }
-    
-    return await systemCommandService.readFile(path);
+
+    logService.addLog({
+      type: 'info',
+      message: `Reading file: ${path}`,
+      timestamp: Date.now()
+    });
+
+    // Read the file
+    const result = await systemCommandService.readFile(path);
+
+    return result;
   } catch (error) {
     logService.addLog({
       type: 'error',
-      message: 'Error in read file command handler',
+      message: 'Failed to read file',
       timestamp: Date.now(),
-      details: { error, command }
+      details: error
     });
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      path: command.params.path || ''
-    };
+    throw error;
   }
 };
 
-export const handleWriteFileCommand = async (command: Command) => {
+/**
+ * Write to a file
+ */
+export const handleWriteFileCommand = async (command: Command): Promise<any> => {
   try {
-    const { path, text } = command.params;
-    
-    if (!path) {
-      return { success: false, error: 'Missing required parameter: path', path: '' };
-    }
-    
-    if (text === undefined) {
-      return { success: false, error: 'Missing required parameter: text', path };
-    }
-    
-    return await systemCommandService.writeFile(path, text);
+    const { path, content } = command.params;
+
+    logService.addLog({
+      type: 'info',
+      message: `Writing to file: ${path}`,
+      timestamp: Date.now()
+    });
+
+    // Write to the file
+    const result = await systemCommandService.writeFile(path, content);
+
+    return result;
   } catch (error) {
     logService.addLog({
       type: 'error',
-      message: 'Error in write file command handler',
+      message: 'Failed to write to file',
       timestamp: Date.now(),
-      details: { error, command }
+      details: error
     });
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      path: command.params.path || ''
-    };
+    throw error;
   }
 };
 
-export const handleListDirCommand = async (command: Command) => {
+/**
+ * List directory contents
+ */
+export const handleListDirCommand = async (command: Command): Promise<any> => {
   try {
     const { path } = command.params;
-    
-    if (!path) {
-      return { success: false, error: 'Missing required parameter: path', path: '' };
-    }
-    
-    return await systemCommandService.listDirectory(path);
+
+    logService.addLog({
+      type: 'info',
+      message: `Listing directory: ${path}`,
+      timestamp: Date.now()
+    });
+
+    // List the directory
+    const result = await systemCommandService.listDirectory(path);
+
+    return result;
   } catch (error) {
     logService.addLog({
       type: 'error',
-      message: 'Error in list directory command handler',
+      message: 'Failed to list directory',
       timestamp: Date.now(),
-      details: { error, command }
+      details: error
     });
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      path: command.params.path || ''
-    };
+    throw error;
   }
 };

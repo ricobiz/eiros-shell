@@ -1,38 +1,37 @@
 
-import * as React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { TaskSchedulerProvider } from "@/contexts/TaskSchedulerContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import './App.css';
+import { Toaster } from '@/components/ui/toaster';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ShellInterface from '@/components/ShellInterface';
+import AdvancedDSLDemo from '@/tests/AdvancedDSLDemo';
 
-// Create a client
-const queryClient = new QueryClient();
-
-const App: React.FC = () => {
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <TaskSchedulerProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </TaskSchedulerProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
+    <>
+      <div className="container mx-auto py-4">
+        <h1 className="text-3xl font-bold mb-6">EirosShell - Advanced DSL</h1>
+        
+        <Tabs defaultValue="shell">
+          <TabsList className="mb-4">
+            <TabsTrigger value="shell">Shell Interface</TabsTrigger>
+            <TabsTrigger value="demo">DSL Demo</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="shell">
+            <div className="border rounded-lg overflow-hidden">
+              <ShellInterface />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="demo">
+            <AdvancedDSLDemo />
+          </TabsContent>
+        </Tabs>
+      </div>
+      <Toaster />
+    </>
   );
-};
+}
 
 export default App;

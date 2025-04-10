@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MemoryItem } from '@/types/types';
+import { MemoryItem, MemoryType } from '@/types/types';
 import { logService } from '@/services/LogService';
 import { memoryService } from '@/services/MemoryService';
 
@@ -27,7 +27,7 @@ export function useShellMemory() {
       const mockScreenshotData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
       
       memoryService.addMemoryItem({
-        type: 'screenshot',
+        type: MemoryType.SCREENSHOT,
         data: mockScreenshotData,
         tags: ['screenshot', 'manual']
       });
@@ -65,7 +65,7 @@ export function useShellMemory() {
       };
       
       memoryService.addMemoryItem({
-        type: 'element',
+        type: MemoryType.ELEMENT,
         data: mockAnalysisData,
         tags: ['analysis', 'interface', 'elements']
       });

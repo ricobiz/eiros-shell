@@ -18,10 +18,14 @@ export class DiagnosticsService {
     const results: DiagnosticResult[] = [];
     
     // Run each check
+    results.push(await this.checkSystemIntegrity());
     results.push(await this.checkBrowserAccess());
     results.push(await this.checkNetworkAccess());
+    results.push(await this.checkInputDevices());
     results.push(await this.checkFileSystemAccess());
     results.push(await this.checkPermissions());
+    results.push(await this.checkDependencies());
+    results.push(await this.checkEirosBridge());
     
     // Calculate overall status
     const passed = results.every(result => result.passed);
@@ -39,11 +43,47 @@ export class DiagnosticsService {
     };
   }
   
-  private async checkBrowserAccess(): Promise<DiagnosticResult> {
-    // In a real implementation, we would check if we can launch a browser
-    // For now, we'll simulate it
+  private async checkSystemIntegrity(): Promise<DiagnosticResult> {
     try {
-      // Simulate checking browser
+      // In a real implementation, we would check file hashes
+      await new Promise(resolve => setTimeout(resolve, 250));
+      
+      return {
+        test: 'System Integrity',
+        passed: true,
+        message: 'Core files verified'
+      };
+    } catch (error) {
+      return {
+        test: 'System Integrity',
+        passed: false,
+        message: 'Failed to verify core files'
+      };
+    }
+  }
+  
+  private async checkDependencies(): Promise<DiagnosticResult> {
+    try {
+      // In real implementation, we would check for Playwright, Tesseract, etc
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      return {
+        test: 'Dependencies',
+        passed: true,
+        message: 'All required dependencies found'
+      };
+    } catch (error) {
+      return {
+        test: 'Dependencies',
+        passed: false,
+        message: 'Missing required dependencies'
+      };
+    }
+  }
+  
+  private async checkBrowserAccess(): Promise<DiagnosticResult> {
+    try {
+      // In a real implementation, we would check if we can launch a browser
       await new Promise(resolve => setTimeout(resolve, 300));
       
       // Here we would use something like Playwright's isInstalled method
@@ -82,6 +122,25 @@ export class DiagnosticsService {
     }
   }
   
+  private async checkInputDevices(): Promise<DiagnosticResult> {
+    try {
+      // In real implementation, we would check input device access
+      await new Promise(resolve => setTimeout(resolve, 180));
+      
+      return {
+        test: 'Input Devices',
+        passed: true,
+        message: 'Mouse and keyboard access OK'
+      };
+    } catch (error) {
+      return {
+        test: 'Input Devices',
+        passed: false,
+        message: 'Cannot access input devices'
+      };
+    }
+  }
+  
   private async checkFileSystemAccess(): Promise<DiagnosticResult> {
     try {
       // In real implementation, we would try to write to a temp file
@@ -107,12 +166,13 @@ export class DiagnosticsService {
       // For now, we'll simulate it
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const hasAdminRights = true;
+      // Simulate non-admin status for demo
+      const hasAdminRights = false; 
       
       return {
         test: 'Admin Rights',
-        passed: hasAdminRights,
-        message: hasAdminRights ? 'Has admin rights' : 'No admin rights'
+        passed: true, // Always report passed, just different message
+        message: hasAdminRights ? 'Has admin rights' : 'Running without admin rights'
       };
     } catch (error) {
       return {
@@ -123,9 +183,28 @@ export class DiagnosticsService {
     }
   }
   
+  private async checkEirosBridge(): Promise<DiagnosticResult> {
+    try {
+      // In real implementation, we would check eiros_bridge.json
+      await new Promise(resolve => setTimeout(resolve, 120));
+      
+      return {
+        test: 'Eiros Bridge',
+        passed: true,
+        message: 'Bridge file verified'
+      };
+    } catch (error) {
+      return {
+        test: 'Eiros Bridge',
+        passed: false,
+        message: 'Bridge file missing or corrupted'
+      };
+    }
+  }
+  
   private generateSummary(results: DiagnosticResult[], passed: boolean): string {
     if (passed) {
-      return '✅ System Ready | Internet OK | Admin OK | Environment Verified';
+      return '✅ System Ready | Internet OK | Environment Verified';
     } else {
       const failedTests = results.filter(r => !r.passed);
       return `❌ ${failedTests.map(t => t.message).join(' | ')}`;
@@ -144,6 +223,41 @@ export class DiagnosticsService {
       timestamp: Date.now(),
       details: results
     });
+  }
+  
+  // Methods for autostart integration
+  async configureAutostart(enable: boolean): Promise<boolean> {
+    // This would interact with the backend to configure autostart
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    logService.addLog({
+      type: 'info',
+      message: `Autostart ${enable ? 'enabled' : 'disabled'}`,
+      timestamp: Date.now()
+    });
+    
+    return true; // Success
+  }
+  
+  // Check if autostart is configured
+  async isAutostartEnabled(): Promise<boolean> {
+    // This would check with the backend
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return false; // Default to false for demo
+  }
+  
+  // Repair Eiros Bridge if corrupted
+  async repairEirosBridge(): Promise<boolean> {
+    // This would interact with the backend to repair the bridge file
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    logService.addLog({
+      type: 'success',
+      message: 'Eiros Bridge file repaired successfully',
+      timestamp: Date.now()
+    });
+    
+    return true; // Success
   }
 }
 

@@ -10,6 +10,7 @@ import MemoryTab from './MemoryTab';
 import ChatTab from './ChatTab';
 import DocumentationTab from './DocumentationTab';
 import ManualAnnotationTab from './ManualAnnotationTab';
+import SystemSettingsTab from './SystemSettingsTab';
 
 const ShellContent: React.FC = () => {
   const { 
@@ -80,6 +81,10 @@ const ShellContent: React.FC = () => {
       
       <TabsContent value="annotate">
         <ManualAnnotationTab />
+      </TabsContent>
+      
+      <TabsContent value="system">
+        <SystemSettingsTab />
       </TabsContent>
     </>
   );

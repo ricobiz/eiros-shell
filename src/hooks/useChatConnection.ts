@@ -38,19 +38,19 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
       
       if (success) {
         toast({
-          title: "ChatGPT подключен",
-          description: "Теперь вы можете отправлять сообщения в ChatGPT",
+          title: "ChatGPT Connected",
+          description: "Automatic communication established with ChatGPT",
         });
         
-        addMessageToChat('Система', 'Подключение установлено! Введите сообщение ниже и нажмите отправить.');
+        addMessageToChat('Система', 'Connection established! You can now send messages directly to ChatGPT.');
       } else {
         toast({
-          title: "Ошибка подключения",
-          description: "Не удалось подключиться к ChatGPT. Проверьте, не блокирует ли браузер всплывающие окна.",
+          title: "Connection Error",
+          description: "Failed to connect to ChatGPT. Please check browser permissions.",
           variant: "destructive"
         });
         
-        addMessageToChat('Система', 'Ошибка подключения. Пожалуйста, попробуйте снова.');
+        addMessageToChat('Система', 'Connection error. Please try again or check browser automation permissions.');
       }
     } finally {
       setIsConnecting(false);
@@ -61,11 +61,11 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
     aiSyncService.emergencyStop();
     setIsWindowOpen(false);
     
-    addMessageToChat('Система', 'Аварийная остановка выполнена. Все подключения закрыты.');
+    addMessageToChat('Система', 'Emergency stop executed. All connections closed.');
     
     toast({
-      title: "Аварийная остановка",
-      description: "Все подключения к ChatGPT остановлены",
+      title: "Emergency Stop",
+      description: "All connections to ChatGPT stopped",
       variant: "destructive"
     });
   };

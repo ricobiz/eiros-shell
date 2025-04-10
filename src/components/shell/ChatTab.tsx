@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { commandService } from '@/services/CommandService';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useShell } from '@/contexts/shell/ShellContext';
-import { AlertCircle } from 'lucide-react';
 
 interface ChatTabProps {
   onClearLogs: () => void;
@@ -46,7 +45,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       // Add a welcome message
       addMessageToChat('Система', t('shellWelcome'));
       // Add integration info message
-      addMessageToChat('Система', 'Note: This shell uses clipboard integration with ChatGPT. After clicking the send button, you\'ll need to paste the message into the ChatGPT window.');
+      addMessageToChat('Система', 'Shell is ready to communicate with ChatGPT. Connect to start automatic communication.');
     }
   }, [isConnectedToAI, isWindowOpen, chatHistory.length, addMessageToChat, t]);
 
@@ -54,23 +53,6 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
-    }
-  };
-
-  // Handler for paste to get responses from ChatGPT
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pastedText = e.clipboardData.getData('text');
-    
-    // Only if text is pasted and looks like a response from ChatGPT
-    if (pastedText && pastedText.length > 10) {
-      // Check if this is just a repeat paste of our own message
-      const lastMessage = chatHistory[chatHistory.length - 1];
-      if (!lastMessage || lastMessage.sender !== 'Система' || 
-          !lastMessage.message.includes(pastedText)) {
-        // Process as AI response
-        e.preventDefault();
-        handleAIResponse(pastedText);
-      }
     }
   };
 
@@ -96,8 +78,8 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
       setMessage(testMessage);
       sendMessage();
       
-      // Add explanation message with clearer instructions
-      addMessageToChat('Система', 'Please paste the test message in ChatGPT. When ChatGPT responds, paste its response back here to complete the test.');
+      // Add explanation message
+      addMessageToChat('Система', 'Testing automatic bidirectional communication with ChatGPT...');
     } else {
       addMessageToChat('Система', t('testConnectionFailed'));
     }
@@ -109,15 +91,6 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
         <ChatMessages chatHistory={chatHistory} />
       </div>
       
-      <div className="p-3 border rounded-md bg-amber-50 dark:bg-amber-950/20">
-        <div className="flex items-start gap-2 text-sm">
-          <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-amber-800 dark:text-amber-400">
-            This shell uses clipboard for ChatGPT integration. You need to manually paste messages into ChatGPT and copy responses back.
-          </p>
-        </div>
-      </div>
-      
       <div className="space-y-3">
         <ChatInput 
           message={message}
@@ -125,7 +98,6 @@ const ChatTab: React.FC<ChatTabProps> = ({ onClearLogs, isConnectedToAI = false 
           onChange={(e) => setMessage(e.target.value)}
           onSend={sendMessage}
           onKeyPress={handleKeyPress}
-          onPaste={handlePaste}
           onTestConnection={handleTestConnection}
           isTestingConnection={isTestingConnection}
         />

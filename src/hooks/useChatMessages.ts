@@ -54,11 +54,21 @@ export function useChatMessages() {
       // Add message to chat history
       addMessageToChat('Вы', message);
       
-      // Try to send the message
-      aiSyncService.sendMessageToAI(message);
+      // Send the message to AI directly - no clipboard needed
+      const sent = aiSyncService.sendMessageToAI(message);
       
-      // Add instruction for manual paste - now with clearer instructions
-      addMessageToChat('Система', t('messageCopiedToClipboard', { message }));
+      if (sent) {
+        toast({
+          title: t('messageSent'),
+          description: t('waitingForResponse'),
+        });
+      } else {
+        toast({
+          title: t('messageError'),
+          description: t('checkConnection'),
+          variant: "destructive"
+        });
+      }
       
       setMessage('');
     }

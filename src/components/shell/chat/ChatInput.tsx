@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Zap, Clipboard } from 'lucide-react';
+import { Send, Zap } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChatInputProps {
@@ -45,9 +45,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
           size="icon"
           disabled={!message.trim() || disabled || isTestingConnection}
           onClick={onSend}
-          title={t('sendToClipboard')}
+          title={t('sendMessage')}
         >
-          <Clipboard size={16} />
+          <Send size={16} />
         </Button>
       </div>
       
@@ -72,10 +72,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           )}
         </Button>
       )}
-      
-      <div className="text-xs text-muted-foreground">
-        {t('clipboardInstructions')}
-      </div>
     </div>
   );
 };

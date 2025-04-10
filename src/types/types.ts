@@ -8,44 +8,25 @@ export interface LogEntry {
   details?: any;
 }
 
-// Define both as type and const object for dual use
-export type CommandType = 
-  | 'click' 
-  | 'type' 
-  | 'navigation' 
-  | 'wait' 
-  | 'screenshot' 
-  | 'analyze' 
-  | 'conditional' 
-  | 'loop' 
-  | 'variable' 
-  | 'record'
-  | 'memory_save'
-  | 'memory_retrieve'
-  | 'annotate'
-  | 'schedule'
-  | 'login'
-  | 'auto_login';
-
-// Create a constant version of CommandType for runtime use
-export const CommandType = {
-  CLICK: 'click' as CommandType,
-  TYPE: 'type' as CommandType,
-  NAVIGATION: 'navigation' as CommandType,
-  WAIT: 'wait' as CommandType,
-  SCREENSHOT: 'screenshot' as CommandType,
-  ANALYZE: 'analyze' as CommandType,
-  CONDITIONAL: 'conditional' as CommandType,
-  LOOP: 'loop' as CommandType, 
-  VARIABLE: 'variable' as CommandType,
-  RECORD: 'record' as CommandType,
-  MEMORY_SAVE: 'memory_save' as CommandType,
-  MEMORY_RETRIEVE: 'memory_retrieve' as CommandType,
-  ANNOTATE: 'annotate' as CommandType,
-  SCHEDULE: 'schedule' as CommandType,
-  LOGIN: 'login' as CommandType,
-  AUTO_LOGIN: 'auto_login' as CommandType
-};
+// Define both as type and enum for dual use
+export enum CommandType {
+  CLICK = 'click',
+  TYPE = 'type',
+  NAVIGATION = 'navigation',
+  WAIT = 'wait',
+  SCREENSHOT = 'screenshot',
+  ANALYZE = 'analyze',
+  CONDITIONAL = 'conditional',
+  LOOP = 'loop', 
+  VARIABLE = 'variable',
+  RECORD = 'record',
+  MEMORY_SAVE = 'memory_save',
+  MEMORY_RETRIEVE = 'memory_retrieve',
+  ANNOTATE = 'annotate',
+  SCHEDULE = 'schedule',
+  LOGIN = 'login',
+  AUTO_LOGIN = 'auto_login'
+}
 
 export interface Command {
   type: CommandType;

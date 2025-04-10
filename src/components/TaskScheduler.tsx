@@ -1,147 +1,116 @@
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { 
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Calendar, Clock, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useTaskScheduler } from '@/contexts/TaskSchedulerContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { Task } from '@/types/types';
 
 const TaskScheduler: React.FC = () => {
-  const { tasks, addTask, removeTask, toggleTask } = useTaskScheduler();
-  const { t } = useLanguage();
-  const [message, setMessage] = useState('');
-  const [interval, setInterval] = useState(60);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { tasks, addTask, removeTask, toggleTaskActive, updateTask } = useTaskScheduler();
+  const [newTask, setNewTask] = useState<Partial<Task>>({
+    type: 'command',
+    content: '',
+    interval: 60,
+    active: true,
+    name: ''
+  });
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim() && interval > 0) {
-      addTask(message.trim(), interval);
-      setMessage('');
+  const handleAddTask = () => {
+    if (newTask.content && newTask.interval) {
+      addTask({
+        id: Date.now().toString(),
+        type: newTask.type || 'command',
+        content: newTask.content,
+        interval: newTask.interval,
+        active: true,
+        name: newTask.name || `Task ${tasks.length + 1}`
+      });
+      
+      // Reset form
+      setNewTask({
+        type: 'command',
+        content: '',
+        interval: 60,
+        active: true,
+        name: ''
+      });
     }
   };
   
-  const TaskContent = () => (
-    <div className="p-4 space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="text-sm font-medium">{t('message')}:</label>
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={t('message')}
-            className="mt-1"
-          />
-        </div>
-        
-        <div>
-          <label className="text-sm font-medium">{t('interval')}:</label>
-          <Input
-            type="number"
-            min={1}
-            value={interval}
-            onChange={(e) => setInterval(parseInt(e.target.value) || 60)}
-            className="mt-1"
-          />
-        </div>
-        
-        <Button type="submit" className="w-full">
-          {t('add')}
-        </Button>
-      </form>
+  return (
+    <div className="space-y-4">
+      <div className="text-lg font-medium">Task Scheduler</div>
       
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">{t('scheduledTasks')}:</h3>
+      <div className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <Input 
+            placeholder="Task name" 
+            value={newTask.name || ''} 
+            onChange={(e) => setNewTask({...newTask, name: e.target.value})}
+          />
+          
+          <Select 
+            value={newTask.type} 
+            onValueChange={(value) => setNewTask({...newTask, type: value as 'message' | 'command'})}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="command">Command</SelectItem>
+              <SelectItem value="message">Message</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Input 
+            type="number" 
+            placeholder="Interval (seconds)" 
+            value={newTask.interval?.toString() || '60'} 
+            onChange={(e) => setNewTask({...newTask, interval: Number(e.target.value)})}
+          />
+        </div>
         
-        {tasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No scheduled tasks</p>
-        ) : (
-          <div className="space-y-2">
-            {tasks.map(task => (
-              <div 
-                key={task.id} 
-                className={`p-2 border rounded-md flex justify-between items-center ${
-                  task.enabled ? 'bg-muted/10' : 'bg-muted/30 opacity-70'
-                }`}
-              >
-                <div className="truncate flex-1">
-                  <div className="font-medium truncate">{task.message}</div>
-                  <div className="text-xs text-muted-foreground flex items-center">
-                    <Clock size={12} className="mr-1" />
-                    {t('interval')}: {task.interval}s
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => toggleTask(task.id)}
-                    className={task.enabled ? 'text-green-500' : 'text-muted-foreground'}
-                  >
-                    {task.enabled ? '✓' : '○'}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => removeTask(task.id)}
-                    className="text-destructive"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <Input 
+          placeholder={newTask.type === 'command' ? '/command#id{params}' : 'Message text'} 
+          value={newTask.content || ''} 
+          onChange={(e) => setNewTask({...newTask, content: e.target.value})}
+        />
+        
+        <Button onClick={handleAddTask}>Add Task</Button>
       </div>
+      
+      {tasks.length > 0 ? (
+        <div className="space-y-2">
+          {tasks.map((task) => (
+            <div key={task.id} className="flex items-center justify-between p-2 bg-muted rounded-md">
+              <div>
+                <div className="font-medium">{task.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {task.type === 'command' ? 'Command' : 'Message'} | Every {task.interval}s
+                </div>
+                <div className="text-xs truncate max-w-[300px]">{task.content}</div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Switch 
+                  checked={task.active} 
+                  onCheckedChange={() => toggleTaskActive(task.id)} 
+                />
+                <Button variant="ghost" size="icon" onClick={() => removeTask(task.id)}>
+                  <span className="sr-only">Delete</span>
+                  <span>🗑️</span>
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center text-muted-foreground py-4">
+          No scheduled tasks
+        </div>
+      )}
     </div>
-  );
-  
-  return isDesktop ? (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8">
-          <Calendar size={14} className="mr-1" />
-          {t('schedule')}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-[400px] sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>{t('schedule')}</SheetTitle>
-        </SheetHeader>
-        <TaskContent />
-      </SheetContent>
-    </Sheet>
-  ) : (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8">
-          <Calendar size={14} className="mr-1" />
-          {t('schedule')}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>{t('schedule')}</DrawerTitle>
-        </DrawerHeader>
-        <TaskContent />
-      </DrawerContent>
-    </Drawer>
   );
 };
 

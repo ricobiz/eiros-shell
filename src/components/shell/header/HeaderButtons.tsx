@@ -16,14 +16,19 @@ const HeaderButtons: React.FC = () => {
   const { t } = useLanguage();
   
   return (
-    <div className="flex space-x-1.5 items-center">
+    <div className="flex space-x-2 items-center">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleToggleAIConnection()} 
-              className="h-3 w-3 rounded-full bg-green-500 hover:bg-green-600 active:bg-green-700 cursor-pointer"
-            />
+              className="relative h-6 w-4 group cursor-pointer flex items-center justify-center"
+              aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
+            >
+              <div className="absolute transform rotate-[-15deg] h-[2px] w-full bg-green-500 hover:bg-green-600 active:bg-green-700"></div>
+              <div className="absolute transform rotate-[-15deg] top-[3px] h-[2px] w-full bg-green-500/70 hover:bg-green-600/70 active:bg-green-700/70 group-hover:bg-green-600/70"></div>
+              <div className="absolute transform rotate-[-15deg] top-[-3px] h-[2px] w-full bg-green-500/70 hover:bg-green-600/70 active:bg-green-700/70 group-hover:bg-green-600/70"></div>
+            </button>
           </TooltipTrigger>
           <TooltipContent>
             {isConnectedToAI ? t('disconnect') : t('connect')}
@@ -36,8 +41,13 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => toggleExecutionPause()} 
-              className="h-3 w-3 rounded-full bg-[#FFBD44] hover:bg-[#E0A93E] active:bg-[#C19435] cursor-pointer"
-            />
+              className="relative h-6 w-4 group cursor-pointer flex items-center justify-center"
+              aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
+            >
+              <div className="absolute transform rotate-[-15deg] h-[2px] w-full bg-[#FFBD44] hover:bg-[#E0A93E] active:bg-[#C19435]"></div>
+              <div className="absolute transform rotate-[-15deg] top-[3px] h-[2px] w-full bg-[#FFBD44]/70 hover:bg-[#E0A93E]/70 active:bg-[#C19435]/70 group-hover:bg-[#E0A93E]/70"></div>
+              <div className="absolute transform rotate-[-15deg] top-[-3px] h-[2px] w-full bg-[#FFBD44]/70 hover:bg-[#E0A93E]/70 active:bg-[#C19435]/70 group-hover:bg-[#E0A93E]/70"></div>
+            </button>
           </TooltipTrigger>
           <TooltipContent>
             {isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
@@ -50,8 +60,13 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleEmergencyStop()} 
-              className="h-3 w-3 rounded-full bg-destructive hover:bg-red-600 active:bg-red-700 cursor-pointer"
-            />
+              className="relative h-6 w-4 group cursor-pointer flex items-center justify-center"
+              aria-label={t('emergencyStop')}
+            >
+              <div className="absolute transform rotate-[-15deg] h-[2px] w-full bg-destructive hover:bg-red-600 active:bg-red-700"></div>
+              <div className="absolute transform rotate-[-15deg] top-[3px] h-[2px] w-full bg-destructive/70 hover:bg-red-600/70 active:bg-red-700/70 group-hover:bg-red-600/70"></div>
+              <div className="absolute transform rotate-[-15deg] top-[-3px] h-[2px] w-full bg-destructive/70 hover:bg-red-600/70 active:bg-red-700/70 group-hover:bg-red-600/70"></div>
+            </button>
           </TooltipTrigger>
           <TooltipContent>
             {t('emergencyStop')}

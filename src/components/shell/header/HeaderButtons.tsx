@@ -25,10 +25,10 @@ const HeaderButtons: React.FC = () => {
               className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-green-500/30"
               aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
             >
-              <div className="flex space-x-0.5 items-center justify-center">
-                <div className="h-3 w-[3px] transform rotate-12 bg-green-500"></div>
-                <div className="h-3 w-[3px] transform rotate-12 bg-green-500"></div>
-                <div className="h-3 w-[3px] transform rotate-12 bg-green-500"></div>
+              <div className="flex items-center space-x-0.5">
+                <div className="w-[3px] h-3 bg-green-500 transform rotate-12"></div>
+                <div className="w-[3px] h-3 bg-green-500 transform rotate-12"></div>
+                <div className="w-[3px] h-3 bg-green-500 transform rotate-12"></div>
               </div>
             </button>
           </TooltipTrigger>
@@ -46,10 +46,10 @@ const HeaderButtons: React.FC = () => {
               className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-amber-500/30"
               aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
             >
-              <div className="flex space-x-0.5 items-center justify-center">
-                <div className="h-3 w-[3px] transform rotate-12 bg-[#FFBD44]"></div>
-                <div className="h-3 w-[3px] transform rotate-12 bg-[#FFBD44]"></div>
-                <div className="h-3 w-[3px] transform rotate-12 bg-[#FFBD44]"></div>
+              <div className="flex items-center space-x-0.5">
+                <div className="w-[3px] h-3 bg-[#FFBD44] transform rotate-12"></div>
+                <div className="w-[3px] h-3 bg-[#FFBD44] transform rotate-12"></div>
+                <div className="w-[3px] h-3 bg-[#FFBD44] transform rotate-12"></div>
               </div>
             </button>
           </TooltipTrigger>
@@ -67,10 +67,10 @@ const HeaderButtons: React.FC = () => {
               className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-destructive/30"
               aria-label={t('emergencyStop')}
             >
-              <div className="flex space-x-0.5 items-center justify-center">
-                <div className="h-3 w-[3px] transform rotate-12 bg-destructive"></div>
-                <div className="h-3 w-[3px] transform rotate-12 bg-destructive"></div>
-                <div className="h-3 w-[3px] transform rotate-12 bg-destructive"></div>
+              <div className="flex items-center space-x-0.5">
+                <div className="w-[3px] h-3 bg-destructive transform rotate-12"></div>
+                <div className="w-[3px] h-3 bg-destructive transform rotate-12"></div>
+                <div className="w-[3px] h-3 bg-destructive transform rotate-12"></div>
               </div>
             </button>
           </TooltipTrigger>

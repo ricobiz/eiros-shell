@@ -18,10 +18,10 @@ const FooterActions: React.FC<FooterActionsProps> = ({ expanded, onExpandToggle 
       
       <div className="flex items-center">
         <span className="text-accent flex items-center font-serif">
-          <span className="inline-flex space-x-0.5 mr-1.5">
-            <span className="inline-block h-2 w-[3px] transform rotate-12 bg-accent animate-pulse"></span>
-            <span className="inline-block h-2 w-[3px] transform rotate-12 bg-accent animate-pulse"></span>
-            <span className="inline-block h-2 w-[3px] transform rotate-12 bg-accent animate-pulse"></span>
+          <span className="flex items-center space-x-0.5 mr-1.5">
+            <span className="w-[3px] h-2 bg-accent transform rotate-12 animate-pulse"></span>
+            <span className="w-[3px] h-2 bg-accent transform rotate-12 animate-pulse"></span>
+            <span className="w-[3px] h-2 bg-accent transform rotate-12 animate-pulse"></span>
           </span>
           <span className="tracking-wide">
             SYMBIOTE ACTIVE

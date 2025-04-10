@@ -1,4 +1,6 @@
 
+import { AIWindowManager, AIConnectionOptions } from './types';
+
 /**
  * Window manager for handling ChatGPT browser windows
  */
@@ -41,4 +43,3 @@ export class WindowManager implements AIWindowManager {
 }
 
 export const windowManager = new WindowManager();
-

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { aiSyncService, aiSyncEvents } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
@@ -108,7 +107,7 @@ export function useAISync() {
         } else {
           toast({
             description: "No response received from ChatGPT within timeout period.",
-            variant: "warning",
+            variant: "default",
           });
         }
         
@@ -153,7 +152,6 @@ export function useAISync() {
   };
 
   useEffect(() => {
-    // Instead of auto-connecting, we'll just check the initial connection state
     setIsConnectedToAI(aiSyncService.isConnected());
     
     return () => {

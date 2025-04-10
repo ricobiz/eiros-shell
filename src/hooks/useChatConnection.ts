@@ -4,6 +4,7 @@ import { aiSyncService } from '@/services/ai-sync';
 import { useToast } from '@/hooks/use-toast';
 import { ChatMessage } from './useChatMessages';
 import { logService } from '@/services/LogService';
+import { windowManager } from '@/services/ai-sync/windowManager';
 
 export function useChatConnection(addMessageToChat: (sender: string, text: string) => void) {
   const { toast } = useToast();
@@ -90,7 +91,7 @@ export function useChatConnection(addMessageToChat: (sender: string, text: strin
         
         // Inject script into ChatGPT window to enable communication back
         // This is a simplified example, in practice you would set up a more robust messaging system
-        const chatWindow = aiSyncService.getWindow();
+        const chatWindow = windowManager.getWindow();
         if (chatWindow) {
           try {
             chatWindow.postMessage({ 

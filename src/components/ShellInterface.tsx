@@ -10,7 +10,9 @@ const ShellInterface: React.FC = () => {
     <LanguageProvider>
       <TaskSchedulerProvider>
         <ShellProvider>
-          <ShellContainer />
+          <div className="w-full h-full">
+            <ShellContainer />
+          </div>
         </ShellProvider>
       </TaskSchedulerProvider>
     </LanguageProvider>

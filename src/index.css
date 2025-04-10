@@ -1,16 +1,17 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 220 20% 4%;
+    --background: 220 25% 2%;
     --foreground: 220 10% 98%;
 
-    --card: 220 20% 8%;
+    --card: 220 20% 6%;
     --card-foreground: 220 10% 98%;
 
-    --popover: 220 20% 8%;
+    --popover: 220 20% 6%;
     --popover-foreground: 220 10% 98%;
 
     --primary: 210 100% 60%;
@@ -34,7 +35,7 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 220 20% 6%;
+    --sidebar-background: 220 25% 4%;
     --sidebar-foreground: 220 10% 90%;
     --sidebar-primary: 210 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;

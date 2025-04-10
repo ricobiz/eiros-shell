@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/hooks/use-toast';
 
 const TitleEditor: React.FC = () => {
-  const [customTitle, setCustomTitle] = useState("EIROS"); // Updated to just EIROS
+  const [customTitle, setCustomTitle] = useState("EIROS");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(customTitle);
   const {

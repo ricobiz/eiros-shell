@@ -21,7 +21,8 @@ import { Button } from '../ui/button';
 import { Bug, CheckCircle, Settings } from 'lucide-react';
 
 const ShellContainer: React.FC = () => {
-  const { activeTab, setActiveTab, isPinned } = useShell();
+  const shell = useShell();
+  const { activeTab, setActiveTab, isPinned } = shell;
   const [expanded, setExpanded] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showAutostart, setShowAutostart] = useState(false);

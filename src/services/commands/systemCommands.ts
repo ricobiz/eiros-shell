@@ -1,4 +1,3 @@
-
 import { Command, CommandType, MemoryType, SystemCommandResult, FileOperationResult } from '@/types/types';
 import { systemCommandService } from '@/services/SystemCommandService';
 import { memoryService } from '@/services/MemoryService';
@@ -29,7 +28,7 @@ export const handleShellCommand = async (command: Command): Promise<any> => {
         result: result
       },
       tags: ['shell', 'command'],
-      createdAt: Date.now()
+      timestamp: Date.now()
     });
 
     return result;

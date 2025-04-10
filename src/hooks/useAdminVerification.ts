@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 export const useAdminVerification = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [elevationRequested, setElevationRequested] = useState<boolean>(false);
 
   /**
    * Check if the current process has admin rights
@@ -30,6 +31,7 @@ export const useAdminVerification = () => {
   const requestElevation = useCallback(async (): Promise<boolean> => {
     try {
       setIsVerifying(true);
+      setElevationRequested(true);
       
       toast.info('Requesting administrative privileges...');
       
@@ -56,6 +58,8 @@ export const useAdminVerification = () => {
   return {
     isAdmin,
     isVerifying,
+    elevationRequested,
+    isCheckingAdmin: isVerifying,
     checkAdminStatus,
     requestElevation
   };

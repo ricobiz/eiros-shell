@@ -16,20 +16,16 @@ const HeaderButtons: React.FC = () => {
   const { t } = useLanguage();
   
   return (
-    <div className="flex items-center gap-0.5 mr-1">
+    <div className="flex items-center gap-3 mr-3">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleToggleAIConnection()} 
-              className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-green-500/30"
+              className="h-7"
               aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
             >
-              <div className="flex items-center space-x-0.5">
-                <div className="w-[3px] h-3 bg-green-500 transform rotate-12"></div>
-                <div className="w-[3px] h-3 bg-green-500 transform rotate-12"></div>
-                <div className="w-[3px] h-3 bg-green-500 transform rotate-12"></div>
-              </div>
+              <div className="w-[4px] h-5 bg-green-500 transform rotate-12"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -43,14 +39,10 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => toggleExecutionPause()} 
-              className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-amber-500/30"
+              className="h-7"
               aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
             >
-              <div className="flex items-center space-x-0.5">
-                <div className="w-[3px] h-3 bg-[#FFBD44] transform rotate-12"></div>
-                <div className="w-[3px] h-3 bg-[#FFBD44] transform rotate-12"></div>
-                <div className="w-[3px] h-3 bg-[#FFBD44] transform rotate-12"></div>
-              </div>
+              <div className="w-[4px] h-5 bg-[#FFBD44] transform rotate-12"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -64,14 +56,10 @@ const HeaderButtons: React.FC = () => {
           <TooltipTrigger asChild>
             <button 
               onClick={() => handleEmergencyStop()} 
-              className="h-7 w-7 flex items-center justify-center rounded-none hover:bg-muted/50 transition-colors border border-destructive/30"
+              className="h-7"
               aria-label={t('emergencyStop')}
             >
-              <div className="flex items-center space-x-0.5">
-                <div className="w-[3px] h-3 bg-destructive transform rotate-12"></div>
-                <div className="w-[3px] h-3 bg-destructive transform rotate-12"></div>
-                <div className="w-[3px] h-3 bg-destructive transform rotate-12"></div>
-              </div>
+              <div className="w-[4px] h-5 bg-destructive transform rotate-12"></div>
             </button>
           </TooltipTrigger>
           <TooltipContent>

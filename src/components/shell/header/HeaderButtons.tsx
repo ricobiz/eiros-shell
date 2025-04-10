@@ -1,54 +1,83 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { 
-  Terminal, 
-  Cpu, 
-  Database, 
-  Settings, 
-  AlertCircle, 
-  LifeBuoy 
-} from 'lucide-react';
-import TaskScheduler from '@/components/TaskScheduler';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
+import { useShell } from '@/contexts/shell/ShellContext';
 import { useTaskScheduler } from '@/contexts/TaskSchedulerContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const HeaderButtons: React.FC = () => {
-  // Use optional chaining to prevent errors if context is not available
-  const taskScheduler = useTaskScheduler();
+  const { isConnectedToAI, handleToggleAIConnection, handleEmergencyStop } = useShell();
+  const { t } = useLanguage();
+  
+  // Safely access the TaskScheduler context, with fallback values
+  let isExecutionPaused = false;
+  let toggleExecutionPause = () => {};
+  
+  try {
+    const taskScheduler = useTaskScheduler();
+    isExecutionPaused = taskScheduler?.isExecutionPaused || false;
+    toggleExecutionPause = taskScheduler?.toggleExecutionPause || (() => {});
+  } catch (error) {
+    console.error('TaskScheduler context not available:', error);
+  }
   
   return (
-    <div className="flex items-center space-x-2">
-      <Button variant="outline" size="sm" className="h-8 gap-1">
-        <Terminal size={14} />
-        <span className="text-xs">Console</span>
-      </Button>
+    <div className="flex items-center gap-3 mr-3">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={() => handleToggleAIConnection()} 
+              className="h-7 flex items-center justify-center"
+              aria-label={isConnectedToAI ? t('disconnect') : t('connect')}
+            >
+              <div className="w-[3px] h-5 bg-green-500 transform rotate-45"></div>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isConnectedToAI ? t('disconnect') : t('connect')}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       
-      <Button variant="outline" size="sm" className="h-8 gap-1">
-        <Cpu size={14} />
-        <span className="text-xs">System</span>
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={() => toggleExecutionPause()} 
+              className="h-7 flex items-center justify-center"
+              aria-label={isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
+            >
+              <div className="w-[3px] h-5 bg-[#FFBD44] transform rotate-45"></div>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isExecutionPaused ? t('resumeExecution') : t('pauseExecution')}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       
-      <Button variant="outline" size="sm" className="h-8 gap-1">
-        <Database size={14} />
-        <span className="text-xs">Memory</span>
-      </Button>
-      
-      <TaskScheduler />
-      
-      <Button variant="outline" size="sm" className="h-8 gap-1">
-        <Settings size={14} />
-        <span className="text-xs">Settings</span>
-      </Button>
-      
-      <Button variant="outline" size="sm" className="h-8 gap-1">
-        <AlertCircle size={14} />
-        <span className="text-xs">Help</span>
-      </Button>
-      
-      <Button variant="outline" size="sm" className="h-8 gap-1">
-        <LifeBuoy size={14} />
-        <span className="text-xs">Support</span>
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={() => handleEmergencyStop()} 
+              className="h-7 flex items-center justify-center"
+              aria-label={t('emergencyStop')}
+            >
+              <div className="w-[3px] h-5 bg-destructive transform rotate-45"></div>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {t('emergencyStop')}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };

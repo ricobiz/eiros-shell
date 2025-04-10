@@ -4,47 +4,20 @@ Command types for EirosShell
 """
 
 class CommandType:
-    """
-    Enumeration of command types supported by EirosShell
-    """
-    
-    # Basic navigation commands
-    NAVIGATION = "navigation"
+    """Command types"""
     CLICK = "click"
     TYPE = "type"
+    NAVIGATION = "navigation"
     WAIT = "wait"
-    
-    # Visual commands
     SCREENSHOT = "screenshot"
     ANALYZE = "analyze"
-    
-    # Memory commands
+    CONDITIONAL = "conditional"
+    LOOP = "loop" 
+    VARIABLE = "variable"
+    RECORD = "record"
     MEMORY_SAVE = "memory_save"
     MEMORY_RETRIEVE = "memory_retrieve"
-    
-    # Login commands
-    LOGIN = "login"
-    AUTO_LOGIN = "auto_login"
-    
-    # Pattern commands
-    PATTERN_LEARN = "pattern_learn"
-    PATTERN_RECALL = "pattern_recall"
-    
-    # DSL logical commands
-    SET = "set"
-    IF = "if"
-    REPEAT = "repeat"
-    
-    # System commands
-    SHELL = "shell"
-    RESTART = "restart"
-    KILL = "kill"
-    READ_FILE = "read_file"
-    WRITE_FILE = "write_file"
-    LIST_DIR = "list_dir"
-    
-    # New commands
-    RECORD = "record"
-    CHAIN = "chain"
-    SCHEDULE = "schedule"
-    ANNOTATE = "annotate"
+    ANNOTATE = "annotate"  # Command type for manual annotation
+    SCHEDULE = "schedule"  # Command type for scheduled tasks
+    LOGIN = "login"  # Command type for credential storage and login
+    AUTO_LOGIN = "auto_login"  # Command type for auto-login with stored credentials

@@ -1,9 +1,7 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { Task } from "@/types/types";
-import { commandService } from "@/services/CommandService";
-import { logService } from "@/services/LogService";
-import { toast } from "sonner";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Task } from '@/types/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskSchedulerContextType {
   tasks: Task[];
@@ -18,162 +16,74 @@ const TaskSchedulerContext = createContext<TaskSchedulerContextType | undefined>
 
 export const useTaskScheduler = () => {
   const context = useContext(TaskSchedulerContext);
-  if (context === undefined) {
-    throw new Error("useTaskScheduler must be used within a TaskSchedulerProvider");
+  if (!context) {
+    throw new Error('useTaskScheduler must be used within a TaskSchedulerProvider');
   }
   return context;
 };
 
-interface TaskSchedulerProviderProps {
-  children: React.ReactNode;
-}
-
-export const TaskSchedulerProvider: React.FC<TaskSchedulerProviderProps> = ({ children }) => {
+export const TaskSchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isExecutionPaused, setIsExecutionPaused] = useState(false);
-  const [taskTimers, setTaskTimers] = useState<Record<string, number>>({});
-
-  // Load tasks from localStorage when component mounts
+  const { toast } = useToast();
+  
+  // Load tasks from localStorage on mount
   useEffect(() => {
-    try {
-      const savedTasks = localStorage.getItem('eiros_scheduled_tasks');
-      if (savedTasks) {
+    const savedTasks = localStorage.getItem('scheduledTasks');
+    if (savedTasks) {
+      try {
         setTasks(JSON.parse(savedTasks));
+      } catch (e) {
+        console.error('Failed to parse saved tasks', e);
       }
-    } catch (error) {
-      logService.addLog({
-        type: 'error',
-        message: 'Failed to load scheduled tasks from storage',
-        timestamp: Date.now()
-      });
+    }
+    
+    const savedPauseState = localStorage.getItem('executionPaused');
+    if (savedPauseState) {
+      setIsExecutionPaused(savedPauseState === 'true');
     }
   }, []);
-
-  // Save tasks to localStorage whenever they change
+  
+  // Save tasks to localStorage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem('eiros_scheduled_tasks', JSON.stringify(tasks));
-    } catch (error) {
-      logService.addLog({
-        type: 'error',
-        message: 'Failed to save scheduled tasks to storage',
-        timestamp: Date.now()
-      });
-    }
+    localStorage.setItem('scheduledTasks', JSON.stringify(tasks));
   }, [tasks]);
-
-  // Setup and clear intervals for tasks
+  
+  // Save pause state to localStorage when it changes
   useEffect(() => {
-    // Clear existing timers
-    Object.values(taskTimers).forEach(timerId => window.clearInterval(timerId));
-    const newTimers: Record<string, number> = {};
-    
-    // Only set up new timers if execution is not paused
-    if (!isExecutionPaused) {
-      tasks.forEach(task => {
-        if (task.active) {
-          const timerId = window.setInterval(() => {
-            executeTask(task);
-          }, task.interval * 1000); // Convert to milliseconds
-          
-          newTimers[task.id] = timerId;
-        }
-      });
-    }
-    
-    setTaskTimers(newTimers);
-    
-    // Cleanup when component unmounts
-    return () => {
-      Object.values(newTimers).forEach(timerId => window.clearInterval(timerId));
-    };
-  }, [tasks, isExecutionPaused]);
-
-  const executeTask = useCallback((task: Task) => {
-    logService.addLog({
-      type: 'info',
-      message: `Executing scheduled task: ${task.name}`,
-      timestamp: Date.now()
+    localStorage.setItem('executionPaused', String(isExecutionPaused));
+  }, [isExecutionPaused]);
+  
+  const addTask = (task: Task) => {
+    setTasks(prev => [...prev, task]);
+    toast({
+      title: 'Task Added',
+      description: `${task.name} has been scheduled to run every ${task.interval} seconds`,
     });
-    
-    try {
-      if (task.type === 'command') {
-        // Parse and execute DSL command
-        const command = commandService.parseCommand(task.content);
-        if (command) {
-          commandService.executeCommand(command)
-            .then(() => {
-              logService.addLog({
-                type: 'success',
-                message: `Task "${task.name}" executed successfully`,
-                timestamp: Date.now()
-              });
-            })
-            .catch(error => {
-              logService.addLog({
-                type: 'error',
-                message: `Task "${task.name}" execution failed: ${error.message}`,
-                timestamp: Date.now(),
-                details: error
-              });
-            });
-        } else {
-          throw new Error('Invalid command format');
-        }
-      } else if (task.type === 'message') {
-        // Handle message tasks (could be used for notifications or other purposes)
-        toast(task.content);
-        logService.addLog({
-          type: 'info',
-          message: `Message task "${task.name}" displayed: ${task.content}`,
-          timestamp: Date.now()
-        });
-      }
-      
-      // Update last run timestamp
-      setTasks(prevTasks => 
-        prevTasks.map(t => 
-          t.id === task.id ? { ...t, lastRun: Date.now() } : t
-        )
-      );
-    } catch (error) {
-      logService.addLog({
-        type: 'error',
-        message: `Failed to execute task "${task.name}"`,
-        timestamp: Date.now(),
-        details: error
-      });
-    }
-  }, []);
-
-  const addTask = useCallback((task: Task) => {
-    setTasks(prevTasks => [...prevTasks, task]);
-    toast.success(`Task "${task.name}" scheduled successfully`);
-  }, []);
-
-  const removeTask = useCallback((id: string) => {
-    // Clear the interval if it exists
-    if (taskTimers[id]) {
-      window.clearInterval(taskTimers[id]);
-    }
-    
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
-    toast.info(`Task removed from scheduler`);
-  }, [taskTimers]);
-
-  const toggleTaskActive = useCallback((id: string) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
+  };
+  
+  const removeTask = (id: string) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
+  };
+  
+  const toggleTaskActive = (id: string) => {
+    setTasks(prev => 
+      prev.map(task => 
         task.id === id ? { ...task, active: !task.active } : task
       )
     );
-  }, []);
-
-  const toggleExecutionPause = useCallback(() => {
+  };
+  
+  const toggleExecutionPause = () => {
     setIsExecutionPaused(prev => !prev);
-    toast(isExecutionPaused ? 'Task execution resumed' : 'Task execution paused');
-  }, [isExecutionPaused]);
-
+    toast({
+      title: !isExecutionPaused ? 'Execution Paused' : 'Execution Resumed',
+      description: !isExecutionPaused 
+        ? 'All scheduled tasks are temporarily paused' 
+        : 'Scheduled tasks will now resume execution',
+    });
+  };
+  
   const value = {
     tasks,
     addTask,
@@ -182,7 +92,7 @@ export const TaskSchedulerProvider: React.FC<TaskSchedulerProviderProps> = ({ ch
     isExecutionPaused,
     toggleExecutionPause
   };
-
+  
   return (
     <TaskSchedulerContext.Provider value={value}>
       {children}

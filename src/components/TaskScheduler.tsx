@@ -14,29 +14,26 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CalendarClock } from "lucide-react";
-import { toast } from "sonner";
 
 const TaskScheduler: React.FC = () => {
-  // Initialize default values in case context is not available
+  // Safely access TaskScheduler context
   let tasks: Task[] = [];
   let addTask: (task: Task) => void = () => {};
   let removeTask: (id: string) => void = () => {};
   let toggleTaskActive: (id: string) => void = () => {};
   let isExecutionPaused = false;
   let toggleExecutionPause: () => void = () => {};
-  let contextAvailable = true;
   
   try {
-    const context = useTaskScheduler();
-    tasks = context.tasks;
-    addTask = context.addTask;
-    removeTask = context.removeTask;
-    toggleTaskActive = context.toggleTaskActive;
-    isExecutionPaused = context.isExecutionPaused;
-    toggleExecutionPause = context.toggleExecutionPause;
+    const taskScheduler = useTaskScheduler();
+    tasks = taskScheduler.tasks;
+    addTask = taskScheduler.addTask;
+    removeTask = taskScheduler.removeTask;
+    toggleTaskActive = taskScheduler.toggleTaskActive;
+    isExecutionPaused = taskScheduler.isExecutionPaused;
+    toggleExecutionPause = taskScheduler.toggleExecutionPause;
   } catch (error) {
     console.error('TaskScheduler context not available:', error);
-    contextAvailable = false;
   }
   
   const [newTask, setNewTask] = useState<Partial<Task>>({
@@ -49,15 +46,6 @@ const TaskScheduler: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   
   const handleAddTask = () => {
-    if (!contextAvailable) {
-      toast({
-        title: "Error",
-        description: "Task scheduler is not available",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     if (newTask.content && newTask.interval) {
       addTask({
         id: Date.now().toString(),
@@ -76,32 +64,8 @@ const TaskScheduler: React.FC = () => {
         active: true,
         name: ''
       });
-    } else {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
     }
   };
-  
-  if (!contextAvailable) {
-    return (
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="h-8 gap-1"
-        onClick={() => toast({
-          title: "Task Scheduler Unavailable",
-          description: "The task scheduler context is not available",
-          variant: "destructive",
-        })}
-      >
-        <CalendarClock size={14} />
-        <span className="text-xs">Scheduler</span>
-      </Button>
-    );
-  }
   
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -175,11 +139,6 @@ const TaskScheduler: React.FC = () => {
                       {task.type === 'command' ? 'Command' : 'Message'} | Every {task.interval}s
                     </div>
                     <div className="text-xs truncate max-w-[300px]">{task.content}</div>
-                    {task.lastRun && (
-                      <div className="text-xs text-muted-foreground">
-                        Last run: {new Date(task.lastRun).toLocaleString()}
-                      </div>
-                    )}
                   </div>
                   
                   <div className="flex items-center gap-2">

@@ -17,7 +17,6 @@ from .variable_handler import handle_set_command, process_params_with_variables
 from .conditional_handler import handle_if_command
 from .loop_handler import handle_repeat_command
 from .record_handler import handle_record_command
-from .schedule_handler import handle_schedule_command
 from .pattern_memory import pattern_memory
 
 logger = logging.getLogger("EirosShell")
@@ -74,8 +73,6 @@ async def execute_command(browser_controller, command: Dict[str, Any]) -> Dict[s
             return await handle_repeat_command(browser_controller, processed_params, command_id)
         elif command_type == CommandType.RECORD:
             return await handle_record_command(browser_controller, processed_params, command_id)
-        elif command_type == CommandType.SCHEDULE:
-            return await handle_schedule_command(processed_params, command_id)
         else:
             result["message"] = f"Unknown command type: {command_type}"
     

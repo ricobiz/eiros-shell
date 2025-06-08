@@ -4,17 +4,13 @@ Test script for visual pattern matching functionality
 """
 
 import asyncio
-import os
 import cv2
 import numpy as np
 from pathlib import Path
-from pattern_matcher import pattern_matcher, image_processor, storage
-from command_handlers import execute_command
-from command_types import CommandType
+from pattern_image_processor import PatternImageProcessor
 
 async def test_pattern_matching():
     """Test the visual pattern matching functionality"""
-    print("Testing visual pattern matching functionality...")
     
     # Setup test directory
     test_dir = Path("./test_patterns")
@@ -40,28 +36,24 @@ async def test_pattern_matching():
         "region": [50, 50, 100, 50]
     }
     
-    # Add to pattern matcher
-    pattern_matcher.patterns["test_button"] = test_pattern
+    image_processor = PatternImageProcessor()
     
     # Test matching
     screenshot = cv2.imread(str(test_dir / "test_screenshot.png"))
     matches = image_processor.match_patterns(screenshot, [test_pattern])
     
-    if matches:
-        match = matches[0]
-        print(f"Found match with confidence: {match['confidence']:.2f}")
-        print(f"Center point: {match['center']}")
-        
-        # Visualize the match (for debugging)
-        result_img = screenshot.copy()
-        x, y, w, h = match["region"]
-        cv2.rectangle(result_img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        cv2.imwrite(str(test_dir / "match_result.png"), result_img)
-        print(f"Match visualization saved to {test_dir / 'match_result.png'}")
-    else:
-        print("No match found")
-    
-    print("Test completed")
+    assert matches, "No match found"
+    match = matches[0]
+    assert match["confidence"] > image_processor.match_threshold, (
+        f"Match confidence {match['confidence']:.2f} "
+        f"is below threshold {image_processor.match_threshold}"
+    )
+
+    # Visualize the match for debugging purposes
+    result_img = screenshot.copy()
+    x, y, w, h = match["region"]
+    cv2.rectangle(result_img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    cv2.imwrite(str(test_dir / "match_result.png"), result_img)
 
 if __name__ == "__main__":
     asyncio.run(test_pattern_matching())
